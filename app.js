@@ -1,5 +1,4 @@
 // --- CZYSZCZENIE URL Z TOKENÓW SUPABASE ---
-// Zapobiega błędom sesji i zablokowaniu ponownego logowania po powrocie z Discorda
 if (window.location.hash && window.location.hash.includes('access_token')) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
@@ -21,7 +20,6 @@ function switchTab(tabId) {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Odśwież dane w zależności od zakładki
     if (tabId === 'home') loadHomeContent();
     if (tabId === 'wiadomosci') loadCategoryContent('wiadomosci', 'wiadomosci-grid');
     if (tabId === 'artykuly') loadCategoryContent('artykuly', 'artykuly-grid');
@@ -80,11 +78,9 @@ async function checkUserSession() {
             userAvatarEl.src = avatarUrl;
         }
 
-        // Przypisywanie ról na podstawie config.js
         let roleName = "Redaktor";
         let roleColor = "var(--text-muted)";
 
-        // Reset panelu admina
         document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'none');
         
         const isBoss = window.BOSS_DISCORD_IDS && window.BOSS_DISCORD_IDS.includes(String(discordId));
@@ -233,7 +229,7 @@ async function loadTiktoks() {
     `).join('');
 }
 
-// --- TWORZENIE WPISÓW (PANEL ADMINA) - BEZ PRZEŁADOWYWANIA STRONY ---
+// --- TWORZENIE WPISÓW (PANEL ADMINA) ---
 async function createArticle(event) {
     event.preventDefault();
     const target = document.getElementById('art-target').value;
@@ -242,7 +238,15 @@ async function createArticle(event) {
     const media_url = document.getElementById('art-media-url').value;
     const content = document.getElementById('art-content').value;
 
-    const { error } = await window.supabase.from('articles').insert([{ target, title, tag, media_url, content }]);
+    const { error } = await window.supabase.from('articles').insert([{ 
+        target, 
+        title, 
+        tag, 
+        media_url, 
+        content,
+        media_type: 'image' // Dodano domyślny typ, aby uniknąć błędu not-null
+    }]);
+    
     if (error) {
         alert('Błąd podczas dodawania artykułu: ' + error.message);
     } else {
@@ -311,7 +315,6 @@ function escapeHtml(text) {
     return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// Inicjalizacja po załadowaniu strony
 window.addEventListener('DOMContentLoaded', () => {
     checkUserSession();
     loadHomeContent();
