@@ -1,3 +1,9 @@
+// --- CZYSZCZENIE URL Z TOKENÓW SUPABASE ---
+// Zapobiega błędom sesji i zablokowaniu ponownego logowania po powrocie z Discorda
+if (window.location.hash && window.location.hash.includes('access_token')) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 // --- ZARZĄDZANIE ZAKŁADKAMI ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -42,8 +48,6 @@ async function loginWithDiscord() {
     if (error) {
         console.error('Błąd logowania:', error.message);
         alert('Nie udało się zalogować przez Discord: ' + error.message);
-    } else {
-        console.log("Przekierowywanie do Discorda...", data);
     }
 }
 
@@ -229,7 +233,7 @@ async function loadTiktoks() {
     `).join('');
 }
 
-// --- TWORZENIE WPISÓW (PANEL ADMINA) ---
+// --- TWORZENIE WPISÓW (PANEL ADMINA) - BEZ PRZEŁADOWYWANIA STRONY ---
 async function createArticle(event) {
     event.preventDefault();
     const target = document.getElementById('art-target').value;
@@ -243,7 +247,8 @@ async function createArticle(event) {
         alert('Błąd podczas dodawania artykułu: ' + error.message);
     } else {
         alert('Artykuł dodany pomyślnie!');
-        location.reload();
+        event.target.reset();
+        loadHomeContent();
     }
 }
 
@@ -258,7 +263,8 @@ async function createCityHallNotice(event) {
         alert('Błąd podczas dodawania ogłoszenia: ' + error.message);
     } else {
         alert('Dekret City Hall opublikowany!');
-        location.reload();
+        event.target.reset();
+        loadCityHallNotices();
     }
 }
 
@@ -273,7 +279,8 @@ async function createTiktok(event) {
         alert('Błąd podczas dodawania TikToka: ' + error.message);
     } else {
         alert('TikTok dodany pomyślnie!');
-        location.reload();
+        event.target.reset();
+        loadTiktoks();
     }
 }
 
