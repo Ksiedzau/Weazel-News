@@ -96,7 +96,7 @@ function renderTiktoks() {
             <div class="card-body">
                 <div class="card-title">${tt.title}</div>
                 <div class="card-meta">📱 ${tt.author} | 📅 ${tt.date}</div>
-                <div class="card-text">${tt.desc || ''}</div>
+                <div class="card-text">${tt.description || ''}</div>
                 ${isAdmin ? `<button class="btn btn-danger" style="margin-top:0.5rem;" onclick="deleteTiktok(${tt.id})">🗑️ Usunąć</button>` : ''}
             </div>
         </div>
@@ -146,7 +146,7 @@ async function createTiktok(e) {
     const { error } = await supabaseClient.from('tiktoks').insert([{
         title: document.getElementById('tt-title').value,
         url: document.getElementById('tt-url').value,
-        desc: document.getElementById('tt-desc').value,
+        description: document.getElementById('tt-desc').value,
         author, date
     }]);
 
