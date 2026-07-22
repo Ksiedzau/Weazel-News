@@ -1,5 +1,4 @@
 // --- CZYSZCZENIE URL Z TOKENÓW SUPABASE ---
-// Zapobiega błędom sesji i zablokowaniu ponownego logowania po powrocie z Discorda
 if (window.location.hash && window.location.hash.includes('access_token')) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
@@ -21,7 +20,6 @@ function switchTab(tabId) {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Odśwież dane w zależności od zakładki
     if (tabId === 'home') loadHomeContent();
     if (tabId === 'wiadomosci') loadCategoryContent('wiadomosci', 'wiadomosci-grid');
     if (tabId === 'artykuly') loadCategoryContent('artykuly', 'artykuly-grid');
@@ -31,14 +29,12 @@ function switchTab(tabId) {
 
 // --- AUTORYZACJA DISCORD PRZEZ SUPABASE ---
 async function loginWithDiscord() {
-    console.log("Kliknięto logowanie przez Discord...");
     if (!window.supabase) {
-        console.error("Obiekt window.supabase nie jest zainicjalizowany!");
         alert("Błąd: Supabase nie został załadowany.");
         return;
     }
 
-    const { data, error } = await window.supabase.auth.signInWithOAuth({
+    const { error } = await window.supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
             redirectTo: window.location.origin + window.location.pathname
@@ -46,7 +42,6 @@ async function loginWithDiscord() {
     });
     
     if (error) {
-        console.error('Błąd logowania:', error.message);
         alert('Nie udało się zalogować przez Discord: ' + error.message);
     }
 }
@@ -55,6 +50,9 @@ async function logout() {
     await window.supabase.auth.signOut();
     location.reload();
 }
+
+// Globalna zmienna do sprawdzania uprawnień w widoku kart
+let currentUserRole = null;
 
 // --- SPRAWDZANIE SESJI I UPRAWNIEN ---
 async function checkUserSession() {
@@ -94,16 +92,19 @@ async function checkUserSession() {
         if (isBoss) {
             roleName = "Szefostwo";
             roleColor = "var(--accent-red)";
+            currentUserRole = 'admin';
             if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
         } else if (isAdmin) {
             roleName = "Administrator";
             roleColor = "var(--accent-gold)";
+            currentUserRole = 'admin';
             if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
         } else if (isCityHall) {
             roleName = "City Hall";
             roleColor = "var(--accent-blue)";
+            currentUserRole = 'cityhall';
             if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             const chForm = document.getElementById('form-cityhall-art');
             if (chForm) chForm.style.display = 'block';
@@ -114,10 +115,13 @@ async function checkUserSession() {
             roleBadge.innerText = roleName;
             roleBadge.style.color = roleColor;
         }
+
+        // Odśwież widok, aby pokazać przyciski usuwania jeśli użytkownik jest adminem
+        loadHomeContent();
     }
 }
 
-// --- POBIERANIE TREŚCI Z BAZY ---
+// --- POBIERANIE TREŚCI Z BAZY Z NOWYM WYGLĄDEM ---
 async function loadHomeContent() {
     const grid = document.getElementById('home-grid');
     if (!grid) return;
@@ -137,17 +141,50 @@ async function loadHomeContent() {
         return;
     }
 
-    grid.innerHTML = data.map(item => `
-        <div class="card" onclick="openModal('${item.title}', '${item.created_at}', '${item.media_url}', '${escapeHtml(item.content)}')">
-            <img class="card-media" src="${item.media_url || ''}" alt="Grafika" onerror="this.src='https://via.placeholder.com/300x180?text=Weazel+News'">
-            <div class="card-body">
-                <span class="card-tag">${item.tag || 'NEWS'}</span>
-                <h3 class="card-title">${item.title}</h3>
-                <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="card-text">${item.content ? item.content.substring(0, 90) + '...' : ''}</p>
+    // Wyciągamy pierwszy artykuł jako główny "Hero / Breaking News", reszta do gridu poniżej
+    const heroItem = data[0];
+    const restItems = data.slice(1);
+
+    let html = '';
+
+    // SEKCJA HERO (Główny news na górze strony)
+    html += `
+        <div class="news-hero" onclick="openModal('${escapeHtml(heroItem.title)}', '${heroItem.created_at}', '${heroItem.media_url || ''}', '${escapeHtml(heroItem.content)}')">
+            <div class="hero-image-container">
+                <img src="${heroItem.media_url || 'https://via.placeholder.com/800x450?text=Weazel+News'}" alt="Hero Image" onerror="this.src='https://via.placeholder.com/800x450?text=Weazel+News'">
+                <div class="hero-badge">GORĄCY TEMAT</div>
+            </div>
+            <div class="hero-content">
+                <span class="card-tag">${heroItem.tag || 'BREAKING NEWS'}</span>
+                <h2 class="hero-title">${heroItem.title}</h2>
+                <div class="card-meta"><i class="far fa-clock"></i> ${new Date(heroItem.created_at).toLocaleDateString('pl-PL')}</div>
+                <p class="hero-text">${heroItem.content ? heroItem.content.substring(0, 160) + '...' : ''}</p>
+                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${heroItem.id})"><i class="fas fa-trash"></i> Usuń wpis</button>` : ''}
             </div>
         </div>
-    `).join('');
+    `;
+
+    // Jeśli są inne artykuły, tworzymy dla nich nowoczesną siatkę
+    if (restItems.length > 0) {
+        html += `<div class="news-subgrid">`;
+        html += restItems.map(item => `
+            <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
+                <div class="card-media-box">
+                    <img class="card-media" src="${item.media_url || ''}" alt="Grafika" onerror="this.src='https://via.placeholder.com/300x180?text=Weazel+News'">
+                </div>
+                <div class="card-body">
+                    <span class="card-tag">${item.tag || 'NEWS'}</span>
+                    <h3 class="card-title">${item.title}</h3>
+                    <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
+                    <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
+                    ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+        html += `</div>`;
+    }
+
+    grid.innerHTML = html;
 }
 
 async function loadCategoryContent(category, gridId) {
@@ -166,13 +203,16 @@ async function loadCategoryContent(category, gridId) {
     }
 
     grid.innerHTML = data.map(item => `
-        <div class="card" onclick="openModal('${item.title}', '${item.created_at}', '${item.media_url}', '${escapeHtml(item.content)}')">
-            <img class="card-media" src="${item.media_url || ''}" alt="Grafika">
+        <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
+            <div class="card-media-box">
+                <img class="card-media" src="${item.media_url || ''}" alt="Grafika">
+            </div>
             <div class="card-body">
                 <span class="card-tag">${item.tag || category}</span>
                 <h3 class="card-title">${item.title}</h3>
                 <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="card-text">${item.content ? item.content.substring(0, 90) + '...' : ''}</p>
+                <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
+                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -193,13 +233,16 @@ async function loadCityHallNotices() {
     }
 
     grid.innerHTML = data.map(item => `
-        <div class="card" onclick="openModal('${item.title}', '${item.created_at}', '${item.media_url}', '${escapeHtml(item.content)}')">
-            <img class="card-media" src="${item.media_url || ''}" alt="Dekret">
+        <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
+            <div class="card-media-box">
+                <img class="card-media" src="${item.media_url || ''}" alt="Dekret">
+            </div>
             <div class="card-body" style="border-top: 3px solid var(--accent-blue);">
                 <span class="card-tag" style="background:var(--accent-blue)">CITY HALL</span>
                 <h3 class="card-title">${item.title}</h3>
                 <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="card-text">${item.content ? item.content.substring(0, 90) + '...' : ''}</p>
+                <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
+                ${currentUserRole === 'admin' || currentUserRole === 'cityhall' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('city_hall', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -226,9 +269,34 @@ async function loadTiktoks() {
                 <span class="card-tag" style="background:var(--accent-gold); color:#000;">TIKTOK</span>
                 <h3 class="card-title">${item.title}</h3>
                 <p class="card-text">${item.description || ''}</p>
+                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('tiktoks', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
             </div>
         </div>
     `).join('');
+}
+
+// --- FUNKCJA USUWANIA WPISÓW ---
+async function deleteArticle(tableName, id) {
+    if (!confirm('Czy na pewno chcesz trwale usunąć ten wpis?')) return;
+
+    const { error } = await window.supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert('Błąd podczas usuwania: ' + error.message);
+    } else {
+        alert('Wpis został usunięty.');
+        // Odśwież bieżącą zakładkę
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+            const tabId = activeTab.id.replace('tab-', '');
+            switchTab(tabId);
+        } else {
+            loadHomeContent();
+        }
+    }
 }
 
 // --- TWORZENIE WPISÓW (PANEL ADMINA) ---
@@ -295,8 +363,8 @@ function openModal(title, date, mediaUrl, content) {
     document.getElementById('m-meta').innerText = new Date(date).toLocaleDateString('pl-PL');
     
     const mediaContainer = document.getElementById('m-media');
-    if (mediaUrl) {
-        mediaContainer.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:350px; object-fit:cover; border-radius:6px; margin-bottom:15px;" alt="Zdjęcie artykułu">`;
+    if (mediaUrl && mediaUrl !== 'null' && mediaUrl !== '') {
+        mediaContainer.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:15px;" alt="Zdjęcie artykułu">`;
     } else {
         mediaContainer.innerHTML = '';
     }
