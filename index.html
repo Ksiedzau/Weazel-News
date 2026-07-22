@@ -25,7 +25,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-        /* NAWIGACJA / HEADER */
+        /* HEADER & NAVBAR */
         header { 
             background: linear-gradient(180deg, rgba(17,19,28,0.95) 0%, rgba(9,10,15,0.98) 100%);
             border-bottom: 2px solid var(--accent);
@@ -73,7 +73,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* NAGŁÓWKI SEKCJI */
+        /* SEKCJE */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-left: 5px solid var(--accent); padding-left: 15px; }
         .section-header h1 { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         .section-header p { color: var(--text-sub); font-size: 0.9rem; margin-top: 4px; }
@@ -82,32 +82,43 @@
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
         .tiktok-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         
-        .article-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
+        .article-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s; position: relative; cursor: pointer; }
         .article-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
         
         .article-img-wrap { width: 100%; height: 200px; position: relative; overflow: hidden; background: #000; }
         .article-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .article-card:hover .article-img { transform: scale(1.05); }
-        .article-tag { position: absolute; top: 12px; left: 12px; background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .article-tag { position: absolute; top: 12px; left: 12px; background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; z-index: 2; }
 
-        .video-player { width: 100%; height: 220px; background: #000; border: none; }
+        .media-player { width: 100%; height: 220px; background: #000; border: none; }
 
         .article-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
         .article-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; color: #fff; }
         .article-meta { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 15px; display: flex; gap: 15px; font-weight: 600; }
-        .article-content { font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; flex: 1; white-space: pre-line; }
+        .article-snippet { font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .btn-delete-item { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; font-size: 0.8rem; }
+        .btn-read-more { background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-top: 15px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn-read-more:hover { background: var(--accent); color: #fff; }
+
+        .btn-delete-item { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 10px; width: 100%; transition: 0.2s; font-size: 0.8rem; }
         .btn-delete-item:hover { background: #ef4444; color: white; }
 
-        /* OBSADA / SIATKA ZESPOŁU */
+        /* WIDOK PEŁNEGO ARTYKUŁU */
+        .full-article-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; }
+        .full-article-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; color: #fff; line-height: 1.2; }
+        .full-article-media { width: 100%; max-height: 500px; border-radius: 10px; overflow: hidden; margin: 20px 0; background: #000; object-fit: cover; }
+        .full-article-content { font-size: 1.1rem; line-height: 1.8; color: #e2e8f0; white-space: pre-line; margin-top: 20px; }
+        .btn-back { background: var(--bg-panel); color: #fff; border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* OBSADA */
         .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .team-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
         .team-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--accent); margin: 0 auto 15px; object-fit: cover; }
         .team-name { font-size: 1.1rem; font-weight: 800; color: #fff; }
         .team-role { font-size: 0.8rem; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
 
-        /* PANEL REDAKTORA */
+        /* PANEL ADMINA */
         .admin-box { background: var(--bg-panel); border: 1px solid var(--gold); border-radius: 12px; padding: 30px; margin-bottom: 30px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-full { grid-column: span 2; }
@@ -116,13 +127,10 @@
         .form-group label { display: block; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--text-sub); margin-bottom: 8px; letter-spacing: 1px; }
         .form-input { width: 100%; padding: 12px 16px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.95rem; transition: 0.2s; }
         .form-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
-        textarea.form-input { min-height: 120px; resize: vertical; }
+        textarea.form-input { min-height: 150px; resize: vertical; }
 
         .btn-publish { background: var(--gold); color: #000; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; width: 100%; transition: 0.2s; font-size: 1rem; }
         .btn-publish:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4); }
-
-        .info-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; line-height: 1.8; }
-        .info-card h3 { color: var(--accent); margin-bottom: 10px; }
 
         footer { background: #06070a; border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--text-sub); font-size: 0.85rem; margin-top: auto; }
     </style>
@@ -138,10 +146,9 @@
         <nav class="nav-menu">
             <a id="nav-home" class="nav-item active" onclick="switchTab('home')">Główna</a>
             <a id="nav-news" class="nav-item" onclick="switchTab('news')">Wiadomości</a>
-            <a id="nav-tiktoki" class="nav-item" onclick="switchTab('tiktoki')">📱 Tiktoki / Wideo</a>
+            <a id="nav-tiktoki" class="nav-item" onclick="switchTab('tiktoki')">📱 Tiktoki / Shorts</a>
             <a id="nav-obsada" class="nav-item" onclick="switchTab('obsada')">👥 Obsada</a>
-            <a id="nav-rekrutacja" class="nav-item" onclick="switchTab('rekrutacja')">Rekrutacja</a>
-            <a id="nav-admin" class="nav-item admin-btn" onclick="switchTab('admin')">⭐ Panel Redaktora</a>
+            <a id="nav-admin" class="nav-item admin-btn" onclick="switchTab('admin')">⭐ PANEL ADMINA</a>
         </nav>
 
         <div class="auth-container">
@@ -165,8 +172,8 @@
         <div id="tab-home" class="tab-content active">
             <div class="section-header">
                 <div>
-                    <h1>Najważniejsze Nagłówki</h1>
-                    <p>Ostatnie publikacje redakcji Weazel News z Los Santos</p>
+                    <h1>Ostatnie Wiadomości</h1>
+                    <p>Najświeższe wieści z Los Santos i okolic</p>
                 </div>
             </div>
             <div id="home-news-grid" class="news-grid"></div>
@@ -177,13 +184,25 @@
             <div class="section-header">
                 <div>
                     <h1>Wszystkie Artykuły</h1>
-                    <p>Pojedyncze relacje, reportaże oraz wywiady</p>
+                    <p>Pełny przegląd informacji prasowych i relacji</p>
                 </div>
             </div>
             <div id="all-news-grid" class="news-grid"></div>
         </div>
 
-        <!-- ZAKŁADKA TIKTOKI / WIDEO -->
+        <!-- ZAKŁADKA PEŁNEGO ARTYKUŁU (PO KLIKNIĘCIU) -->
+        <div id="tab-article-view" class="tab-content">
+            <button class="btn-back" onclick="switchTab('news')">⬅️ Powrót do wiadomości</button>
+            <div class="full-article-container">
+                <span id="view-tag" class="article-tag" style="position:static; display:inline-block; margin-bottom:15px;"></span>
+                <h1 id="view-title" class="full-article-title"></h1>
+                <div id="view-meta" class="article-meta"></div>
+                <div id="view-media-wrap"></div>
+                <div id="view-content" class="full-article-content"></div>
+            </div>
+        </div>
+
+        <!-- ZAKŁADKA TIKTOKI / SHORTS -->
         <div id="tab-tiktoki" class="tab-content">
             <div class="section-header">
                 <div>
@@ -199,7 +218,7 @@
             <div class="section-header">
                 <div>
                     <h1>👥 Zespół Redakcyjny</h1>
-                    <p>Dziennikarze, fotoreporterzy oraz zarząd Weazel News</p>
+                    <p>Oficjalna obsada oraz zarząd Weazel News</p>
                 </div>
             </div>
             <div class="team-grid">
@@ -209,44 +228,30 @@
                     <div class="team-role">Dyrektor Główny</div>
                 </div>
                 <div class="team-card">
-                    <img class="team-avatar" src="https://via.placeholder.com/150/f59e0b/ffffff?text=RED" alt="Redaktor">
-                    <div class="team-name">Główny Dziennikarz</div>
-                    <div class="team-role">Redaktor Wydania</div>
+                    <img class="team-avatar" src="https://via.placeholder.com/150/f59e0b/ffffff?text=ADMIN" alt="Admin">
+                    <div class="team-name">Główny Admin</div>
+                    <div class="team-role">Zarządzanie Portalem</div>
                 </div>
             </div>
         </div>
 
-        <!-- ZAKŁADKA REKRUTACJA -->
-        <div id="tab-rekrutacja" class="tab-content">
-            <div class="section-header">
-                <div>
-                    <h1>Dołącz Do Redakcji</h1>
-                    <p>Szukamy nowych talentów do pracy w mediach</p>
-                </div>
-            </div>
-            <div class="info-card">
-                <h3>Otwarty Nabór na Dziennikarzy!</h3>
-                <p>Masz w sobie pasję do tworzenia treści, filmów lub pisania artykułów? Zgłoś się do Weazel News przez Discorda!</p>
-            </div>
-        </div>
-
-        <!-- ZAKŁADKA ADMIN / PANEL REDAKTORA -->
+        <!-- PANEL ADMINA -->
         <div id="tab-admin" class="tab-content">
             <div class="section-header">
                 <div>
-                    <h1>⭐ Panel Publikacji Treści</h1>
-                    <p>Dostępny wyłącznie dla weryfikowanych członków redakcji</p>
+                    <h1>⭐ Panel Admina</h1>
+                    <p>Zarządzaj artykułami, wiadomościami i TikTokami</p>
                 </div>
             </div>
 
-            <!-- FORMULARZ 1: DODAWANIE ARTYKUŁU -->
+            <!-- FORMULARZ 1: DODAWANIE ARTYKUŁU (ZDJĘCIE LUB WIDEO) -->
             <div class="admin-box">
-                <h2 style="color: var(--gold); margin-bottom: 20px;">📰 Dodaj Artykuł / Wiadomość</h2>
+                <h2 style="color: var(--gold); margin-bottom: 20px;">📰 Dodaj Artykuł / Wiadomość (Zdjęcie lub Wideo)</h2>
                 <form id="add-article-form" onsubmit="dodajArtykul(event)">
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tytuł Artykułu</label>
-                            <input type="text" id="art-title" class="form-input" placeholder="np. Strzelanina w centrum..." required>
+                            <input type="text" id="art-title" class="form-input" placeholder="np. Pościg na Highway 1..." required>
                         </div>
                         <div class="form-group">
                             <label>Kategoria / Tag</label>
@@ -257,38 +262,45 @@
                                 <option value="EVENTS">Wydarzenie</option>
                             </select>
                         </div>
-                        <div class="form-group form-full">
-                            <label>Link do zdjęcia (URL / Imgur)</label>
-                            <input type="url" id="art-image" class="form-input" placeholder="https://i.imgur.com/..." required>
+                        <div class="form-group">
+                            <label>Typ Mediów</label>
+                            <select id="art-media-type" class="form-input" onchange="zmienTypMedia()">
+                                <option value="image">Zdjęcie (URL)</option>
+                                <option value="video">Wideo MP4 / Link</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Link do Mediów (Zdjęcie lub Wideo)</label>
+                            <input type="url" id="art-media-url" class="form-input" placeholder="https://..." required>
                         </div>
                         <div class="form-group form-full">
-                            <label>Opis / Treść Artykułu</label>
-                            <textarea id="art-content" class="form-input" placeholder="Napisz szczegóły artykułu..." required></textarea>
+                            <label>Pełna Treść Artykułu</label>
+                            <textarea id="art-content" class="form-input" placeholder="Napisz obszerną treść artykułu..." required></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="btn-publish">🚀 Opublikuj Artykuł</button>
+                    <button type="submit" class="btn-publish">🚀 Opublikuj Wiadomość</button>
                 </form>
             </div>
 
-            <!-- FORMULARZ 2: DODAWANIE TIKTOKA / WIDEO -->
+            <!-- FORMULARZ 2: DODAWANIE TIKTOKA -->
             <div class="admin-box" style="border-color: var(--tiktok-color);">
-                <h2 style="color: var(--tiktok-color); margin-bottom: 20px;">📱 Dodaj TikTok / Filmik Wideo</h2>
+                <h2 style="color: var(--tiktok-color); margin-bottom: 20px;">📱 Dodaj TikTok / Shorts Wideo</h2>
                 <form id="add-tiktok-form" onsubmit="dodajTiktoka(event)">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Tytuł Filmu / Tiktoka</label>
-                            <input type="text" id="tt-title" class="form-input" placeholder="np. Wywiad ze świadkiem wypadku!" required>
+                            <label>Tytuł Tiktoka</label>
+                            <input type="text" id="tt-title" class="form-input" placeholder="np. Szybki wywiad z policjantem!" required>
                         </div>
                         <div class="form-group">
                             <label>Link do Wideo (MP4 / Direct URL)</label>
-                            <input type="url" id="tt-url" class="form-input" placeholder="https://dane.com/wideo.mp4" required>
+                            <input type="url" id="tt-url" class="form-input" placeholder="https://..." required>
                         </div>
                         <div class="form-group form-full">
-                            <label>Krótki Opis Filmu</label>
-                            <textarea id="tt-desc" class="form-input" placeholder="Opis pod filmikiem..." required></textarea>
+                            <label>Krótki Opis</label>
+                            <textarea id="tt-desc" class="form-input" placeholder="Opis pod wideo..." required></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="btn-publish" style="background: var(--tiktok-color); color: #000;">📱 Opublikuj Wideo</button>
+                    <button type="submit" class="btn-publish" style="background: var(--tiktok-color); color: #000;">📱 Opublikuj Tiktoka</button>
                 </form>
             </div>
         </div>
@@ -299,11 +311,11 @@
     </footer>
 
     <script>
-        // === 1. LISTA DISCORD ID REDAKCJI (UPRAWNIENIA) ===
+        // === 1. LISTA DISCORD ID ADMINÓW ===
         const ALLOWED_DISCORD_IDS = [
-            '1487414745534431233', // Twój aktualny ID Discorda
-            '1529556227317698791', // Twój poprzedni ID Discorda
-            '1391147972024078519'  // ID Twojego Ziomka
+            '1487414745534431233', // Twój ID
+            '1529556227317698791', // Twój alternatywny ID
+            '1391147972024078519'  // ID Ziomka
         ];
 
         // === 2. KONFIGURACJA SUPABASE ===
@@ -311,24 +323,25 @@
         const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let isEditor = false;
+        let isAdmin = false;
 
-        // Domyślne dane w pamięci
+        // BAZA DANYCH W LOCALSTORAGE
         let articles = JSON.parse(localStorage.getItem('weazel_articles')) || [
             {
                 id: 1,
                 title: 'Otwarcie Nowego Studia Weazel News!',
                 tag: 'WIADOMOŚCI',
-                image: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop',
-                content: 'Witamy w nowym portalu informacyjnym Weazel News! Od dziś nasi redaktorzy będą dostarczać Wam najświeższe relacje i wiadomości.',
-                author: 'Zarząd Redakcji',
+                mediaType: 'image',
+                mediaUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop',
+                content: 'Witamy w nowym portalu informacyjnym Weazel News!\n\nOd teraz nasi dziennikarze będą przekazywać najważniejsze informacje z miasta. Zapraszamy do czytania i oglądania naszych materiałów wideo!',
+                author: 'Zarząd',
                 date: '22.07.2026'
             }
         ];
 
         let tiktoks = JSON.parse(localStorage.getItem('weazel_tiktoks')) || [];
 
-        // === 3. LOGOWANIE OAUTH (DISCORD) ===
+        // === 3. LOGOWANIE DISCORD ===
         async function zalogujPrzezDiscord() {
             try {
                 const { error } = await supabaseClient.auth.signInWithOAuth({
@@ -346,7 +359,7 @@
             window.location.reload();
         }
 
-        // === 4. SPRAWDZANIE KONT I RANG ===
+        // === 4. KONTROLA DOSTĘPU ADMINA ===
         async function sprawdzUzytkownika() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (user) {
@@ -358,8 +371,8 @@
                 const discordId = user.user_metadata.provider_id || user.identities?.[0]?.id;
 
                 if (ALLOWED_DISCORD_IDS.includes(discordId)) {
-                    isEditor = true;
-                    document.getElementById('user-role').innerText = '⭐ Redaktor';
+                    isAdmin = true;
+                    document.getElementById('user-role').innerText = '⭐ ADMIN';
                     document.getElementById('user-role').style.color = '#f59e0b';
                     document.getElementById('nav-admin').style.display = 'inline-block';
                 }
@@ -368,20 +381,22 @@
             renderTiktoks();
         }
 
-        // === 5. AKCJE ARTYKUŁÓW I TIKTOKÓW ===
+        // === 5. AKCJE W PANELU ADMINA ===
         function dodajArtykul(e) {
             e.preventDefault();
             const title = document.getElementById('art-title').value;
             const tag = document.getElementById('art-tag').value;
-            const image = document.getElementById('art-image').value;
+            const mediaType = document.getElementById('art-media-type').value;
+            const mediaUrl = document.getElementById('art-media-url').value;
             const content = document.getElementById('art-content').value;
-            const author = document.getElementById('user-name').innerText || 'Redaktor';
+            const author = document.getElementById('user-name').innerText || 'Admin';
 
             const newArticle = {
                 id: Date.now(),
                 title,
                 tag,
-                image,
+                mediaType,
+                mediaUrl,
                 content,
                 author,
                 date: new Date().toLocaleDateString('pl-PL')
@@ -390,7 +405,7 @@
             articles.unshift(newArticle);
             localStorage.setItem('weazel_articles', JSON.stringify(articles));
             document.getElementById('add-article-form').reset();
-            alert('Artykuł został pomyślnie opublikowany!');
+            alert('Wiadomość została opublikowana!');
             renderArticles();
             switchTab('news');
         }
@@ -400,7 +415,7 @@
             const title = document.getElementById('tt-title').value;
             const url = document.getElementById('tt-url').value;
             const desc = document.getElementById('tt-desc').value;
-            const author = document.getElementById('user-name').innerText || 'Redaktor';
+            const author = document.getElementById('user-name').innerText || 'Admin';
 
             const newTiktok = {
                 id: Date.now(),
@@ -414,12 +429,13 @@
             tiktoks.unshift(newTiktok);
             localStorage.setItem('weazel_tiktoks', JSON.stringify(tiktoks));
             document.getElementById('add-tiktok-form').reset();
-            alert('Wideo opublikowane!');
+            alert('TikTok opublikowany!');
             renderTiktoks();
             switchTab('tiktoki');
         }
 
-        function usunArtykul(id) {
+        function usunArtykul(id, event) {
+            event.stopPropagation();
             if (confirm('Usunąć ten artykuł?')) {
                 articles = articles.filter(a => a.id !== id);
                 localStorage.setItem('weazel_articles', JSON.stringify(articles));
@@ -427,7 +443,8 @@
             }
         }
 
-        function usunTiktoka(id) {
+        function usunTiktoka(id, event) {
+            event.stopPropagation();
             if (confirm('Usunąć to wideo?')) {
                 tiktoks = tiktoks.filter(t => t.id !== id);
                 localStorage.setItem('weazel_tiktoks', JSON.stringify(tiktoks));
@@ -435,16 +452,41 @@
             }
         }
 
-        // RENDEROWANIE TREŚCI
+        // ODTWARZANIE WIDOKU OBSZERNEGO ARTYKUŁU
+        function otworzArtykul(id) {
+            const art = articles.find(a => a.id === id);
+            if (!art) return;
+
+            document.getElementById('view-tag').innerText = art.tag;
+            document.getElementById('view-title').innerText = art.title;
+            document.getElementById('view-meta').innerHTML = `<span>✍️ Redaktor: ${art.author}</span> | <span>📅 Data: ${art.date}</span>`;
+            document.getElementById('view-content').innerText = art.content;
+
+            const mediaWrap = document.getElementById('view-media-wrap');
+            if (art.mediaType === 'video') {
+                mediaWrap.innerHTML = `<video class="full-article-media" controls><source src="${art.mediaUrl}" type="video/mp4"></video>`;
+            } else {
+                mediaWrap.innerHTML = `<img class="full-article-media" src="${art.mediaUrl}" alt="Media">`;
+            }
+
+            switchTab('article-view');
+        }
+
+        // RENDEROWANIE KART
         function renderArticles() {
             const homeGrid = document.getElementById('home-news-grid');
             const allGrid = document.getElementById('all-news-grid');
 
-            const html = articles.map(art => `
-                <div class="article-card">
+            const html = articles.map(art => {
+                const mediaHtml = art.mediaType === 'video' 
+                    ? `<video class="media-player" controls><source src="${art.mediaUrl}" type="video/mp4"></video>`
+                    : `<img class="article-img" src="${art.mediaUrl}" alt="Media" onerror="this.src='https://via.placeholder.com/600x300?text=Weazel+News'">`;
+
+                return `
+                <div class="article-card" onclick="otworzArtykul(${art.id})">
                     <div class="article-img-wrap">
                         <span class="article-tag">${art.tag || 'WIADOMOŚCI'}</span>
-                        <img class="article-img" src="${art.image}" alt="Zdjęcie" onerror="this.src='https://via.placeholder.com/600x300?text=Weazel+News'">
+                        ${mediaHtml}
                     </div>
                     <div class="article-body">
                         <div class="article-title">${art.title}</div>
@@ -452,11 +494,12 @@
                             <span>✍️ ${art.author}</span>
                             <span>📅 ${art.date}</span>
                         </div>
-                        <div class="article-content">${art.content}</div>
-                        ${isEditor ? `<button class="btn-delete-item" onclick="usunArtykul(${art.id})">🗑️ Usuń artykuł</button>` : ''}
+                        <div class="article-snippet">${art.content}</div>
+                        <button class="btn-read-more">Czytaj Całość ➔</button>
+                        ${isAdmin ? `<button class="btn-delete-item" onclick="usunArtykul(${art.id}, event)">🗑️ Usuń Wpis</button>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
 
             if (homeGrid) homeGrid.innerHTML = html;
             if (allGrid) allGrid.innerHTML = html;
@@ -467,15 +510,14 @@
             if (!ttGrid) return;
 
             if (tiktoks.length === 0) {
-                ttGrid.innerHTML = `<p style="color: var(--text-sub);">Brak opublikowanych filmików.</p>`;
+                ttGrid.innerHTML = `<p style="color: var(--text-sub);">Brak opublikowanych TikToków.</p>`;
                 return;
             }
 
             ttGrid.innerHTML = tiktoks.map(tt => `
                 <div class="article-card" style="border-color: var(--tiktok-color);">
-                    <video class="video-player" controls>
+                    <video class="media-player" controls>
                         <source src="${tt.url}" type="video/mp4">
-                        Twoja przeglądarka nie obsługuje wideo.
                     </video>
                     <div class="article-body">
                         <div class="article-title">${tt.title}</div>
@@ -483,14 +525,14 @@
                             <span>📱 ${tt.author}</span>
                             <span>📅 ${tt.date}</span>
                         </div>
-                        <div class="article-content">${tt.desc}</div>
-                        ${isEditor ? `<button class="btn-delete-item" onclick="usunTiktoka(${tt.id})">🗑️ Usuń wideo</button>` : ''}
+                        <div class="article-snippet">${tt.desc}</div>
+                        ${isAdmin ? `<button class="btn-delete-item" onclick="usunTiktoka(${tt.id}, event)">🗑️ Usuń TikTok</button>` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
-        // PRZEŁĄCZANIE ZAKŁADEK
+        // ZMIANA ZAKŁADEK
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
