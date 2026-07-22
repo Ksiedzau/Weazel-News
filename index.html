@@ -3,67 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Ogłoszeniowy - San Andreas</title>
+    <title>Portal Ogłoszeniowy - DOJ & Rekrutacja</title>
     <style>
-        :root {
-            --bg-primary: #12151e;
-            --bg-secondary: #1a1f2c;
-            --bg-card: #222838;
-            --accent-gold: #e5b849;
-            --accent-doj: #2b5797;
-            --accent-green: #27ae60;
-            --text-main: #e0e6ed;
-            --text-muted: #8a99ad;
-            --border: #2d3548;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-main); padding: 20px; }
-
-        .container { max-width: 1200px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; background: #18191a; color: #e4e6eb; margin: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
         
-        /* Header & User Switcher */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .user-controls { display: flex; gap: 15px; align-items: center; }
-        select, button, input { padding: 10px 14px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
-        button.btn-primary { background: var(--accent-gold); color: #000; font-weight: bold; border: none; }
-        button.btn-primary:hover { opacity: 0.9; }
+        /* Nagłówek i przełącznik użytkowników */
+        header { display: flex; justify-content: space-between; align-items: center; background: #242526; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        select, input, button, textarea { padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; color: #fff; border-radius: 6px; }
+        button { cursor: pointer; background: #2d88ff; border: none; font-weight: bold; }
+        button:hover { background: #1a73e8; }
 
-        /* Main Layout */
-        .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+        /* Układ główny */
+        .main-layout { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
+        .sidebar, .feed, .panel { background: #242526; padding: 20px; border-radius: 8px; }
 
-        /* Sidebar & Categories */
-        .sidebar { background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
-        .sidebar h3 { margin-bottom: 15px; color: var(--accent-gold); font-size: 1.1rem; }
-        .category-list { list-style: none; }
-        .category-item { padding: 12px; margin-bottom: 8px; background: var(--bg-card); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .category-item:hover, .category-item.active { border-left: 4px solid var(--accent-gold); background: #2a3144; }
-        .badge-doj { background: var(--accent-doj); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+        /* Kategorie */
+        .category-item { padding: 10px; margin-bottom: 5px; background: #3a3b3c; border-radius: 5px; cursor: pointer; }
+        .category-item:hover, .category-item.active { background: #4e4f50; border-left: 4px solid #2d88ff; }
+        .tag-doj { background: #1b4f72; color: #5adeff; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 
-        /* Feed & Cards */
-        .feed { display: flex; flex-direction: column; gap: 15px; }
-        .card { background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
-        .card.doj-card { border-left: 5px solid var(--accent-doj); }
-        .card.rekrutacja-card { border-left: 5px solid var(--accent-green); }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .card-title { font-size: 1.3rem; color: #fff; }
-        .card-author { color: var(--text-muted); font-size: 0.85rem; }
-        .card-body { line-height: 1.6; margin-bottom: 15px; }
-        .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; background: var(--bg-card); }
+        /* Karty Ogłoszeń */
+        .card { background: #3a3b3c; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #888; }
+        .card.doj { border-left-color: #5adeff; }
+        .card.rekrutacja { border-left-color: #2ecc71; }
+        .card-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+
+        /* Tabela w panelu */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #4e4f50; padding: 10px; text-align: left; }
+        th { background: #3a3b3c; }
 
         /* Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
-        .modal { background: var(--bg-secondary); padding: 30px; border-radius: 8px; width: 500px; border: 1px solid var(--border); }
-        .modal h2 { margin-bottom: 20px; color: var(--accent-gold); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; }
-
-        /* Admin / Panel section */
-        .panel-section { display: none; background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-top: 20px; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .table th, .table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
-        .table th { background: var(--bg-card); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background: #242526; padding: 25px; border-radius: 8px; width: 400px; display: flex; flex-direction: column; gap: 10px; }
     </style>
 </head>
 <body>
@@ -71,58 +44,56 @@
 <div class="container">
     <header>
         <div>
-            <h2>🏛️ Portal Ogłoszeniowy SA</h2>
-            <small style="color: var(--text-muted)">System Ogłoszeń & Frakcji</small>
+            <h2>Portal Ogłoszeniowy</h2>
+            <small id="userRoleInfo"></small>
         </div>
-        <div class="user-controls">
-            <span>Zalogowany jako:</span>
+        <div>
+            <label>Symuluj zalogowanego jako: </label>
             <select id="userSelect" onchange="switchUser()">
-                <option value="1">Jan Kowalski (Użytkownik)</option>
-                <option value="2">Marek Prokurator (DOJ)</option>
-                <option value="3">Admin (Superadmin)</option>
+                <!-- Genorowane w JS -->
             </select>
-            <button class="btn-primary" onclick="openModal()">+ Dodaj Ogłoszenie</button>
-            <button onclick="toggleAdminPanel()">⚙️ Panel Zarządzania</button>
+            <button onclick="openModal()">+ Dodaj Ogłoszenie</button>
+            <button onclick="togglePanel()" style="background: #e67e22;">⚙️ Panel Admina/Zarządzania</button>
         </div>
     </header>
 
-    <div class="layout">
-        <aside class="sidebar">
+    <div class="main-layout">
+        <!-- Panel Boczny z Kategoriami -->
+        <div class="sidebar">
             <h3>Kategorie</h3>
-            <ul class="category-list">
-                <li class="category-item active" onclick="filterCategory('all')">Wszystkie</li>
-                <li class="category-item" onclick="filterCategory('Ogólne')">Ogólne</li>
-                <li class="category-item" onclick="filterCategory('Rekrutacja')">📢 Rekrutacja</li>
-                <li class="category-item" onclick="filterCategory('Ogłoszenia DOJ')">⚖️ Ogłoszenia DOJ <span class="badge-doj">DOJ</span></li>
-            </ul>
-        </aside>
+            <div class="category-item active" onclick="filterCategory('all')">Wszystkie</div>
+            <div class="category-item" onclick="filterCategory('Ogólne')">Ogólne</div>
+            <div class="category-item" onclick="filterCategory('Rekrutacja')">📢 Rekrutacja</div>
+            <div class="category-item" onclick="filterCategory('Ogłoszenia DOJ')">⚖️ Ogłoszenia DOJ <span class="tag-doj">DOJ</span></div>
+        </div>
 
-        <main>
-            <div id="feed" class="feed">
-                <!-- Ogłoszenia renderują się tutaj -->
-            </div>
+        <!-- Główna Lista Ogłoszeń -->
+        <div>
+            <div id="feed" class="feed"></div>
 
             <!-- Panel Zarządzania / Admina -->
-            <div id="adminPanel" class="panel-section">
+            <div id="adminPanel" class="panel" style="display: none; margin-top: 20px;">
                 <h2 id="panelTitle">Panel Zarządzania</h2>
-                <p id="panelSubtitle" style="color: var(--text-muted); margin-bottom: 15px;"></p>
                 
-                <div id="userRoleManagement" style="margin-bottom: 25px; display: none;">
-                    <h3>Nadawanie Rang (Tylko Admin)</h3>
-                    <table class="table">
+                <!-- Sekcja nadawania rang (Widoczna tylko dla Admina) -->
+                <div id="roleManagementSection" style="margin-bottom: 30px; display: none;">
+                    <h3>Opcja nadawania rangi DOJ (Tylko dla Admina)</h3>
+                    <table>
                         <thead>
                             <tr>
                                 <th>Użytkownik</th>
-                                <th>Obecna Ranga</th>
-                                <th>Zmień Rangę</th>
+                                <th>Ranga</th>
+                                <th>Akcja (Zmień Rangę)</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody"></tbody>
                     </table>
                 </div>
 
-                <h3>Twoje Ogłoszenia w Panelu</h3>
-                <table class="table">
+                <!-- Lista Ogłoszeń w Panelu -->
+                <h3>Zarządzanie Ogłoszeniami</h3>
+                <p id="panelInfoText" style="color: #aaa; font-size: 14px;"></p>
+                <table>
                     <thead>
                         <tr>
                             <th>Tytuł</th>
@@ -131,67 +102,71 @@
                             <th>Akcje</th>
                         </tr>
                     </thead>
-                    <tbody id="adminAnnouncementsBody"></tbody>
+                    <tbody id="announcementsTableBody"></tbody>
                 </table>
             </div>
-        </main>
+        </div>
     </div>
 </div>
 
 <!-- Modal Dodawania Ogłoszenia -->
-<div id="modal" class="modal-overlay">
-    <div class="modal">
-        <h2>Nowe Ogłoszenie</h2>
-        <div class="form-group">
-            <label>Tytuł</label>
-            <input type="text" id="postTitle" placeholder="Wpisz tytuł...">
-        </div>
-        <div class="form-group">
-            <label>Kategoria</label>
-            <select id="postCategory">
-                <option value="Ogólne">Ogólne</option>
-                <option value="Rekrutacja">📢 Rekrutacja</option>
-                <option value="Ogłoszenia DOJ" id="dojCategoryOption">⚖️ Ogłoszenia DOJ (Wymagana ranga DOJ)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Treść</label>
-            <textarea id="postContent" rows="5" placeholder="Treść ogłoszenia..."></textarea>
-        </div>
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3>Nowe Ogłoszenie</h3>
+        <input type="text" id="postTitle" placeholder="Tytuł ogłoszenia">
+        <select id="postCategory">
+            <option value="Ogólne">Ogólne</option>
+            <option value="Rekrutacja">📢 Rekrutacja</option>
+            <option value="Ogłoszenia DOJ" id="dojOption">⚖️ Ogłoszenia DOJ</option>
+        </select>
+        <textarea id="postContent" rows="4" placeholder="Treść ogłoszenia..."></textarea>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button onclick="closeModal()">Anuluj</button>
-            <button class="btn-primary" onclick="createAnnouncement()">Opublikuj</button>
+            <button onclick="closeModal()" style="background: #555;">Anuluj</button>
+            <button onclick="addAnnouncement()">Opublikuj</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Baza Danych / Stan Aplikacji
-    const users = [
+    // Baza użytkowników
+    let users = [
         { id: 1, name: "Jan Kowalski", role: "User" },
-        { id: 2, name: "Marek Prokurator", role: "DOJ" },
-        { id: 3, name: "Admin", role: "Admin" }
+        { id: 2, name: "Anna Nowak", role: "DOJ" },
+        { id: 3, name: "Piotr Admin", role: "Admin" }
     ];
 
     let currentUser = users[0];
-    let currentFilter = 'all';
+    let currentCategory = 'all';
 
+    // Baza ogłoszeń
     let announcements = [
-        { id: 101, title: "Otwarta rekrutacja do LSPD", category: "Rekrutacja", content: "Zapraszamy wszystkich chętnych do składania podań do akademii LSPD!", authorId: 1, authorName: "Jan Kowalski" },
-        { id: 102, title: "Aktualizacja Kodeksu Karnego", category: "Ogłoszenia DOJ", content: "Wchodzą w życie nowe przepisy dotyczące mandatów za przekroczenie prędkości.", authorId: 2, authorName: "Marek Prokurator" },
-        { id: 103, title: "Sprzedam Blistę", category: "Ogólne", content: "Stan idealny, niskie przebiegi.", authorId: 1, authorName: "Jan Kowalski" }
+        { id: 1, title: "Otwarta rekrutacja do Sądów", category: "Rekrutacja", content: "Zapraszamy do składania podań na stanowiska pomocnicze.", authorId: 2, authorName: "Anna Nowak" },
+        { id: 2, title: "Oficjalny Komunikat DOJ", category: "Ogłoszenia DOJ", content: "Wchodzą w życie nowe rozporządzenia prawne.", authorId: 2, authorName: "Anna Nowak" },
+        { id: 3, title: "Sprzedam auto", category: "Ogólne", content: "Auto w stanie idealnym, cena do negocjacji.", authorId: 1, authorName: "Jan Kowalski" }
     ];
 
     function init() {
+        renderUserSelect();
         switchUser();
     }
 
+    function renderUserSelect() {
+        const select = document.getElementById('userSelect');
+        select.innerHTML = '';
+        users.forEach(u => {
+            select.innerHTML += `<option value="${u.id}">${u.name} (${u.role})</option>`;
+        });
+        select.value = currentUser.id;
+    }
+
     function switchUser() {
-        const userId = parseInt(document.getElementById('userSelect').value);
-        currentUser = users.find(u => u.id === userId);
-        
-        // Zabezpieczenie opcji kategorii DOJ w formularzu
-        const dojOption = document.getElementById('dojCategoryOption');
+        const selectedId = parseInt(document.getElementById('userSelect').value);
+        currentUser = users.find(u => u.id === selectedId);
+
+        document.getElementById('userRoleInfo').innerText = `Ranga: ${currentUser.role}`;
+
+        // Zablokuj/Odblokuj opcję ogłoszeń DOJ w formularzu
+        const dojOption = document.getElementById('dojOption');
         if (currentUser.role === 'DOJ' || currentUser.role === 'Admin') {
             dojOption.disabled = false;
             dojOption.innerText = "⚖️ Ogłoszenia DOJ";
@@ -201,11 +176,11 @@
         }
 
         renderFeed();
-        renderAdminPanel();
+        renderPanel();
     }
 
     function filterCategory(cat) {
-        currentFilter = cat;
+        currentCategory = cat;
         renderFeed();
     }
 
@@ -213,133 +188,128 @@
         const feed = document.getElementById('feed');
         feed.innerHTML = '';
 
-        const filtered = announcements.filter(a => currentFilter === 'all' || a.category === currentFilter);
+        const filtered = announcements.filter(a => currentCategory === 'all' || a.category === currentCategory);
 
-        if (filtered.length === 0) {
-            feed.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Brak ogłoszeń w tej kategorii.</p>';
+        if(filtered.length === 0) {
+            feed.innerHTML = '<p style="color: #aaa;">Brak ogłoszeń w tej kategorii.</p>';
             return;
         }
 
         filtered.forEach(a => {
-            const card = document.createElement('div');
-            let extraClass = '';
-            if (a.category === 'Ogłoszenia DOJ') extraClass = 'doj-card';
-            if (a.category === 'Rekrutacja') extraClass = 'rekrutacja-card';
+            let typeClass = '';
+            if (a.category === 'Ogłoszenia DOJ') typeClass = 'doj';
+            if (a.category === 'Rekrutacja') typeClass = 'rekrutacja';
 
-            card.className = `card ${extraClass}`;
-            card.innerHTML = `
-                <div class="card-header">
-                    <span class="card-title">${a.title}</span>
-                    <span class="tag">${a.category}</span>
+            feed.innerHTML += `
+                <div class="card ${typeClass}">
+                    <div class="card-header">
+                        <span>${a.title}</span>
+                        <small>[${a.category}]</small>
+                    </div>
+                    <div>${a.content}</div>
+                    <small style="color: #aaa; display:block; margin-top:10px;">Autor: ${a.authorName}</small>
                 </div>
-                <div class="card-body">${a.content}</div>
-                <div class="card-author">Autor: <strong>${a.authorName}</strong></div>
             `;
-            feed.appendChild(card);
         });
     }
 
-    function renderAdminPanel() {
-        const title = document.getElementById('panelTitle');
-        const subtitle = document.getElementById('panelSubtitle');
-        const roleMgmt = document.getElementById('userRoleManagement');
-        const tbody = document.getElementById('adminAnnouncementsBody');
+    function renderPanel() {
+        const roleSection = document.getElementById('roleManagementSection');
+        const infoText = document.getElementById('panelInfoText');
+        const tbody = document.getElementById('announcementsTableBody');
+
+        // 1. ZARZĄDZANIE RANGAMI (Widoczne tylko dla Admina)
+        if (currentUser.role === 'Admin') {
+            roleSection.style.display = 'block';
+            renderUserRolesTable();
+            infoText.innerText = "Jako Admin widzisz ogłoszenia wszystkich użytkowników.";
+        } else {
+            roleSection.style.display = 'none';
+        }
+
+        // 2. FILTROWANIE W PANELU DLA DOJ
+        let visibleAnnouncements = [];
+        if (currentUser.role === 'Admin') {
+            visibleAnnouncements = announcements; // Admin widzi wszystko
+        } else if (currentUser.role === 'DOJ') {
+            // Ranga DOJ widzi TYLKO SWOJE ogłoszenia!
+            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
+            infoText.innerText = "Jako członek DOJ widzisz w panelu wyłącznie swoje własne ogłoszenia.";
+        } else {
+            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
+            infoText.innerText = "Widzisz wyłącznie swoje własne ogłoszenia.";
+        }
 
         tbody.innerHTML = '';
-
-        if (currentUser.role === 'Admin') {
-            title.innerText = "Panel Superadmina";
-            subtitle.innerText = "Widzisz wszystkie ogłoszenia oraz możesz zarządzać rangami użytkowników.";
-            roleMgmt.style.display = 'block';
-            renderUserTable();
-        } else if (currentUser.role === 'DOJ') {
-            title.innerText = "Panel Departamentu Sprawiedliwości (DOJ)";
-            subtitle.innerText = "Widzisz wyłącznie swoje własne ogłoszenia.";
-            roleMgmt.style.display = 'none';
-        } else {
-            title.innerText = "Panel Użytkownika";
-            subtitle.innerText = "Możesz zarządzać swoimi wpisami.";
-            roleMgmt.style.display = 'none';
-        }
-
-        // WARUNEK: Jeśli DOJ -> widzi TYLKO SWOJE ogłoszenia!
-        let visibleAnnouncements = announcements;
-        if (currentUser.role === 'DOJ') {
-            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
-        } else if (currentUser.role === 'User') {
-            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
-        }
-
         visibleAnnouncements.forEach(a => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${a.title}</td>
-                <td><span class="tag">${a.category}</span></td>
-                <td>${a.authorName}</td>
-                <td><button onclick="deleteAnnouncement(${a.id})" style="background: #c0392b; color: #fff; border:none; padding: 5px 10px; border-radius:4px;">Usuń</button></td>
+            tbody.innerHTML += `
+                <tr>
+                    <td>${a.title}</td>
+                    <td>${a.category}</td>
+                    <td>${a.authorName}</td>
+                    <td><button onclick="deleteAnnouncement(${a.id})" style="background: #e74c3c;">Usuń</button></td>
+                </tr>
             `;
-            tbody.appendChild(tr);
         });
     }
 
-    function renderUserTable() {
+    function renderUserRolesTable() {
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = '';
         users.forEach(u => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${u.name}</td>
-                <td><strong>${u.role}</strong></td>
-                <td>
-                    <select onchange="changeRole(${u.id}, this.value)">
-                        <option value="User" ${u.role === 'User' ? 'selected' : ''}>Użytkownik</option>
-                        <option value="DOJ" ${u.role === 'DOJ' ? 'selected' : ''}>Ranga DOJ</option>
-                        <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                    </select>
-                </td>
+            tbody.innerHTML += `
+                <tr>
+                    <td>${u.name}</td>
+                    <td><strong>${u.role}</strong></td>
+                    <td>
+                        <button onclick="setRole(${u.id}, 'User')" style="background: #555;">Daj User</button>
+                        <button onclick="setRole(${u.id}, 'DOJ')" style="background: #1b4f72;">Daj Rangi DOJ</button>
+                        <button onclick="setRole(${u.id}, 'Admin')" style="background: #e67e22;">Daj Admin</button>
+                    </td>
+                </tr>
             `;
-            tbody.appendChild(tr);
         });
     }
 
-    function changeRole(userId, newRole) {
-        const user = users.find(u => u.id === userId);
-        if (user) {
-            user.role = newRole;
-            alert(`Zmieniono rangę użytkownika ${user.name} na: ${newRole}`);
+    function setRole(userId, newRole) {
+        const u = users.find(user => user.id === userId);
+        if (u) {
+            u.role = newRole;
+            renderUserSelect();
             switchUser();
+            alert(`Pomyślnie zmieniono rangę użytkownika ${u.name} na ${newRole}`);
         }
     }
 
-    function createAnnouncement() {
+    function addAnnouncement() {
         const title = document.getElementById('postTitle').value;
         const category = document.getElementById('postCategory').value;
         const content = document.getElementById('postContent').value;
 
         if (!title || !content) {
-            alert('Wypełnij tytuł i treść!');
+            alert("Uzupełnij tytuł i treść!");
             return;
         }
 
+        // Blokada zabezpieczająca
         if (category === 'Ogłoszenia DOJ' && currentUser.role !== 'DOJ' && currentUser.role !== 'Admin') {
-            alert('Brak uprawnień do publikacji w kąciku DOJ!');
+            alert("Nie masz uprawnień (Rangi DOJ), aby publikować w tej kategorii!");
             return;
         }
 
-        const newPost = {
+        announcements.unshift({
             id: Date.now(),
             title: title,
             category: category,
             content: content,
             authorId: currentUser.id,
             authorName: currentUser.name
-        };
+        });
 
-        announcements.unshift(newPost);
         closeModal();
         renderFeed();
-        renderAdminPanel();
-        
+        renderPanel();
+
         document.getElementById('postTitle').value = '';
         document.getElementById('postContent').value = '';
     }
@@ -347,12 +317,12 @@
     function deleteAnnouncement(id) {
         announcements = announcements.filter(a => a.id !== id);
         renderFeed();
-        renderAdminPanel();
+        renderPanel();
     }
 
-    function toggleAdminPanel() {
-        const panel = document.getElementById('adminPanel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    function togglePanel() {
+        const p = document.getElementById('adminPanel');
+        p.style.display = p.style.display === 'none' ? 'block' : 'none';
     }
 
     function openModal() { document.getElementById('modal').style.display = 'flex'; }
