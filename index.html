@@ -63,8 +63,8 @@
         .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
 
         main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 2rem 1.5rem; }
-        .tab-section { display: none; }
-        .tab-section.active { display: block; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
         .page-header.cityhall-header { border-left-color: var(--accent-blue); }
@@ -73,35 +73,33 @@
         .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
 
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: 0.2s; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
         .card:hover { transform: translateY(-4px); border-color: var(--accent-red); }
 
-        .card-media { width: 100%; height: 190px; background: #121520; position: relative; }
-        .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; }
-        .card-tag { position: absolute; top: 10px; left: 10px; background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; z-index: 2; }
-
-        .card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+        .card-media { width: 100%; height: 190px; background: #121520; object-fit: cover; }
+        .card-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+        .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
         .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; display: flex; gap: 12px; }
-        .card-snippet { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; flex: 1; }
-        .card-btn { background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; margin-top: 12px; text-transform: uppercase; cursor: pointer; text-align: center; }
-        .card-btn:hover { background: var(--accent-red); color: #fff; }
-
-        .btn-delete { background: rgba(220, 38, 38, 0.15); color: #f87171; border: 1px solid #dc2626; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-top: 8px; width: 100%; }
-        .btn-delete:hover { background: #dc2626; color: #fff; }
+        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+        .card-text { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; flex: 1; }
+        
+        .btn-red { background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; text-align: center; transition: 0.2s; }
+        .btn-red:hover { background: var(--accent-red); color: #fff; }
+        .btn-danger { background: rgba(220, 38, 38, 0.15); color: #f87171; border-color: #dc2626; }
+        .btn-danger:hover { background: #dc2626; color: #fff; }
 
         .recruitment-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 30px; max-width: 800px; margin: 0 auto; }
         .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 15px; font-size: 1.4rem; }
         .recruitment-box p { line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
 
         .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
+        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; display: none; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         
         .form-row { margin-bottom: 16px; }
         .form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
         .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.9rem; }
-        textarea.form-field { min-height: 120px; resize: vertical; }
+        textarea.form-field { min-height: 100px; resize: vertical; }
 
         .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center; }
         .btn-submit:hover { background: #d97706; }
@@ -112,7 +110,6 @@
         .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
         .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; font-weight: 700; }
         .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
-        .modal-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #000; }
         .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
 
         footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; }
@@ -127,13 +124,13 @@
         </div>
 
         <nav class="nav-links">
-            <button id="nav-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
-            <button id="nav-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci')">📰 Wiadomości</button>
-            <button id="nav-artykuly" class="nav-btn" onclick="switchTab('artykuly')">📝 Artykuły</button>
-            <button id="nav-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
-            <button id="nav-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall')">🏛️ Ogłoszenia City Hall</button>
-            <button id="nav-rekrutacja" class="nav-btn" onclick="switchTab('rekrutacja')">💼 Rekrutacja</button>
-            <button id="nav-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ Panel Admina</button>
+            <button id="btn-tab-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
+            <button id="btn-tab-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci')">📰 Wiadomości</button>
+            <button id="btn-tab-artykuly" class="nav-btn" onclick="switchTab('artykuly')">📝 Artykuły</button>
+            <button id="btn-tab-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
+            <button id="btn-tab-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall')">🏛️ Ogłoszenia City Hall</button>
+            <button id="btn-tab-rekrutacja" class="nav-btn" onclick="switchTab('rekrutacja')">💼 Rekrutacja</button>
+            <button id="btn-tab-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ Panel Admina</button>
         </nav>
 
         <div class="auth-box">
@@ -151,7 +148,7 @@
 
     <main>
         <!-- STRONA GŁÓWNA -->
-        <section id="tab-home" class="tab-section active">
+        <section id="tab-home" class="tab-content active">
             <div class="page-header">
                 <h1>Strona Główna</h1>
                 <p>Najważniejsze wydarzenia z Los Santos</p>
@@ -160,7 +157,7 @@
         </section>
 
         <!-- WIADOMOŚCI -->
-        <section id="tab-wiadomosci" class="tab-section">
+        <section id="tab-wiadomosci" class="tab-content">
             <div class="page-header">
                 <h1>Wiadomości Bieżące</h1>
                 <p>Szybkie informacje i flesze z miasta</p>
@@ -169,7 +166,7 @@
         </section>
 
         <!-- ARTYKUŁY -->
-        <section id="tab-artykuly" class="tab-section">
+        <section id="tab-artykuly" class="tab-content">
             <div class="page-header">
                 <h1>Artykuły i Wywiady</h1>
                 <p>Pogłębione materiały publicystyczne</p>
@@ -178,7 +175,7 @@
         </section>
 
         <!-- TIKTOKI -->
-        <section id="tab-tiktoki" class="tab-section">
+        <section id="tab-tiktoki" class="tab-content">
             <div class="page-header">
                 <h1>Tiktoki / Shorts</h1>
                 <p>Krótkie materiały wideo</p>
@@ -187,7 +184,7 @@
         </section>
 
         <!-- OGŁOSZENIA CITY HALL -->
-        <section id="tab-cityhall" class="tab-section">
+        <section id="tab-cityhall" class="tab-content">
             <div class="page-header cityhall-header">
                 <h1>Ogłoszenia City Hall</h1>
                 <p>Oficjalne dekrety, ustawy i komunikaty Urzędu Miasta</p>
@@ -196,7 +193,7 @@
         </section>
 
         <!-- REKRUTACJA -->
-        <section id="tab-rekrutacja" class="tab-section">
+        <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header recruitment-header">
                 <h1>Rekrutacja do Weazel News</h1>
                 <p>Dołącz do naszego zespołu redakcyjnego</p>
@@ -209,42 +206,88 @@
         </section>
 
         <!-- PANEL ADMINISTRATORA -->
-        <section id="tab-admin" class="tab-section">
+        <section id="tab-admin" class="tab-content">
             <div class="page-header">
                 <h1>Panel Administratora</h1>
                 <p>Zarządzanie treściami w serwisie</p>
             </div>
             <div class="admin-panel">
-                <div class="admin-card">
-                    <div class="admin-card-title">Dodaj Wpis</div>
-                    <form onsubmit="createPost(event)">
+                <!-- Formularz Ogólny Artykułów -->
+                <div id="form-general-art" class="admin-card">
+                    <div class="admin-card-title">Dodaj Wpis / Artykuł</div>
+                    <form onsubmit="createArticle(event)">
                         <div class="form-row">
                             <label>Kategoria docelowa</label>
-                            <select id="post-target" class="form-field">
+                            <select id="art-target" class="form-field">
                                 <option value="home">Strona Główna</option>
                                 <option value="wiadomosci">Wiadomości</option>
                                 <option value="artykuly">Artykuły</option>
-                                <option value="tiktoki">Tiktoki</option>
-                                <option value="cityhall">Ogłoszenia City Hall</option>
                             </select>
                         </div>
                         <div class="form-row">
-                            <label>Etykieta (Tag)</label>
-                            <input type="text" id="post-tag" class="form-field" placeholder="np. PILNE / DEKRET" required>
-                        </div>
-                        <div class="form-row">
                             <label>Tytuł</label>
-                            <input type="text" id="post-title" class="form-field" required>
+                            <input type="text" id="art-title" class="form-field" required>
                         </div>
                         <div class="form-row">
-                            <label>Link do mediów (Zdjęcie / Wideo)</label>
-                            <input type="url" id="post-media" class="form-field" placeholder="https://...">
+                            <label>Etykieta (Tag)</label>
+                            <input type="text" id="art-tag" class="form-field" placeholder="np. PILNE" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Typ Mediów</label>
+                            <select id="art-media-type" class="form-field">
+                                <option value="image">Zdjęcie</option>
+                                <option value="video">Wideo</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Link do mediów (URL)</label>
+                            <input type="url" id="art-media-url" class="form-field" placeholder="https://..." required>
                         </div>
                         <div class="form-row">
                             <label>Treść</label>
-                            <textarea id="post-content" class="form-field" required></textarea>
+                            <textarea id="art-content" class="form-field" required></textarea>
                         </div>
-                        <button type="submit" class="btn-submit">Opublikuj</button>
+                        <button type="submit" class="btn-submit">Opublikuj Artykuł</button>
+                    </form>
+                </div>
+
+                <!-- Formularz City Hall -->
+                <div id="form-cityhall-art" class="admin-card">
+                    <div class="admin-card-title">Ogłoszenie City Hall</div>
+                    <form onsubmit="createCityHallNotice(event)">
+                        <div class="form-row">
+                            <label>Tytuł Dekretu / Ogłoszenia</label>
+                            <input type="text" id="ch-title" class="form-field" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Link do grafiki (URL)</label>
+                            <input type="url" id="ch-media-url" class="form-field" placeholder="https://..." required>
+                        </div>
+                        <div class="form-row">
+                            <label>Treść ogłoszenia</label>
+                            <textarea id="ch-content" class="form-field" required></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit" style="background:var(--accent-blue); color:#fff;">Opublikuj City Hall</button>
+                    </form>
+                </div>
+
+                <!-- Formularz Tiktok -->
+                <div id="form-tiktok-art" class="admin-card">
+                    <div class="admin-card-title">Dodaj TikTok / Shorts</div>
+                    <form onsubmit="createTiktok(event)">
+                        <div class="form-row">
+                            <label>Tytuł wideo</label>
+                            <input type="text" id="tt-title" class="form-field" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Link do wideo (MP4 / URL)</label>
+                            <input type="url" id="tt-url" class="form-field" placeholder="https://..." required>
+                        </div>
+                        <div class="form-row">
+                            <label>Opis</label>
+                            <textarea id="tt-desc" class="form-field"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit">Dodaj TikTok</button>
                     </form>
                 </div>
             </div>
@@ -252,14 +295,13 @@
     </main>
 
     <!-- MODAL -->
-    <div id="article-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div id="modal-art" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-container" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()">&times;</button>
-            <span id="modal-tag" class="card-tag" style="position:static; display:inline-block; margin-bottom:10px;"></span>
-            <h1 id="modal-title" class="modal-title"></h1>
-            <div id="modal-meta" class="card-meta"></div>
-            <div id="modal-media-wrap"></div>
-            <div id="modal-content" class="modal-text"></div>
+            <h1 id="m-title" class="modal-title"></h1>
+            <div id="m-meta" class="card-meta"></div>
+            <div id="m-media"></div>
+            <div id="m-content" class="modal-text"></div>
         </div>
     </div>
 
@@ -267,7 +309,7 @@
         &copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.
     </footer>
 
-    <!-- Podłączenie Twoich skryptów z projektu -->
+    <!-- Twoje skrypty we właściwej kolejności -->
     <script src="config.js"></script>
     <script src="supabase.js"></script>
     <script src="app.js"></script>
