@@ -1,4 +1,5 @@
 // --- CZYSZCZENIE URL Z TOKENÓW SUPABASE ---
+// Zapobiega błędom sesji i zablokowaniu ponownego logowania po powrocie z Discorda
 if (window.location.hash && window.location.hash.includes('access_token')) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
@@ -20,6 +21,7 @@ function switchTab(tabId) {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Odśwież dane w zależności od zakładki
     if (tabId === 'home') loadHomeContent();
     if (tabId === 'wiadomosci') loadCategoryContent('wiadomosci', 'wiadomosci-grid');
     if (tabId === 'artykuly') loadCategoryContent('artykuly', 'artykuly-grid');
@@ -243,8 +245,7 @@ async function createArticle(event) {
         title, 
         tag, 
         media_url, 
-        content,
-        media_type: 'image' // Dodano domyślny typ, aby uniknąć błędu not-null
+        content 
     }]);
     
     if (error) {
