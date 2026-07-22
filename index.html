@@ -3,379 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weazel News - Wiadomości z Miasta</title>
-    <!-- Biblioteka Supabase JS -->
+    <title>Weazel News - Redakcja RP</title>
+    <!-- Biblioteka Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --red: #e50914;
-            --dark-red: #b20710;
-            --black: #111111;
-            --gray: #1f1f1f;
-            --light-gray: #f4f4f4;
-            --white: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--black);
-            color: var(--white);
-            line-height: 1.6;
-        }
-
-        /* Top Bar & Header */
-        header {
-            background-color: var(--black);
-            border-bottom: 4px solid var(--red);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 5%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 2.2rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--white);
-            text-decoration: none;
-        }
-
-        .logo span {
-            background-color: var(--red);
-            color: var(--white);
-            padding: 2px 8px;
-            margin-left: 5px;
-            border-radius: 3px;
-        }
-
-        /* User / Auth Button */
-        .auth-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .btn-discord {
-            background-color: var(--red);
-            color: var(--white);
-            border: none;
-            padding: 10px 18px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-discord:hover {
-            background-color: var(--dark-red);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 2px solid var(--red);
-        }
-
-        /* Navigation */
-        nav {
-            background-color: var(--gray);
-            border-bottom: 1px solid #333;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 5%;
-        }
-
-        .nav-links li a {
-            display: block;
-            padding: 12px 20px;
-            color: var(--white);
-            text-decoration: none;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-
-        .nav-links li a:hover,
-        .nav-links li a.active {
-            background-color: var(--red);
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 5%;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            border-left: 5px solid var(--red);
-            padding-left: 10px;
-            margin-bottom: 25px;
-        }
-
-        /* Grid Cards (Artykuły / Wiadomości) */
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        .news-card {
-            background-color: var(--gray);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: transform 0.2s;
-        }
-
-        .news-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .news-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-        }
-
-        .news-card-content {
-            padding: 20px;
-        }
-
-        .news-tag {
-            background-color: var(--red);
-            color: var(--white);
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 3px 8px;
-            text-transform: uppercase;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        .news-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-
-        .news-card p {
-            color: #ccc;
-            font-size: 0.9rem;
-        }
-
-        /* Sekcja Obsada */
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
-
-        .team-card {
-            background-color: var(--gray);
-            padding: 20px;
-            text-align: center;
-            border-radius: 6px;
-            border-top: 3px solid var(--red);
-        }
-
-        .team-card h4 {
-            font-size: 1.1rem;
-            margin-top: 10px;
-        }
-
-        .team-card p {
-            color: var(--red);
-            font-weight: bold;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--gray);
-            text-align: center;
-            padding: 20px;
-            margin-top: 50px;
-            border-top: 1px solid #333;
-            color: #888;
-            font-size: 0.85rem;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background-color: #1e293b; border-bottom: 3px solid #e11d48; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #e11d48; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        .nav-links a.active, .nav-links a:hover { background-color: #334155; color: #ffffff; }
+        .auth-btn { background-color: #5865F2; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .auth-btn:hover { background-color: #4752C4; }
+        .user-profile { display: none; align-items: center; gap: 10px; }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #e11d48; }
+        .logout-btn { background-color: #dc2626; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        main { flex: 1; padding: 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background-color: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #e11d48; }
+        h1, h2 { margin-bottom: 15px; color: #f1f5f9; }
+        p { color: #94a3b8; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
     <header>
-        <div class="header-top">
-            <a href="#" class="logo" onclick="switchTab('glowna')">WEAZEL<span>NEWS</span></a>
-            <div class="auth-container">
-                <div id="user-profile" class="user-info" style="display: none;">
-                    <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                    <span id="user-name"></span>
-                    <button class="btn-discord" style="padding: 5px 10px; font-size: 0.8rem;" onclick="wyloguj()">Wyloguj</button>
-                </div>
-                <button id="btn-login" class="btn-discord" onclick="zalogujPrzezDiscord()">
-                    Zaloguj przez Discord
-                </button>
+        <div class="logo">Weazel News</div>
+        <nav class="nav-links">
+            <a id="nav-home" class="active" onclick="switchTab('home')">Strona Główna</a>
+            <a id="nav-news" onclick="switchTab('news')">Artykuły</a>
+            <a id="nav-rekrutacja" onclick="switchTab('rekrutacja')">Rekrutacja</a>
+        </nav>
+        <div>
+            <button id="btn-login" class="auth-btn" onclick="zalogujPrzezDiscord()">
+                Zaloguj przez Discord
+            </button>
+            <div id="user-profile" class="user-profile">
+                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                <span id="user-name"></span>
+                <button class="logout-btn" onclick="wyloguj()">Wyloguj</button>
             </div>
         </div>
     </header>
 
-    <!-- Nawigacja -->
-    <nav>
-        <ul class="nav-links">
-            <li><a href="#" id="nav-glowna" class="active" onclick="switchTab('glowna')">Strona Główna</a></li>
-            <li><a href="#" id="nav-wiadomosci" onclick="switchTab('wiadomosci')">Wiadomości</a></li>
-            <li><a href="#" id="nav-artykuly" onclick="switchTab('artykuly')">Artykuły</a></li>
-            <li><a href="#" id="nav-obsada" onclick="switchTab('obsada')">Obsada</a></li>
-        </ul>
-    </nav>
-
-    <!-- Treść Strony -->
-    <div class="container">
-
-        <!-- Zakładka: Strona Główna -->
-        <section id="tab-glowna" class="tab-content active">
-            <h2 class="section-title">Najważniejsze Nagłówki</h2>
-            <div class="news-grid">
-                <div class="news-card">
-                    <img src="https://via.placeholder.com/400x200/111111/e50914?text=Weazel+News" alt="News">
-                    <div class="news-card-content">
-                        <span class="news-tag">PILNE</span>
-                        <h3>Wydarzenia w mieście</h3>
-                        <p>Witamy na nowym portalu Weazel News. Najnowsze informacje ze świata polityki, przestępczości i rozrywki.</p>
-                    </div>
-                </div>
+    <main>
+        <div id="tab-home" class="tab-content active">
+            <div class="card">
+                <h1>Witaj w Weazel News!</h1>
+                <p>Najświeższe wiadomości, wywiady oraz wydarzenia z miasta. Zaloguj się przez Discorda, aby uzyskać dostęp do panelu.</p>
             </div>
-        </section>
+        </div>
 
-        <!-- Zakładka: Wiadomości -->
-        <section id="tab-wiadomosci" class="tab-content">
-            <h2 class="section-title">Krótkie Wiadomości</h2>
-            <p>Tutaj pojawią się najnowsze doniesienia i transmisje na żywo.</p>
-        </section>
-
-        <!-- Zakładka: Artykuły -->
-        <section id="tab-artykuly" class="tab-content">
-            <h2 class="section-title">Artykuły i Publicystyka</h2>
-            <p>Dłuższe reportaże i felietony tworzone przez nasz zespół redakcyjny.</p>
-        </section>
-
-        <!-- Zakładka: Obsada -->
-        <section id="tab-obsada" class="tab-content">
-            <h2 class="section-title">Nasz Zespół Redakcyjny</h2>
-            <div class="team-grid">
-                <div class="team-card">
-                    <h4>Imię Nazwisko</h4>
-                    <p>Dyrektor Redakcji</p>
-                </div>
-                <div class="team-card">
-                    <h4>Imię Nazwisko</h4>
-                    <p>Dziennikarz Śledczy</p>
-                </div>
-                <div class="team-card">
-                    <h4>Imię Nazwisko</h4>
-                    <p>Fotoreporter</p>
-                </div>
+        <div id="tab-news" class="tab-content">
+            <div class="card">
+                <h2>Ostatnie Artykuły</h2>
+                <p>Brak opublikowanych wiadomości w tym momencie.</p>
             </div>
-        </section>
+        </div>
 
-    </div>
+        <div id="tab-rekrutacja" class="tab-content">
+            <div class="card">
+                <h2>Dołącz do naszego zespołu</h2>
+                <p>Rekrutacja do redakcji Weazel News jest obecnie otwarta. Skontaktuj się z nami przez Discorda!</p>
+            </div>
+        </div>
+    </main>
 
-    <!-- Footer -->
-    <footer>
-        &copy; 2026 Weazel News. Wszelkie prawa zastrzeżone.
-    </footer>
-
-    <!-- Skrypty Obsługi Nawigacji i Supabase -->
     <script>
         // === 1. KONFIGURACJA SUPABASE ===
-        // Podmień poniższe wartości na swoje dane z panelu Supabase.com
-       <script>
-    // === 1. KONFIGURACJA SUPABASE ===
-    const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
+        const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        // Funkcja logowania przez Discord
+        // Inicjalizacja z unikalną nazwą zmiennej
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // === 2. FUNKCJA LOGOWANIA ===
         async function zalogujPrzezDiscord() {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'discord',
-                options: {
-                    redirectTo: window.location.href
-                }
-            });
-            if (error) console.error('Błąd logowania:', error.message);
+            try {
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'discord',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                if (error) alert('Błąd Supabase: ' + error.message);
+            } catch (err) {
+                alert('Błąd uruchamiania logowania: ' + err.message);
+            }
         }
 
-        // Funkcja wylogowania
+        // === 3. FUNKCJA WYLOGOWANIA ===
         async function wyloguj() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             window.location.reload();
         }
 
-        // Sprawdzanie stanu zalogowania
+        // === 4. SPRAWDZANIE STANU ZALOGOWANIA ===
         async function sprawdzUzytkownika() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabaseClient.auth.getUser();
             if (user) {
-                document.getElementById('btn-login').style.display = 'none';
-                document.getElementById('user-profile').style.display = 'flex';
-                document.getElementById('user-name').innerText = user.user_metadata.full_name || user.user_metadata.custom_claims?.global_name || 'Użytkownik';
-                document.getElementById('user-avatar').src = user.user_metadata.avatar_url || 'https://via.placeholder.com/35';
+                const btnLogin = document.getElementById('btn-login');
+                const userProfile = document.getElementById('user-profile');
+                const userName = document.getElementById('user-name');
+                const userAvatar = document.getElementById('user-avatar');
+
+                if (btnLogin) btnLogin.style.display = 'none';
+                if (userProfile) userProfile.style.display = 'flex';
+                if (userName) userName.innerText = user.user_metadata.full_name || user.user_metadata.custom_claims?.global_name || 'Użytkownik';
+                if (userAvatar) userAvatar.src = user.user_metadata.avatar_url || 'https://via.placeholder.com/35';
             }
         }
 
         sprawdzUzytkownika();
 
-        // === 2. PRZEŁĄCZANIE ZAKŁADEK ===
+        // === 5. OBSŁUGA ZAKŁADEK ===
         function switchTab(tabName) {
-            // Ukrycie wszystkich zakładek
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
 
-            // Aktywacja wybranej
-            document.getElementById('tab-' + tabName).classList.add('active');
-            document.getElementById('nav-' + tabName).classList.add('active');
+            const activeTab = document.getElementById('tab-' + tabName);
+            const activeNav = document.getElementById('nav-' + tabName);
+
+            if (activeTab) activeTab.classList.add('active');
+            if (activeNav) activeNav.classList.add('active');
         }
     </script>
 </body>
