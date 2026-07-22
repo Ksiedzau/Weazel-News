@@ -3,647 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weazel News | Los Santos</title>
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Portal Ogłoszeniowy - San Andreas</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-
         :root {
-            --bg-body: #0b0d14;
-            --bg-header: #121520;
-            --bg-card: #181c2b;
-            --bg-input: #0f121d;
-            --accent-red: #dc2626;
-            --accent-red-hover: #ef4444;
-            --accent-gold: #f59e0b;
-            --accent-purple: #8b5cf6;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #262c40;
+            --bg-primary: #12151e;
+            --bg-secondary: #1a1f2c;
+            --bg-card: #222838;
+            --accent-gold: #e5b849;
+            --accent-doj: #2b5797;
+            --accent-green: #27ae60;
+            --text-main: #e0e6ed;
+            --text-muted: #8a99ad;
+            --border: #2d3548;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-main); padding: 20px; }
 
-        /* NAWIGACJA */
-        header { 
-            background-color: var(--bg-header);
-            border-bottom: 2px solid var(--accent-red);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.9rem; letter-spacing: 1px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .brand-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
-        .brand-title span { color: var(--accent-red); }
-
-        .nav-links { display: flex; gap: 6px; }
-        .nav-btn { color: var(--text-muted); padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: transparent; transition: 0.2s; }
-        .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
-        .nav-btn.admin-link { display: none; color: var(--accent-gold); border: 1px solid var(--accent-gold); }
-        .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
-
-        /* AUTH BANNER */
-        .auth-box { display: flex; align-items: center; gap: 12px; }
-        .btn-discord { background: #5865F2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
-        .btn-discord:hover { background: #4752C4; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
-        .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
-        .user-name { font-weight: 700; font-size: 0.85rem; }
-        .user-badge { font-size: 0.7rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
-        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
+        /* Header & User Switcher */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .user-controls { display: flex; gap: 15px; align-items: center; }
+        select, button, input { padding: 10px 14px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+        button.btn-primary { background: var(--accent-gold); color: #000; font-weight: bold; border: none; }
+        button.btn-primary:hover { opacity: 0.9; }
 
-        /* MAIN LAYOUT */
-        main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 2rem 1.5rem; }
-        .tab-section { display: none; }
-        .tab-section.active { display: block; }
+        /* Main Layout */
+        .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
 
-        /* STRONA GŁÓWNA - HERO ARTICLE */
-        .featured-hero {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            cursor: pointer;
-        }
-        @media (max-width: 768px) {
-            .featured-hero { grid-template-columns: 1fr; }
-        }
-        .hero-media { width: 100%; height: 100%; min-height: 280px; max-height: 380px; object-fit: cover; background: #000; }
-        .hero-content { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-        .hero-badge { background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 12px; }
-        .hero-title { font-size: 1.8rem; font-weight: 900; line-height: 1.2; color: #fff; margin-bottom: 12px; }
-        .hero-snippet { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        /* Sidebar & Categories */
+        .sidebar { background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .sidebar h3 { margin-bottom: 15px; color: var(--accent-gold); font-size: 1.1rem; }
+        .category-list { list-style: none; }
+        .category-item { padding: 12px; margin-bottom: 8px; background: var(--bg-card); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .category-item:hover, .category-item.active { border-left: 4px solid var(--accent-gold); background: #2a3144; }
+        .badge-doj { background: var(--accent-doj); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
 
-        .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
-        .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; }
-        .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+        /* Feed & Cards */
+        .feed { display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
+        .card.doj-card { border-left: 5px solid var(--accent-doj); }
+        .card.rekrutacja-card { border-left: 5px solid var(--accent-green); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .card-title { font-size: 1.3rem; color: #fff; }
+        .card-author { color: var(--text-muted); font-size: 0.85rem; }
+        .card-body { line-height: 1.6; margin-bottom: 15px; }
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; background: var(--bg-card); }
 
-        /* SIATKA KART */
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; cursor: pointer; }
-        .card:hover { transform: translateY(-4px); border-color: var(--accent-red); }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal { background: var(--bg-secondary); padding: 30px; border-radius: 8px; width: 500px; border: 1px solid var(--border); }
+        .modal h2 { margin-bottom: 20px; color: var(--accent-gold); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; }
 
-        .card-media { width: 100%; height: 190px; background: #121520; overflow: hidden; position: relative; }
-        .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; }
-        .card-tag { position: absolute; top: 10px; left: 10px; background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-
-        .card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
-        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
-        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; display: flex; gap: 12px; }
-        .card-snippet { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
-        .card-btn { background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; margin-top: 12px; text-transform: uppercase; cursor: pointer; text-align: center; }
-        .card-btn:hover { background: var(--accent-red); color: #fff; }
-
-        .btn-delete { background: rgba(220, 38, 38, 0.15); color: #f87171; border: 1px solid #dc2626; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-top: 8px; width: 100%; }
-        .btn-delete:hover { background: #dc2626; color: #fff; }
-
-        /* MODAL */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; font-weight: 700; }
-        .modal-close:hover { color: #fff; }
-        .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
-        .modal-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #000; }
-        .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
-
-        /* ADMIN PANEL */
-        .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
-        .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-        .admin-card-title.boss-title { color: var(--accent-purple); }
-
-        .form-row { margin-bottom: 16px; }
-        .form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-        .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.9rem; }
-        .form-field:focus { outline: none; border-color: var(--accent-gold); }
-        textarea.form-field { min-height: 120px; resize: vertical; }
-
-        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-        .btn-submit:hover { background: #d97706; }
-        .btn-submit.btn-boss { background: var(--accent-purple); color: #fff; }
-        .btn-submit.btn-boss:hover { background: #7c3aed; }
-
-        /* OBSADA */
-        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .team-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; text-align: center; position: relative; }
-        .team-photo { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--accent-red); margin: 0 auto 12px; object-fit: cover; background: #0f121d; }
-        .team-name { font-weight: 800; font-size: 1rem; color: #fff; }
-        .team-role { font-size: 0.75rem; color: var(--accent-gold); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
-
-        footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; }
+        /* Admin / Panel section */
+        .panel-section { display: none; background: var(--bg-secondary); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-top: 20px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table th, .table td { padding: 12px; border: 1px solid var(--border); text-align: left; }
+        .table th { background: var(--bg-card); }
     </style>
 </head>
 <body>
 
+<div class="container">
     <header>
-        <div class="brand" onclick="switchTab('home')">
-            <div class="brand-badge">LIVE</div>
-            <div class="brand-title">WEAZEL <span>NEWS</span></div>
+        <div>
+            <h2>🏛️ Portal Ogłoszeniowy SA</h2>
+            <small style="color: var(--text-muted)">System Ogłoszeń & Frakcji</small>
         </div>
-
-        <nav class="nav-links">
-            <button id="nav-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
-            <button id="nav-news" class="nav-btn" onclick="switchTab('news')">📰 Wiadomości</button>
-            <button id="nav-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
-            <button id="nav-obsada" class="nav-btn" onclick="switchTab('obsada')">👥 Zespół Redakcyjny</button>
-            <button id="nav-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ PANEL ADMINISTRATORA</button>
-        </nav>
-
-        <div class="auth-box">
-            <button id="btn-login" class="btn-discord" onclick="loginWithDiscord()">Zaloguj przez Discord</button>
-            <div id="user-info" class="user-info">
-                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                <div>
-                    <div id="user-name" class="user-name"></div>
-                    <div id="user-role" class="user-badge">Czytelnik</div>
-                </div>
-                <button class="btn-logout" onclick="logout()">[ Wyloguj ]</button>
-            </div>
+        <div class="user-controls">
+            <span>Zalogowany jako:</span>
+            <select id="userSelect" onchange="switchUser()">
+                <option value="1">Jan Kowalski (Użytkownik)</option>
+                <option value="2">Marek Prokurator (DOJ)</option>
+                <option value="3">Admin (Superadmin)</option>
+            </select>
+            <button class="btn-primary" onclick="openModal()">+ Dodaj Ogłoszenie</button>
+            <button onclick="toggleAdminPanel()">⚙️ Panel Zarządzania</button>
         </div>
     </header>
 
-    <main>
-        <!-- STRONA GŁÓWNA -->
-        <section id="tab-home" class="tab-section active">
-            <!-- WYRÓŻNIONY ARTYKUŁ GŁÓWNY -->
-            <div id="featured-article-wrap"></div>
+    <div class="layout">
+        <aside class="sidebar">
+            <h3>Kategorie</h3>
+            <ul class="category-list">
+                <li class="category-item active" onclick="filterCategory('all')">Wszystkie</li>
+                <li class="category-item" onclick="filterCategory('Ogólne')">Ogólne</li>
+                <li class="category-item" onclick="filterCategory('Rekrutacja')">📢 Rekrutacja</li>
+                <li class="category-item" onclick="filterCategory('Ogłoszenia DOJ')">⚖️ Ogłoszenia DOJ <span class="badge-doj">DOJ</span></li>
+            </ul>
+        </aside>
 
-            <div class="page-header">
-                <h1>Najnowsze Wiadomości</h1>
-                <p>Bieżące informacje z terenu stanu Los Santos</p>
-            </div>
-            <div id="home-grid" class="cards-grid"></div>
-        </section>
-
-        <!-- ZAKŁADKA WIADOMOŚCI -->
-        <section id="tab-news" class="tab-section">
-            <div class="page-header">
-                <h1>Wszystkie Artykuły</h1>
-                <p>Pełna lista wiadomości i publikacji</p>
-            </div>
-            <div id="news-grid" class="cards-grid"></div>
-        </section>
-
-        <!-- ZAKŁADKA TIKTOKI -->
-        <section id="tab-tiktoki" class="tab-section">
-            <div class="page-header">
-                <h1>📱 Weazel Tiktoki & Shorts</h1>
-                <p>Krótkie klipy wideo z ulic miasta</p>
-            </div>
-            <div id="tiktok-grid" class="cards-grid"></div>
-        </section>
-
-        <!-- ZAKŁADKA OBSADA -->
-        <section id="tab-obsada" class="tab-section">
-            <div class="page-header">
-                <h1>👥 Zespół Redakcyjny</h1>
-                <p>Oficjalna kadra i zarząd Weazel News</p>
-            </div>
-            <div id="team-grid" class="team-grid"></div>
-        </section>
-
-        <!-- PANEL ADMINISTRATORA -->
-        <section id="tab-admin" class="tab-section">
-            <div class="page-header">
-                <h1>⭐ Panel Zarządzania Portalem</h1>
-                <p>Publikacja treści oraz zarządzanie redakcją</p>
+        <main>
+            <div id="feed" class="feed">
+                <!-- Ogłoszenia renderują się tutaj -->
             </div>
 
-            <div class="admin-panel">
-                <!-- FORMULARZ DODAWANIA ARTYKUŁU -->
-                <div class="admin-card">
-                    <div class="admin-card-title">📰 Publikacja Treści</div>
-                    <form onsubmit="createArticle(event)">
-                        <div class="form-row">
-                            <label>Gdzie opublikować?</label>
-                            <select id="art-target" class="form-field">
-                                <option value="featured">🔥 Wyróżniony wpis na Stronie Głównym (Hero Article)</option>
-                                <option value="home">🏠 Zwykły wpis na Stronę Główną & Wiadomości</option>
-                                <option value="news">📰 Tylko Zakładka Wiadomości</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <label>Kategoria Artykułu</label>
-                            <select id="art-tag" class="form-field">
-                                <option value="📰 WIADOMOŚCI">📰 Wiadomości</option>
-                                <option value="🚨 KRYMINAŁ">🚨 Kryminał</option>
-                                <option value="🎤 WYWIAD">🎤 Wywiad</option>
-                                <option value="🎪 EVENTS">🎪 Events / Wydarzenie</option>
-                                <option value="⚽ SPORT">⚽ Sport</option>
-                                <option value="🚗 MOTORYZACJA">🚗 Motoryzacja</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <label>Tytuł Wiadomości</label>
-                            <input type="text" id="art-title" class="form-field" placeholder="np. Akcja policyjna w centrum..." required>
-                        </div>
-                        <div class="form-row">
-                            <label>Typ Mediów</label>
-                            <select id="art-media-type" class="form-field">
-                                <option value="image">🖼️ Obrazek (URL)</option>
-                                <option value="video">🎥 Wideo MP4 (URL Direct)</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <label>Link do Zdjęcia / Wideo</label>
-                            <input type="url" id="art-media-url" class="form-field" placeholder="https://..." required>
-                        </div>
-                        <div class="form-row">
-                            <label>Treść Artykułu</label>
-                            <textarea id="art-content" class="form-field" placeholder="Wpisz tekst tutaj..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn-submit">Opublikuj Post</button>
-                    </form>
+            <!-- Panel Zarządzania / Admina -->
+            <div id="adminPanel" class="panel-section">
+                <h2 id="panelTitle">Panel Zarządzania</h2>
+                <p id="panelSubtitle" style="color: var(--text-muted); margin-bottom: 15px;"></p>
+                
+                <div id="userRoleManagement" style="margin-bottom: 25px; display: none;">
+                    <h3>Nadawanie Rang (Tylko Admin)</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Użytkownik</th>
+                                <th>Obecna Ranga</th>
+                                <th>Zmień Rangę</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
                 </div>
 
-                <!-- DODAWANIE TIKTOKA -->
-                <div class="admin-card">
-                    <div class="admin-card-title">📱 Nowy TikTok / Shorts</div>
-                    <form onsubmit="createTiktok(event)">
-                        <div class="form-row">
-                            <label>Tytuł Klipu</label>
-                            <input type="text" id="tt-title" class="form-field" placeholder="np. Akcja w pościgu..." required>
-                        </div>
-                        <div class="form-row">
-                            <label>Link Wideo (MP4 URL Direct)</label>
-                            <input type="url" id="tt-url" class="form-field" placeholder="https://..." required>
-                        </div>
-                        <div class="form-row">
-                            <label>Krótki Opis</label>
-                            <textarea id="tt-desc" class="form-field" placeholder="Wpisz opis..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn-submit">Opublikuj TikTok</button>
-                    </form>
-                </div>
-
-                <!-- SEKCJA SZEFA (DODAWANIE KADRY) -->
-                <div id="boss-panel" class="admin-card" style="display: none; border-color: var(--accent-purple);">
-                    <div class="admin-card-title boss-title">👑 Panel Szefa (Zarządzanie Zespołem)</div>
-                    <form onsubmit="addTeamMember(event)">
-                        <div class="form-row">
-                            <label>Imię i Nazwisko / Nick</label>
-                            <input type="text" id="member-name" class="form-field" placeholder="np. John Doe" required>
-                        </div>
-                        <div class="form-row">
-                            <label>Ranga / Stanowisko</label>
-                            <input type="text" id="member-role" class="form-field" placeholder="np. Redaktor Główny" required>
-                        </div>
-                        <div class="form-row">
-                            <label>Zdjęcie Profilowe (URL)</label>
-                            <input type="url" id="member-photo" class="form-field" placeholder="Opcjonalnie (https://...)">
-                        </div>
-                        <button type="submit" class="btn-submit btn-boss">Dodaj Członka Kadry</button>
-                    </form>
-                </div>
+                <h3>Twoje Ogłoszenia w Panelu</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tytuł</th>
+                            <th>Kategoria</th>
+                            <th>Autor</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminAnnouncementsBody"></tbody>
+                </table>
             </div>
-        </section>
-    </main>
+        </main>
+    </div>
+</div>
 
-    <!-- MODAL - PEŁNY ARTYKUŁ -->
-    <div id="article-modal" class="modal-overlay" onclick="closeArticleModal(event)">
-        <div class="modal-container" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeArticleModal()">&times;</button>
-            <span id="modal-tag" class="card-tag" style="position:static; display:inline-block; margin-bottom:10px;"></span>
-            <h1 id="modal-title" class="modal-title"></h1>
-            <div id="modal-meta" class="card-meta"></div>
-            <div id="modal-media-wrap"></div>
-            <div id="modal-content" class="modal-text"></div>
+<!-- Modal Dodawania Ogłoszenia -->
+<div id="modal" class="modal-overlay">
+    <div class="modal">
+        <h2>Nowe Ogłoszenie</h2>
+        <div class="form-group">
+            <label>Tytuł</label>
+            <input type="text" id="postTitle" placeholder="Wpisz tytuł...">
+        </div>
+        <div class="form-group">
+            <label>Kategoria</label>
+            <select id="postCategory">
+                <option value="Ogólne">Ogólne</option>
+                <option value="Rekrutacja">📢 Rekrutacja</option>
+                <option value="Ogłoszenia DOJ" id="dojCategoryOption">⚖️ Ogłoszenia DOJ (Wymagana ranga DOJ)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Treść</label>
+            <textarea id="postContent" rows="5" placeholder="Treść ogłoszenia..."></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeModal()">Anuluj</button>
+            <button class="btn-primary" onclick="createAnnouncement()">Opublikuj</button>
         </div>
     </div>
+</div>
 
-    <footer>
-        &copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.
-    </footer>
+<script>
+    // Baza Danych / Stan Aplikacji
+    const users = [
+        { id: 1, name: "Jan Kowalski", role: "User" },
+        { id: 2, name: "Marek Prokurator", role: "DOJ" },
+        { id: 3, name: "Admin", role: "Admin" }
+    ];
 
-    <script>
-        // SZEF REDAKCJI DISCORD ID
-        const BOSS_DISCORD_IDS = [
-            '1487414745534431233'
-        ];
+    let currentUser = users[0];
+    let currentFilter = 'all';
 
-        // ADMINISTRATORZY DISCORD ID
-        const ADMIN_DISCORD_IDS = [
-            '1529556227317698791', 
-            '1391147972024078519'  
-        ];
+    let announcements = [
+        { id: 101, title: "Otwarta rekrutacja do LSPD", category: "Rekrutacja", content: "Zapraszamy wszystkich chętnych do składania podań do akademii LSPD!", authorId: 1, authorName: "Jan Kowalski" },
+        { id: 102, title: "Aktualizacja Kodeksu Karnego", category: "Ogłoszenia DOJ", content: "Wchodzą w życie nowe przepisy dotyczące mandatów za przekroczenie prędkości.", authorId: 2, authorName: "Marek Prokurator" },
+        { id: 103, title: "Sprzedam Blistę", category: "Ogólne", content: "Stan idealny, niskie przebiegi.", authorId: 1, authorName: "Jan Kowalski" }
+    ];
 
-        // SUPABASE CLIENT
-        const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function init() {
+        switchUser();
+    }
 
-        let isAdmin = false;
-        let isBoss = false;
-
-        const DEFAULT_IMG = 'https://raw.githubusercontent.com/feathericons/feather/master/icons/image.svg';
-
-        let articles = JSON.parse(localStorage.getItem('wn_articles')) || [];
-        let tiktoks = JSON.parse(localStorage.getItem('wn_tiktoks')) || [];
+    function switchUser() {
+        const userId = parseInt(document.getElementById('userSelect').value);
+        currentUser = users.find(u => u.id === userId);
         
-        let teamMembers = JSON.parse(localStorage.getItem('wn_team')) || [
-            { id: 1, name: 'Szef Redakcji', role: '👑 Dyrektor Główny', photo: '' }
-        ];
-
-        // DISCORD LOGOWANIE
-        async function loginWithDiscord() {
-            try {
-                const { error } = await supabaseClient.auth.signInWithOAuth({
-                    provider: 'discord',
-                    options: { redirectTo: window.location.href }
-                });
-                if (error) alert('Błąd logowania: ' + error.message);
-            } catch (err) {
-                alert('Błąd: ' + err.message);
-            }
+        // Zabezpieczenie opcji kategorii DOJ w formularzu
+        const dojOption = document.getElementById('dojCategoryOption');
+        if (currentUser.role === 'DOJ' || currentUser.role === 'Admin') {
+            dojOption.disabled = false;
+            dojOption.innerText = "⚖️ Ogłoszenia DOJ";
+        } else {
+            dojOption.disabled = true;
+            dojOption.innerText = "⚖️ Ogłoszenia DOJ (Tylko dla DOJ)";
         }
 
-        async function logout() {
-            await supabaseClient.auth.signOut();
-            window.location.reload();
+        renderFeed();
+        renderAdminPanel();
+    }
+
+    function filterCategory(cat) {
+        currentFilter = cat;
+        renderFeed();
+    }
+
+    function renderFeed() {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '';
+
+        const filtered = announcements.filter(a => currentFilter === 'all' || a.category === currentFilter);
+
+        if (filtered.length === 0) {
+            feed.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Brak ogłoszeń w tej kategorii.</p>';
+            return;
         }
 
-        async function checkUser() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                document.getElementById('btn-login').style.display = 'none';
-                document.getElementById('user-info').style.display = 'flex';
-                document.getElementById('user-name').innerText = user.user_metadata.full_name || 'Użytkownik';
-                document.getElementById('user-avatar').src = user.user_metadata.avatar_url || DEFAULT_IMG;
+        filtered.forEach(a => {
+            const card = document.createElement('div');
+            let extraClass = '';
+            if (a.category === 'Ogłoszenia DOJ') extraClass = 'doj-card';
+            if (a.category === 'Rekrutacja') extraClass = 'rekrutacja-card';
 
-                const discordId = user.user_metadata.provider_id || user.identities?.[0]?.id;
-
-                if (BOSS_DISCORD_IDS.includes(discordId)) {
-                    isBoss = true;
-                    isAdmin = true;
-                    document.getElementById('user-role').innerText = '👑 SZEF REDAKCJI';
-                    document.getElementById('user-role').style.color = '#8b5cf6';
-                    document.getElementById('nav-admin').style.display = 'inline-block';
-                    document.getElementById('boss-panel').style.display = 'block';
-                } else if (ADMIN_DISCORD_IDS.includes(discordId)) {
-                    isAdmin = true;
-                    document.getElementById('user-role').innerText = '⭐ ADMINISTRATOR';
-                    document.getElementById('nav-admin').style.display = 'inline-block';
-                }
-            }
-            renderArticles();
-            renderTiktoks();
-            renderTeam();
-        }
-
-        // TWORZENIE TREŚCI
-        function createArticle(e) {
-            e.preventDefault();
-            const target = document.getElementById('art-target').value;
-            const tag = document.getElementById('art-tag').value;
-            const title = document.getElementById('art-title').value;
-            const mediaType = document.getElementById('art-media-type').value;
-            const mediaUrl = document.getElementById('art-media-url').value;
-            const content = document.getElementById('art-content').value;
-            const author = document.getElementById('user-name').innerText || 'Redaktor';
-
-            const newArt = {
-                id: Date.now(),
-                target, tag, title, mediaType, mediaUrl, content, author,
-                date: new Date().toLocaleDateString('pl-PL')
-            };
-
-            // Jeśli wybrano 'featured', zmień obecny wyróżniony na zwykły
-            if (target === 'featured') {
-                articles.forEach(a => { if (a.target === 'featured') a.target = 'home'; });
-            }
-
-            articles.unshift(newArt);
-            localStorage.setItem('wn_articles', JSON.stringify(articles));
-            e.target.reset();
-            alert('Artykuł opublikowany!');
-            renderArticles();
-            switchTab('home');
-        }
-
-        function createTiktok(e) {
-            e.preventDefault();
-            const title = document.getElementById('tt-title').value;
-            const url = document.getElementById('tt-url').value;
-            const desc = document.getElementById('tt-desc').value;
-            const author = document.getElementById('user-name').innerText || 'Redaktor';
-
-            const newTt = {
-                id: Date.now(),
-                title, url, desc, author,
-                date: new Date().toLocaleDateString('pl-PL')
-            };
-
-            tiktoks.unshift(newTt);
-            localStorage.setItem('wn_tiktoks', JSON.stringify(tiktoks));
-            e.target.reset();
-            alert('TikTok dodany!');
-            renderTiktoks();
-            switchTab('tiktoki');
-        }
-
-        function addTeamMember(e) {
-            e.preventDefault();
-            const name = document.getElementById('member-name').value;
-            const role = document.getElementById('member-role').value;
-            const photo = document.getElementById('member-photo').value;
-
-            const newMember = { id: Date.now(), name, role, photo };
-            teamMembers.push(newMember);
-            localStorage.setItem('wn_team', JSON.stringify(teamMembers));
-            e.target.reset();
-            alert('Członek kadry dodany!');
-            renderTeam();
-            switchTab('obsada');
-        }
-
-        function deleteArticle(id, event) {
-            if (event) event.stopPropagation();
-            if (confirm('Usunąć ten wpis?')) {
-                articles = articles.filter(a => a.id !== id);
-                localStorage.setItem('wn_articles', JSON.stringify(articles));
-                renderArticles();
-            }
-        }
-
-        function deleteTiktok(id, event) {
-            if (event) event.stopPropagation();
-            if (confirm('Usunąć ten TikTok?')) {
-                tiktoks = tiktoks.filter(t => t.id !== id);
-                localStorage.setItem('wn_tiktoks', JSON.stringify(tiktoks));
-                renderTiktoks();
-            }
-        }
-
-        function deleteMember(id) {
-            if (confirm('Usunąć tę osobę z zespołu?')) {
-                teamMembers = teamMembers.filter(m => m.id !== id);
-                localStorage.setItem('wn_team', JSON.stringify(teamMembers));
-                renderTeam();
-            }
-        }
-
-        // MODAL
-        function openArticleModal(id) {
-            const art = articles.find(a => a.id === id);
-            if (!art) return;
-
-            document.getElementById('modal-tag').innerText = art.tag;
-            document.getElementById('modal-title').innerText = art.title;
-            document.getElementById('modal-meta').innerHTML = `<span>✍️ Author: ${art.author}</span> | <span>📅 Data: ${art.date}</span>`;
-            document.getElementById('modal-content').innerText = art.content;
-
-            const mediaWrap = document.getElementById('modal-media-wrap');
-            if (art.mediaType === 'video') {
-                mediaWrap.innerHTML = `<video class="modal-media" controls><source src="${art.mediaUrl}" type="video/mp4"></video>`;
-            } else {
-                mediaWrap.innerHTML = `<img class="modal-media" src="${art.mediaUrl}" onerror="this.style.display='none'">`;
-            }
-
-            document.getElementById('article-modal').classList.add('active');
-        }
-
-        function closeArticleModal(e) {
-            if (!e || e.target.id === 'article-modal' || e.target.classList.contains('modal-close')) {
-                document.getElementById('article-modal').classList.remove('active');
-            }
-        }
-
-        // RENDEROWANIE
-        function renderArticles() {
-            const homeGrid = document.getElementById('home-grid');
-            const newsGrid = document.getElementById('news-grid');
-            const featuredWrap = document.getElementById('featured-article-wrap');
-
-            featuredWrap.innerHTML = '';
-
-            if (articles.length === 0) {
-                const emptyMsg = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
-                if (homeGrid) homeGrid.innerHTML = emptyMsg;
-                if (newsGrid) newsGrid.innerHTML = emptyMsg;
-                return;
-            }
-
-            // Wyróżniony artykuł na głównej stronie
-            const featuredArt = articles.find(a => a.target === 'featured') || articles[0];
-            if (featuredArt) {
-                const mediaHtml = featuredArt.mediaType === 'video'
-                    ? `<video class="hero-media" controls><source src="${featuredArt.mediaUrl}" type="video/mp4"></video>`
-                    : `<img class="hero-media" src="${featuredArt.mediaUrl}">`;
-
-                featuredWrap.innerHTML = `
-                    <div class="featured-hero" onclick="openArticleModal(${featuredArt.id})">
-                        ${mediaHtml}
-                        <div class="hero-content">
-                            <span class="hero-badge">🔥 GŁÓWNY NEWS • ${featuredArt.tag}</span>
-                            <h1 class="hero-title">${featuredArt.title}</h1>
-                            <p class="hero-snippet">${featuredArt.content}</p>
-                            <button class="card-btn" style="align-self:flex-start;">Czytaj Więcej ➔</button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Zwykła lista
-            const homeArticles = articles.filter(a => a.target === 'home' || a.target === 'featured');
-            
-            const renderCard = (art) => {
-                const mediaHtml = art.mediaType === 'video'
-                    ? `<video controls><source src="${art.mediaUrl}" type="video/mp4"></video>`
-                    : `<img src="${art.mediaUrl}" onerror="this.style.display='none'">`;
-
-                return `
-                <div class="card" onclick="openArticleModal(${art.id})">
-                    <div class="card-media">
-                        <span class="card-tag">${art.tag}</span>
-                        ${mediaHtml}
-                    </div>
-                    <div class="card-content">
-                        <div class="card-title">${art.title}</div>
-                        <div class="card-meta">
-                            <span>✍️ ${art.author}</span>
-                            <span>📅 ${art.date}</span>
-                        </div>
-                        <div class="card-snippet">${art.content}</div>
-                        <button class="card-btn">Czytaj Całość ➔</button>
-                        ${isAdmin ? `<button class="btn-delete" onclick="deleteArticle(${art.id}, event)">🗑️ Usuń Wpis</button>` : ''}
-                    </div>
+            card.className = `card ${extraClass}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="card-title">${a.title}</span>
+                    <span class="tag">${a.category}</span>
                 </div>
-            `};
+                <div class="card-body">${a.content}</div>
+                <div class="card-author">Autor: <strong>${a.authorName}</strong></div>
+            `;
+            feed.appendChild(card);
+        });
+    }
 
-            if (homeGrid) homeGrid.innerHTML = homeArticles.map(renderCard).join('');
-            if (newsGrid) newsGrid.innerHTML = articles.map(renderCard).join('');
+    function renderAdminPanel() {
+        const title = document.getElementById('panelTitle');
+        const subtitle = document.getElementById('panelSubtitle');
+        const roleMgmt = document.getElementById('userRoleManagement');
+        const tbody = document.getElementById('adminAnnouncementsBody');
+
+        tbody.innerHTML = '';
+
+        if (currentUser.role === 'Admin') {
+            title.innerText = "Panel Superadmina";
+            subtitle.innerText = "Widzisz wszystkie ogłoszenia oraz możesz zarządzać rangami użytkowników.";
+            roleMgmt.style.display = 'block';
+            renderUserTable();
+        } else if (currentUser.role === 'DOJ') {
+            title.innerText = "Panel Departamentu Sprawiedliwości (DOJ)";
+            subtitle.innerText = "Widzisz wyłącznie swoje własne ogłoszenia.";
+            roleMgmt.style.display = 'none';
+        } else {
+            title.innerText = "Panel Użytkownika";
+            subtitle.innerText = "Możesz zarządzać swoimi wpisami.";
+            roleMgmt.style.display = 'none';
         }
 
-        function renderTiktoks() {
-            const ttGrid = document.getElementById('tiktok-grid');
-            if (!ttGrid) return;
-
-            if (tiktoks.length === 0) {
-                ttGrid.innerHTML = `<p style="color: var(--text-muted);">Brak opublikowanych TikToków.</p>`;
-                return;
-            }
-
-            ttGrid.innerHTML = tiktoks.map(tt => `
-                <div class="card">
-                    <div class="card-media">
-                        <video controls><source src="${tt.url}" type="video/mp4"></video>
-                    </div>
-                    <div class="card-content">
-                        <div class="card-title">${tt.title}</div>
-                        <div class="card-meta">
-                            <span>📱 ${tt.author}</span>
-                            <span>📅 ${tt.date}</span>
-                        </div>
-                        <div class="card-snippet">${tt.desc}</div>
-                        ${isAdmin ? `<button class="btn-delete" onclick="deleteTiktok(${tt.id}, event)">🗑️ Usuń TikTok</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
+        // WARUNEK: Jeśli DOJ -> widzi TYLKO SWOJE ogłoszenia!
+        let visibleAnnouncements = announcements;
+        if (currentUser.role === 'DOJ') {
+            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
+        } else if (currentUser.role === 'User') {
+            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
         }
 
-        function renderTeam() {
-            const teamGrid = document.getElementById('team-grid');
-            if (!teamGrid) return;
+        visibleAnnouncements.forEach(a => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${a.title}</td>
+                <td><span class="tag">${a.category}</span></td>
+                <td>${a.authorName}</td>
+                <td><button onclick="deleteAnnouncement(${a.id})" style="background: #c0392b; color: #fff; border:none; padding: 5px 10px; border-radius:4px;">Usuń</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 
-            teamGrid.innerHTML = teamMembers.map(m => `
-                <div class="team-item">
-                    <img class="team-photo" src="${m.photo || DEFAULT_IMG}" onerror="this.src='${DEFAULT_IMG}'">
-                    <div class="team-name">${m.name}</div>
-                    <div class="team-role">${m.role}</div>
-                    ${isBoss ? `<button class="btn-delete" onclick="deleteMember(${m.id})">🗑️ Usuń z Kadry</button>` : ''}
-                </div>
-            `).join('');
+    function renderUserTable() {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = '';
+        users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${u.name}</td>
+                <td><strong>${u.role}</strong></td>
+                <td>
+                    <select onchange="changeRole(${u.id}, this.value)">
+                        <option value="User" ${u.role === 'User' ? 'selected' : ''}>Użytkownik</option>
+                        <option value="DOJ" ${u.role === 'DOJ' ? 'selected' : ''}>Ranga DOJ</option>
+                        <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function changeRole(userId, newRole) {
+        const user = users.find(u => u.id === userId);
+        if (user) {
+            user.role = newRole;
+            alert(`Zmieniono rangę użytkownika ${user.name} na: ${newRole}`);
+            switchUser();
+        }
+    }
+
+    function createAnnouncement() {
+        const title = document.getElementById('postTitle').value;
+        const category = document.getElementById('postCategory').value;
+        const content = document.getElementById('postContent').value;
+
+        if (!title || !content) {
+            alert('Wypełnij tytuł i treść!');
+            return;
         }
 
-        // NAVIGATION SWITCH
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-
-            const targetSection = document.getElementById('tab-' + tabName);
-            const targetBtn = document.getElementById('nav-' + tabName);
-
-            if (targetSection) targetSection.classList.add('active');
-            if (targetBtn) targetBtn.classList.add('active');
+        if (category === 'Ogłoszenia DOJ' && currentUser.role !== 'DOJ' && currentUser.role !== 'Admin') {
+            alert('Brak uprawnień do publikacji w kąciku DOJ!');
+            return;
         }
 
-        checkUser();
-    </script>
+        const newPost = {
+            id: Date.now(),
+            title: title,
+            category: category,
+            content: content,
+            authorId: currentUser.id,
+            authorName: currentUser.name
+        };
+
+        announcements.unshift(newPost);
+        closeModal();
+        renderFeed();
+        renderAdminPanel();
+        
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+    }
+
+    function deleteAnnouncement(id) {
+        announcements = announcements.filter(a => a.id !== id);
+        renderFeed();
+        renderAdminPanel();
+    }
+
+    function toggleAdminPanel() {
+        const panel = document.getElementById('adminPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function openModal() { document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    init();
+</script>
 </body>
 </html>
