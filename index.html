@@ -7,7 +7,7 @@
     <!-- Ikony FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- WBUDOWANE STYLE (nie potrzebujesz osobnego pliku style.css) -->
+    <!-- STYL CSS (Wklejony bezpośrednio, żeby nic się nie zgubiło i nie szukało osobnego pliku) -->
     <style>
         :root {
             --bg-main: #0f1117;
@@ -21,9 +21,7 @@
             --text-muted: #8b949e;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             background-color: var(--bg-main);
@@ -45,26 +43,11 @@
             z-index: 1000;
         }
 
-        .logo-area {
-            cursor: pointer;
-        }
+        .logo-area { cursor: pointer; }
+        .logo-text { font-size: 1.5rem; font-weight: 900; letter-spacing: 1px; color: #fff; }
+        .logo-accent { color: var(--accent-red); }
 
-        .logo-text {
-            font-size: 1.5rem;
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: #fff;
-        }
-
-        .logo-accent {
-            color: var(--accent-red);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
 
         .nav-btn {
             background: transparent;
@@ -78,20 +61,10 @@
             transition: all 0.2s ease;
         }
 
-        .nav-btn:hover {
-            color: #fff;
-            background-color: rgba(255,255,255,0.05);
-        }
+        .nav-btn:hover { color: #fff; background-color: rgba(255,255,255,0.05); }
+        .nav-btn.active { color: #fff; background-color: var(--accent-red); }
 
-        .nav-btn.active {
-            color: #fff;
-            background-color: var(--accent-red);
-        }
-
-        .user-auth-area {
-            display: flex;
-            align-items: center;
-        }
+        .user-auth-area { display: flex; align-items: center; }
 
         .discord-login-btn {
             background-color: #5865F2;
@@ -104,11 +77,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: opacity 0.2s;
-        }
-
-        .discord-login-btn:hover {
-            opacity: 0.9;
         }
 
         .user-info-box {
@@ -121,72 +89,20 @@
             border-radius: 8px;
         }
 
-        .user-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+        .user-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .user-text-meta { display: flex; flex-direction: column; }
+        .user-name { font-size: 0.9rem; font-weight: 700; color: #fff; }
+        .user-role-badge { font-size: 0.75rem; font-weight: 600; }
 
-        .user-text-meta {
-            display: flex;
-            flex-direction: column;
-        }
+        .logout-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; }
+        .logout-btn:hover { color: var(--accent-red); }
 
-        .user-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #fff;
-        }
+        .tab-content { display: none; padding: 40px 5%; max-width: 1300px; margin: 0 auto; }
+        .tab-content.active { display: block; }
 
-        .user-role-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1rem;
-            transition: color 0.2s;
-        }
-
-        .logout-btn:hover {
-            color: var(--accent-red);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 40px 5%;
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .section-header {
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-        }
-
-        .section-header h2 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 0 5px 0;
-            color: #fff;
-            letter-spacing: 0.5px;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            margin: 0;
-            font-size: 1rem;
-        }
+        .section-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .section-header h2 { font-size: 2rem; font-weight: 800; margin: 0 0 5px 0; color: #fff; }
+        .section-header p { color: var(--text-muted); margin: 0; font-size: 1rem; }
 
         .news-hero {
             display: grid;
@@ -198,74 +114,17 @@
             overflow: hidden;
             margin-bottom: 40px;
             cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .news-hero:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent-red);
-        }
+        .hero-image-box { position: relative; width: 100%; height: 350px; background-color: #000; }
+        .hero-image-box img { width: 100%; height: 100%; object-fit: cover; }
+        .hero-badge { position: absolute; top: 15px; left: 15px; background: var(--accent-red); color: white; font-weight: 700; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; }
+        .hero-content { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+        .hero-title { font-size: 1.8rem; font-weight: 800; margin: 10px 0; color: #ffffff; }
+        .hero-text { color: var(--text-muted); font-size: 1rem; line-height: 1.5; }
 
-        .hero-image-box {
-            position: relative;
-            width: 100%;
-            height: 350px;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        .hero-image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-
-        .news-hero:hover .hero-image-box img {
-            transform: scale(1.03);
-        }
-
-        .hero-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--accent-red);
-            color: white;
-            font-weight: 700;
-            font-size: 0.75rem;
-            padding: 6px 12px;
-            border-radius: 4px;
-            letter-spacing: 1px;
-        }
-
-        .hero-content {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .hero-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 10px 0;
-            color: #ffffff;
-            line-height: 1.3;
-        }
-
-        .hero-text {
-            color: var(--text-muted);
-            font-size: 1rem;
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-
-        .news-subgrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
+        .news-subgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
 
         .card {
             background-color: var(--bg-card);
@@ -273,274 +132,44 @@
             border-radius: 10px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.25s ease;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        .card:hover {
-            transform: translateY(-4px);
-            background-color: var(--bg-card-hover);
-            border-color: #58a6ff;
-        }
+        .card-media-box { width: 100%; height: 200px; background-color: #000; }
+        .card-media { width: 100%; height: 100%; object-fit: cover; }
+        .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-tag { display: inline-block; background: rgba(230, 57, 70, 0.15); color: var(--accent-red); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px; }
+        .card-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 10px 0; color: #ffffff; }
+        .card-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
+        .card-text { font-size: 0.95rem; color: var(--text-muted); flex-grow: 1; }
 
-        .card-media-box {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background-color: #000;
-        }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+        .team-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; text-align: center; padding: 25px 20px; }
+        .team-avatar-box { width: 110px; height: 110px; margin: 0 auto 15px auto; border-radius: 50%; overflow: hidden; border: 3px solid var(--accent-red); }
+        .team-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+        .team-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0 0 5px 0; }
+        .team-role { color: var(--accent-gold); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; }
+        .team-desc { color: var(--text-muted); font-size: 0.9rem; }
 
-        .card-media {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover .card-media {
-            transform: scale(1.05);
-        }
-
-        .card-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .card-tag {
-            display: inline-block;
-            background: rgba(230, 57, 70, 0.15);
-            color: var(--accent-red);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            align-self: flex-start;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin: 0 0 10px 0;
-            color: #ffffff;
-            line-height: 1.35;
-        }
-
-        .card-meta {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .card-text {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            flex-grow: 1;
-            margin-bottom: 15px;
-        }
-
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 25px;
-        }
-
-        .team-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            overflow: hidden;
-            text-align: center;
-            padding: 25px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .team-avatar-box {
-            width: 110px;
-            height: 110px;
-            margin: 0 auto 15px auto;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid var(--accent-red);
-        }
-
-        .team-avatar-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .team-name {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #fff;
-            margin: 0 0 5px 0;
-        }
-
-        .team-role {
-            display: inline-block;
-            color: var(--accent-gold);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-
-        .team-desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.4;
-            margin-bottom: 15px;
-        }
-
-        .admin-grid-forms {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-        }
-
-        .admin-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 25px;
-        }
-
-        .admin-card h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #fff;
-            font-size: 1.2rem;
-        }
-
-        .admin-card form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .admin-card input, 
-        .admin-card select, 
-        .admin-card textarea {
+        .admin-grid-forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .admin-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; }
+        .admin-card h3 { margin-top: 0; color: #fff; }
+        .admin-card form { display: flex; flex-direction: column; gap: 15px; }
+        .admin-card input, .admin-card select, .admin-card textarea {
             background-color: var(--bg-main);
             border: 1px solid var(--border-color);
             color: #fff;
             padding: 12px;
             border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.95rem;
         }
+        .admin-btn { background-color: var(--accent-red); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
-        .admin-card input:focus, 
-        .admin-card select:focus, 
-        .admin-card textarea:focus {
-            outline: none;
-            border-color: #58a6ff;
-        }
-
-        .admin-btn {
-            background-color: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .admin-btn:hover {
-            opacity: 0.9;
-        }
-
-        .delete-btn {
-            background-color: rgba(230, 57, 70, 0.2);
-            color: #ff6b6b;
-            border: 1px solid rgba(230, 57, 70, 0.4);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            margin-top: auto;
-        }
-
-        .delete-btn:hover {
-            background-color: var(--accent-red);
-            color: white;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 700px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 2rem;
-            cursor: pointer;
-        }
-
-        .modal-close:hover {
-            color: #fff;
-        }
-
-        .modal-text-content {
-            color: var(--text-muted);
-            line-height: 1.6;
-            white-space: pre-wrap;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 900px) {
-            .news-hero {
-                grid-template-columns: 1fr;
-            }
-            .hero-image-box {
-                height: 250px;
-            }
-            .main-header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 15px;
-            }
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 2rem; cursor: pointer; }
+        .modal-text-content { color: var(--text-muted); line-height: 1.6; white-space: pre-wrap; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -576,115 +205,77 @@
         </div>
     </header>
 
-    <!-- ZAKŁADKA: STRONA GŁÓWNA -->
+    <!-- ZAKŁADKI -->
     <div id="tab-home" class="tab-content active">
-        <div class="section-header">
-            <h2>STRONA GŁÓWNA</h2>
-            <p>Najważniejsze wydarzenia z Los Santos</p>
-        </div>
+        <div class="section-header"><h2>STRONA GŁÓWNA</h2><p>Najważniejsze wydarzenia z Los Santos</p></div>
         <div id="home-grid"></div>
     </div>
 
-    <!-- ZAKŁADKA: WIADOMOŚCI -->
     <div id="tab-wiadomosci" class="tab-content">
-        <div class="section-header">
-            <h2>WIADOMOŚCI</h2>
-            <p>Bieżące relacje z akcji w mieście</p>
-        </div>
+        <div class="section-header"><h2>WIADOMOŚCI</h2><p>Bieżące relacje z akcji w mieście</p></div>
         <div id="wiadomosci-grid" class="news-subgrid"></div>
     </div>
 
-    <!-- ZAKŁADKA: ARTYKUŁY -->
     <div id="tab-artykuly" class="tab-content">
-        <div class="section-header">
-            <h2>ARTYKUŁY</h2>
-            <p>Publicystyka, wywiady i reportaże</p>
-        </div>
+        <div class="section-header"><h2>ARTYKUŁY</h2><p>Publicystyka, wywiady i reportaże</p></div>
         <div id="artykuly-grid" class="news-subgrid"></div>
     </div>
 
-    <!-- ZAKŁADKA: TIKTOKI -->
     <div id="tab-tiktoki" class="tab-content">
-        <div class="section-header">
-            <h2>TIKTOKI</h2>
-            <p>Krótkie materiały wideo z życia redakcji</p>
-        </div>
+        <div class="section-header"><h2>TIKTOKI</h2><p>Krótkie materiały wideo z życia redakcji</p></div>
         <div id="tiktok-grid" class="news-subgrid"></div>
     </div>
 
-    <!-- ZAKŁADKA: CITY HALL -->
     <div id="tab-cityhall" class="tab-content">
-        <div class="section-header">
-            <h2>CITY HALL</h2>
-            <p>Oficjalne dekrety, ogłoszenia i komunikaty urzędowe</p>
-        </div>
+        <div class="section-header"><h2>CITY HALL</h2><p>Oficjalne dekrety, ogłoszenia i komunikaty urzędowe</p></div>
         <div id="cityhall-grid" class="news-subgrid"></div>
     </div>
 
-    <!-- ZAKŁADKA: KADRA -->
     <div id="tab-kadra" class="tab-content">
-        <div class="section-header">
-            <h2>KADRA REDAKCYJNA</h2>
-            <p>Poznaj ludzi, którzy tworzą Weazel News</p>
-        </div>
+        <div class="section-header"><h2>KADRA REDAKCYJNA</h2><p>Poznaj ludzi, którzy tworzą Weazel News</p></div>
         <div id="kadra-grid" class="team-grid"></div>
     </div>
 
-    <!-- ZAKŁADKA: PANEL ADMINA -->
     <div id="tab-admin" class="tab-content">
-        <div class="section-header">
-            <h2>PANEL ZARZĄDZANIA</h2>
-            <p>Dodawaj nowe materiały do systemów Weazel News</p>
-        </div>
-
+        <div class="section-header"><h2>PANEL ZARZĄDZANIA</h2><p>Dodawaj nowe materiały do systemów Weazel News</p></div>
         <div class="admin-grid-forms">
-            <!-- Formularz Artykułów / Wiadomości -->
             <div class="admin-card">
                 <h3>Dodaj Artykuł / Wiadomość</h3>
                 <form onsubmit="createArticle(event)">
-                    <select id="art-target" required>
-                        <option value="wiadomosci">Wiadomości</option>
-                        <option value="artykuly">Artykuły</option>
-                    </select>
+                    <select id="art-target" required><option value="wiadomosci">Wiadomości</option><option value="artykuly">Artykuły</option></select>
                     <input type="text" id="art-title" placeholder="Tytuł publikacji" required>
-                    <input type="text" id="art-tag" placeholder="Tag (np. PILNE, WYWIAD)" required>
-                    <input type="text" id="art-media-url" placeholder="Link do zdjęcia (URL)" required>
+                    <input type="text" id="art-tag" placeholder="Tag (np. PILNE)" required>
+                    <input type="text" id="art-media-url" placeholder="Link do zdjęcia" required>
                     <textarea id="art-content" placeholder="Treść artykułu..." rows="5" required></textarea>
-                    <button type="submit" class="admin-btn">Opublikuj artykuł</button>
+                    <button type="submit" class="admin-btn">Opublikuj</button>
                 </form>
             </div>
-
-            <!-- Formularz City Hall -->
             <div class="admin-card" id="form-cityhall-art" style="display:none;">
                 <h3>Opublikuj Dekret City Hall</h3>
                 <form onsubmit="createCityHallNotice(event)">
                     <input type="text" id="ch-title" placeholder="Tytuł dekretu" required>
-                    <input type="text" id="ch-media-url" placeholder="Link do grafiki / dokumentu" required>
-                    <textarea id="ch-content" placeholder="Treść ogłoszenia urzędowego..." rows="5" required></textarea>
-                    <button type="submit" class="admin-btn" style="background: var(--accent-blue);">Opublikuj dekret</button>
+                    <input type="text" id="ch-media-url" placeholder="Link do grafiki" required>
+                    <textarea id="ch-content" placeholder="Treść..." rows="5" required></textarea>
+                    <button type="submit" class="admin-btn" style="background: var(--accent-blue);">Opublikuj</button>
                 </form>
             </div>
-
-            <!-- Formularz TikTok -->
             <div class="admin-card">
                 <h3>Dodaj materiał wideo (TikTok)</h3>
                 <form onsubmit="createTiktok(event)">
                     <input type="text" id="tt-title" placeholder="Tytuł wideo" required>
-                    <input type="text" id="tt-url" placeholder="Bezpośredni link do pliku wideo (.mp4)" required>
-                    <textarea id="tt-desc" placeholder="Krótki opis wideo..." rows="3"></textarea>
+                    <input type="text" id="tt-url" placeholder="Link do .mp4" required>
+                    <textarea id="tt-desc" placeholder="Opis..." rows="3"></textarea>
                     <button type="submit" class="admin-btn" style="background: var(--accent-gold); color:#000;">Dodaj wideo</button>
                 </form>
             </div>
-
-            <!-- Formularz Kadry (Widoczny wyłącznie dla Szefa) -->
             <div class="admin-card" id="boss-team-card" style="display:none; border-color: var(--accent-red);">
-                <h3 style="color: var(--accent-red);">Zarządzanie Kadrą (Tylko Szef)</h3>
+                <h3 style="color: var(--accent-red);">Zarządzanie Kadrą</h3>
                 <form onsubmit="createTeamMember(event)">
-                    <input type="text" id="team-name" placeholder="Imię i nazwisko pracownika" required>
-                    <input type="text" id="team-role" placeholder="Ranga / Stanowisko" required>
-                    <input type="text" id="team-avatar" placeholder="Link do zdjęcia (avatar)" required>
-                    <textarea id="team-desc" placeholder="Krótki opis / Bio pracownika" rows="3"></textarea>
-                    <button type="submit" class="admin-btn" style="background: var(--accent-red);">Dodaj do kadry</button>
+                    <input type="text" id="team-name" placeholder="Imię i nazwisko" required>
+                    <input type="text" id="team-role" placeholder="Stanowisko" required>
+                    <input type="text" id="team-avatar" placeholder="Link do avatara" required>
+                    <textarea id="team-desc" placeholder="Bio" rows="3"></textarea>
+                    <button type="submit" class="admin-btn" style="background: var(--accent-red);">Dodaj</button>
                 </form>
             </div>
         </div>
@@ -701,18 +292,9 @@
         </div>
     </div>
 
-    <!-- SUPABASE ORAZ SKRYPTY -->
+    <!-- SKRYPTY (Zgodne z Twoją strukturą plików) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-        const SUPABASE_ANON_KEY = 'WSTAW_TUTAJ_SWÓJ_KLUCZ_ANON'; 
-
-        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        window.BOSS_DISCORD_IDS = ["TWÓJ_DISCORD_ID_SZEFA"]; 
-        window.ADMIN_DISCORD_IDS = ["ID_ADMINA_1", "ID_ADMINA_2"];
-        window.CITY_HALL_DISCORD_IDS = ["ID_CITY_HALL"];
-    </script>
+    <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
