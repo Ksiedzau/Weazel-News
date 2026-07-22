@@ -27,6 +27,9 @@ function switchTab(tabId) {
 async function loginWithDiscord() {
     const { error } = await window.supabase.auth.signInWithOAuth({
         provider: 'discord',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname
+        }
     });
     if (error) {
         console.error('Błąd logowania:', error.message);
