@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weazel News | Los Santos</title>
-    <!-- Kluczowa linijka naprawiająca ścieżki na GitHub Pages -->
-    <base href="/Weazel-News/">
     
     <!-- Oficjalny globalny SDK Supabase v2 z CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -132,7 +130,6 @@
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; position: relative; }
         .card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
         
-        /* Naprawione dopasowanie obrazka - nie będzie się wylewał ani nachodził */
         .card-media { 
             width: 100%; 
             height: 180px; 
