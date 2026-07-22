@@ -68,53 +68,26 @@
         .tab-section { display: none; }
         .tab-section.active { display: block; }
 
-        /* ULEPSZONY HERO BANNER STRONY GŁÓWNEJ */
-        .hero-banner {
-            background: linear-gradient(135deg, #181c2b 0%, #0f121d 100%);
-            border: 1px solid var(--border-color);
-            border-left: 5px solid var(--accent-red);
-            border-radius: 12px;
-            padding: 35px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .hero-tag { font-size: 0.8rem; font-weight: 800; color: var(--accent-red); text-transform: uppercase; letter-spacing: 2px; }
-        .hero-title { font-size: 2.2rem; font-weight: 900; line-height: 1.2; text-transform: uppercase; color: #fff; }
-        .hero-desc { color: var(--text-muted); font-size: 1rem; max-width: 750px; line-height: 1.6; }
-
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 35px;
-        }
-        .stat-card {
+        /* STRONA GŁÓWNA - HERO ARTICLE */
+        .featured-hero {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .stat-value { font-size: 1.5rem; font-weight: 900; color: var(--accent-gold); }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
-
-        .features-grid {
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: 1.2fr 1fr;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            cursor: pointer;
         }
-        .feature-box {
-            background: var(--bg-header);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 8px;
+        @media (max-width: 768px) {
+            .featured-hero { grid-template-columns: 1fr; }
         }
-        .feature-box h3 { font-size: 1rem; color: #fff; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .feature-box p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+        .hero-media { width: 100%; height: 100%; min-height: 280px; max-height: 380px; object-fit: cover; background: #000; }
+        .hero-content { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+        .hero-badge { background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 12px; }
+        .hero-title { font-size: 1.8rem; font-weight: 900; line-height: 1.2; color: #fff; margin-bottom: 12px; }
+        .hero-snippet { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
         .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; }
@@ -139,7 +112,7 @@
         .btn-delete { background: rgba(220, 38, 38, 0.15); color: #f87171; border: 1px solid #dc2626; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-top: 8px; width: 100%; }
         .btn-delete:hover { background: #dc2626; color: #fff; }
 
-        /* OBSERNE OKNO ARTYKUŁU (MODAL) */
+        /* MODAL */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
         .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
@@ -149,7 +122,7 @@
         .modal-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #000; }
         .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
 
-        /* PANEL ADMINISTRATORA */
+        /* ADMIN PANEL */
         .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
@@ -206,48 +179,14 @@
     </header>
 
     <main>
-        <!-- ULEPSZONA STRONA GŁÓWNA -->
+        <!-- STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-section active">
-            
-            <div class="hero-banner">
-                <div class="hero-tag">🔴 Oficjalny Portal Informacyjny</div>
-                <h1 class="hero-title">Największa Redakcja w Los Santos</h1>
-                <p class="hero-desc">Dostarczamy najświeższe wiadomości, relacje z pościgów, raporty policyjne oraz najgorętsze plotki ze świata gwiazd 24 godziny na dobę.</p>
-            </div>
-
-            <div class="stats-bar">
-                <div class="stat-card">
-                    <div class="stat-value">24/7</div>
-                    <div class="stat-label">Relacje Na Żywo</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">100%</div>
-                    <div class="stat-label">Niezależne Dziennikarstwo</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">#1</div>
-                    <div class="stat-label">Źródło Informacji LS</div>
-                </div>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-box">
-                    <h3>⚡ Błyskawiczne Informacje</h3>
-                    <p>Nasi reporterzy są zawsze na miejscu wydarzeń przed służbami ratunkowymi.</p>
-                </div>
-                <div class="feature-box">
-                    <h3>🎤 Ekskluzywne Wywiady</h3>
-                    <p>Rozmowy z kluczowymi postaciami stanu, politykami i szefami organizacji.</p>
-                </div>
-                <div class="feature-box">
-                    <h3>📱 Wideo & Tiktoki</h3>
-                    <p>Oglądaj krótkie podsumowania najważniejszych akcji w nowoczesnej formie.</p>
-                </div>
-            </div>
+            <!-- WYRÓŻNIONY ARTYKUŁ GŁÓWNY -->
+            <div id="featured-article-wrap"></div>
 
             <div class="page-header">
-                <h1>Gorące Nagłówki</h1>
-                <p>Ostatnio opublikowane artykuły i wiadomości</p>
+                <h1>Najnowsze Wiadomości</h1>
+                <p>Bieżące informacje z terenu stanu Los Santos</p>
             </div>
             <div id="home-grid" class="cards-grid"></div>
         </section>
@@ -256,7 +195,7 @@
         <section id="tab-news" class="tab-section">
             <div class="page-header">
                 <h1>Wszystkie Artykuły</h1>
-                <p>Archiwum wiadomości z całego Los Santos</p>
+                <p>Pełna lista wiadomości i publikacji</p>
             </div>
             <div id="news-grid" class="cards-grid"></div>
         </section>
@@ -287,16 +226,20 @@
             </div>
 
             <div class="admin-panel">
-                <!-- FORMULARZ DODAWANIA ARTYKUŁU Z EMOTKAMI -->
+                <!-- FORMULARZ DODAWANIA ARTYKUŁU -->
                 <div class="admin-card">
-                    <div class="admin-card-title">📰 Nowa Wiadomość / Artykuł</div>
+                    <div class="admin-card-title">📰 Publikacja Treści</div>
                     <form onsubmit="createArticle(event)">
                         <div class="form-row">
-                            <label>Tytuł Wiadomości</label>
-                            <input type="text" id="art-title" class="form-field" placeholder="np. Pościg na Highway 1..." required>
+                            <label>Gdzie opublikować?</label>
+                            <select id="art-target" class="form-field">
+                                <option value="featured">🔥 Wyróżniony wpis na Stronie Głównym (Hero Article)</option>
+                                <option value="home">🏠 Zwykły wpis na Stronę Główną & Wiadomości</option>
+                                <option value="news">📰 Tylko Zakładka Wiadomości</option>
+                            </select>
                         </div>
                         <div class="form-row">
-                            <label>Kategoria / Tag</label>
+                            <label>Kategoria Artykułu</label>
                             <select id="art-tag" class="form-field">
                                 <option value="📰 WIADOMOŚCI">📰 Wiadomości</option>
                                 <option value="🚨 KRYMINAŁ">🚨 Kryminał</option>
@@ -307,21 +250,25 @@
                             </select>
                         </div>
                         <div class="form-row">
+                            <label>Tytuł Wiadomości</label>
+                            <input type="text" id="art-title" class="form-field" placeholder="np. Akcja policyjna w centrum..." required>
+                        </div>
+                        <div class="form-row">
                             <label>Typ Mediów</label>
                             <select id="art-media-type" class="form-field">
                                 <option value="image">🖼️ Obrazek (URL)</option>
-                                <option value="video">🎥 Wideo MP4 (Direct URL)</option>
+                                <option value="video">🎥 Wideo MP4 (URL Direct)</option>
                             </select>
                         </div>
                         <div class="form-row">
-                            <label>Link do Zdjęcia lub Wideo</label>
+                            <label>Link do Zdjęcia / Wideo</label>
                             <input type="url" id="art-media-url" class="form-field" placeholder="https://..." required>
                         </div>
                         <div class="form-row">
-                            <label>Obszerna Treść Artykułu</label>
-                            <textarea id="art-content" class="form-field" placeholder="Wpisz tutaj pełny tekst wiadomości..." required></textarea>
+                            <label>Treść Artykułu</label>
+                            <textarea id="art-content" class="form-field" placeholder="Wpisz tekst tutaj..." required></textarea>
                         </div>
-                        <button type="submit" class="btn-submit">Opublikuj Wiadomość</button>
+                        <button type="submit" class="btn-submit">Opublikuj Post</button>
                     </form>
                 </div>
 
@@ -330,16 +277,16 @@
                     <div class="admin-card-title">📱 Nowy TikTok / Shorts</div>
                     <form onsubmit="createTiktok(event)">
                         <div class="form-row">
-                            <label>Tytuł Wideo</label>
-                            <input type="text" id="tt-title" class="form-field" placeholder="np. Wywiad ze świadkiem..." required>
+                            <label>Tytuł Klipu</label>
+                            <input type="text" id="tt-title" class="form-field" placeholder="np. Akcja w pościgu..." required>
                         </div>
                         <div class="form-row">
-                            <label>Link do Filmu (MP4 Direct URL)</label>
+                            <label>Link Wideo (MP4 URL Direct)</label>
                             <input type="url" id="tt-url" class="form-field" placeholder="https://..." required>
                         </div>
                         <div class="form-row">
-                            <label>Opis Wideo</label>
-                            <textarea id="tt-desc" class="form-field" placeholder="Krótki opis pod nagraniem..." required></textarea>
+                            <label>Krótki Opis</label>
+                            <textarea id="tt-desc" class="form-field" placeholder="Wpisz opis..." required></textarea>
                         </div>
                         <button type="submit" class="btn-submit">Opublikuj TikTok</button>
                     </form>
@@ -347,18 +294,18 @@
 
                 <!-- SEKCJA SZEFA (DODAWANIE KADRY) -->
                 <div id="boss-panel" class="admin-card" style="display: none; border-color: var(--accent-purple);">
-                    <div class="admin-card-title boss-title">👑 Zarządzanie Kadrami (Rola Szef)</div>
+                    <div class="admin-card-title boss-title">👑 Panel Szefa (Zarządzanie Zespołem)</div>
                     <form onsubmit="addTeamMember(event)">
                         <div class="form-row">
                             <label>Imię i Nazwisko / Nick</label>
-                            <input type="text" id="member-name" class="form-field" placeholder="np. Jan Kowalski" required>
+                            <input type="text" id="member-name" class="form-field" placeholder="np. John Doe" required>
                         </div>
                         <div class="form-row">
                             <label>Ranga / Stanowisko</label>
-                            <input type="text" id="member-role" class="form-field" placeholder="np. Dyrektor Główny / Redaktor" required>
+                            <input type="text" id="member-role" class="form-field" placeholder="np. Redaktor Główny" required>
                         </div>
                         <div class="form-row">
-                            <label>Link do Avatara / Zdjęcia</label>
+                            <label>Zdjęcie Profilowe (URL)</label>
                             <input type="url" id="member-photo" class="form-field" placeholder="Opcjonalnie (https://...)">
                         </div>
                         <button type="submit" class="btn-submit btn-boss">Dodaj Członka Kadry</button>
@@ -385,11 +332,12 @@
     </footer>
 
     <script>
-        // DISCORD ID Z UPRAWNIENIAMI SZEFA
+        // SZEF REDAKCJI DISCORD ID
         const BOSS_DISCORD_IDS = [
-            '1487414745534431233' // Twoje ID jako SZEF
+            '1487414745534431233'
         ];
 
+        // ADMINISTRATORZY DISCORD ID
         const ADMIN_DISCORD_IDS = [
             '1529556227317698791', 
             '1391147972024078519'  
@@ -409,11 +357,10 @@
         let tiktoks = JSON.parse(localStorage.getItem('wn_tiktoks')) || [];
         
         let teamMembers = JSON.parse(localStorage.getItem('wn_team')) || [
-            { id: 1, name: 'Zarząd Redakcji', role: 'Dyrektor Główny', photo: '' },
-            { id: 2, name: 'Główny Admin', role: 'Zarządzanie Portalem', photo: '' }
+            { id: 1, name: 'Szef Redakcji', role: '👑 Dyrektor Główny', photo: '' }
         ];
 
-        // AUTH DISCORD
+        // DISCORD LOGOWANIE
         async function loginWithDiscord() {
             try {
                 const { error } = await supabaseClient.auth.signInWithOAuth({
@@ -462,8 +409,9 @@
         // TWORZENIE TREŚCI
         function createArticle(e) {
             e.preventDefault();
-            const title = document.getElementById('art-title').value;
+            const target = document.getElementById('art-target').value;
             const tag = document.getElementById('art-tag').value;
+            const title = document.getElementById('art-title').value;
             const mediaType = document.getElementById('art-media-type').value;
             const mediaUrl = document.getElementById('art-media-url').value;
             const content = document.getElementById('art-content').value;
@@ -471,16 +419,21 @@
 
             const newArt = {
                 id: Date.now(),
-                title, tag, mediaType, mediaUrl, content, author,
+                target, tag, title, mediaType, mediaUrl, content, author,
                 date: new Date().toLocaleDateString('pl-PL')
             };
+
+            // Jeśli wybrano 'featured', zmień obecny wyróżniony na zwykły
+            if (target === 'featured') {
+                articles.forEach(a => { if (a.target === 'featured') a.target = 'home'; });
+            }
 
             articles.unshift(newArt);
             localStorage.setItem('wn_articles', JSON.stringify(articles));
             e.target.reset();
-            alert('Wiadomość została opublikowana!');
+            alert('Artykuł opublikowany!');
             renderArticles();
-            switchTab('news');
+            switchTab('home');
         }
 
         function createTiktok(e) {
@@ -499,7 +452,7 @@
             tiktoks.unshift(newTt);
             localStorage.setItem('wn_tiktoks', JSON.stringify(tiktoks));
             e.target.reset();
-            alert('TikTok został opublikowany!');
+            alert('TikTok dodany!');
             renderTiktoks();
             switchTab('tiktoki');
         }
@@ -514,13 +467,13 @@
             teamMembers.push(newMember);
             localStorage.setItem('wn_team', JSON.stringify(teamMembers));
             e.target.reset();
-            alert('Dodano nowego członka zespołu!');
+            alert('Członek kadry dodany!');
             renderTeam();
             switchTab('obsada');
         }
 
         function deleteArticle(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
             if (confirm('Usunąć ten wpis?')) {
                 articles = articles.filter(a => a.id !== id);
                 localStorage.setItem('wn_articles', JSON.stringify(articles));
@@ -529,7 +482,7 @@
         }
 
         function deleteTiktok(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
             if (confirm('Usunąć ten TikTok?')) {
                 tiktoks = tiktoks.filter(t => t.id !== id);
                 localStorage.setItem('wn_tiktoks', JSON.stringify(tiktoks));
@@ -538,21 +491,21 @@
         }
 
         function deleteMember(id) {
-            if (confirm('Usunąć tę osobę z obsady?')) {
+            if (confirm('Usunąć tę osobę z zespołu?')) {
                 teamMembers = teamMembers.filter(m => m.id !== id);
                 localStorage.setItem('wn_team', JSON.stringify(teamMembers));
                 renderTeam();
             }
         }
 
-        // MODAL ARTYKUŁÓW
+        // MODAL
         function openArticleModal(id) {
             const art = articles.find(a => a.id === id);
             if (!art) return;
 
             document.getElementById('modal-tag').innerText = art.tag;
             document.getElementById('modal-title').innerText = art.title;
-            document.getElementById('modal-meta').innerHTML = `<span>✍️ Redaktor: ${art.author}</span> | <span>📅 Data: ${art.date}</span>`;
+            document.getElementById('modal-meta').innerHTML = `<span>✍️ Author: ${art.author}</span> | <span>📅 Data: ${art.date}</span>`;
             document.getElementById('modal-content').innerText = art.content;
 
             const mediaWrap = document.getElementById('modal-media-wrap');
@@ -571,19 +524,45 @@
             }
         }
 
-        // RENDEROWANIE WIDOKÓW
+        // RENDEROWANIE
         function renderArticles() {
             const homeGrid = document.getElementById('home-grid');
             const newsGrid = document.getElementById('news-grid');
+            const featuredWrap = document.getElementById('featured-article-wrap');
+
+            featuredWrap.innerHTML = '';
 
             if (articles.length === 0) {
-                const emptyMsg = `<p style="color: var(--text-muted);">Brak opublikowanych artykułów.</p>`;
+                const emptyMsg = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
                 if (homeGrid) homeGrid.innerHTML = emptyMsg;
                 if (newsGrid) newsGrid.innerHTML = emptyMsg;
                 return;
             }
 
-            const html = articles.map(art => {
+            // Wyróżniony artykuł na głównej stronie
+            const featuredArt = articles.find(a => a.target === 'featured') || articles[0];
+            if (featuredArt) {
+                const mediaHtml = featuredArt.mediaType === 'video'
+                    ? `<video class="hero-media" controls><source src="${featuredArt.mediaUrl}" type="video/mp4"></video>`
+                    : `<img class="hero-media" src="${featuredArt.mediaUrl}">`;
+
+                featuredWrap.innerHTML = `
+                    <div class="featured-hero" onclick="openArticleModal(${featuredArt.id})">
+                        ${mediaHtml}
+                        <div class="hero-content">
+                            <span class="hero-badge">🔥 GŁÓWNY NEWS • ${featuredArt.tag}</span>
+                            <h1 class="hero-title">${featuredArt.title}</h1>
+                            <p class="hero-snippet">${featuredArt.content}</p>
+                            <button class="card-btn" style="align-self:flex-start;">Czytaj Więcej ➔</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Zwykła lista
+            const homeArticles = articles.filter(a => a.target === 'home' || a.target === 'featured');
+            
+            const renderCard = (art) => {
                 const mediaHtml = art.mediaType === 'video'
                     ? `<video controls><source src="${art.mediaUrl}" type="video/mp4"></video>`
                     : `<img src="${art.mediaUrl}" onerror="this.style.display='none'">`;
@@ -602,13 +581,13 @@
                         </div>
                         <div class="card-snippet">${art.content}</div>
                         <button class="card-btn">Czytaj Całość ➔</button>
-                        ${isAdmin ? `<button class="btn-delete" onclick="deleteArticle(${art.id}, event)">🗑️ Usuń Artykuł</button>` : ''}
+                        ${isAdmin ? `<button class="btn-delete" onclick="deleteArticle(${art.id}, event)">🗑️ Usuń Wpis</button>` : ''}
                     </div>
                 </div>
-            `}).join('');
+            `};
 
-            if (homeGrid) homeGrid.innerHTML = html;
-            if (newsGrid) newsGrid.innerHTML = html;
+            if (homeGrid) homeGrid.innerHTML = homeArticles.map(renderCard).join('');
+            if (newsGrid) newsGrid.innerHTML = articles.map(renderCard).join('');
         }
 
         function renderTiktoks() {
@@ -647,12 +626,12 @@
                     <img class="team-photo" src="${m.photo || DEFAULT_IMG}" onerror="this.src='${DEFAULT_IMG}'">
                     <div class="team-name">${m.name}</div>
                     <div class="team-role">${m.role}</div>
-                    ${isBoss ? `<button class="btn-delete" onclick="deleteMember(${m.id})">🗑️ Usuń Osobiście</button>` : ''}
+                    ${isBoss ? `<button class="btn-delete" onclick="deleteMember(${m.id})">🗑️ Usuń z Kadry</button>` : ''}
                 </div>
             `).join('');
         }
 
-        // SWITCH TAB
+        // NAVIGATION SWITCH
         function switchTab(tabName) {
             document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
