@@ -18,6 +18,7 @@
             --accent-red-hover: #ef4444;
             --accent-gold: #f59e0b;
             --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --border-color: #262c40;
@@ -49,6 +50,10 @@
         .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
         .nav-btn { color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: transparent; transition: 0.2s; }
         .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
+        
+        .nav-btn.cityhall-link { color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+        .nav-btn.cityhall-link:hover, .nav-btn.cityhall-link.active { background-color: var(--accent-blue); color: #fff; }
+
         .nav-btn.admin-link { display: none; color: var(--accent-gold); border: 1px solid var(--accent-gold); }
         .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
@@ -90,6 +95,7 @@
         .hero-snippet { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
         .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
+        .page-header.cityhall-header { border-left-color: var(--accent-blue); }
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; }
         .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
 
@@ -127,6 +133,7 @@
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .admin-card-title.boss-title { color: var(--accent-purple); }
+        .admin-card-title.cityhall-title { color: var(--accent-blue); }
 
         .form-row { margin-bottom: 16px; }
         .form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
@@ -138,6 +145,8 @@
         .btn-submit:hover { background: #d97706; }
         .btn-submit.btn-boss { background: var(--accent-purple); color: #fff; }
         .btn-submit.btn-boss:hover { background: #7c3aed; }
+        .btn-submit.btn-cityhall { background: var(--accent-blue); color: #fff; }
+        .btn-submit.btn-cityhall:hover { background: #2563eb; }
 
         /* OBSADA */
         .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
@@ -162,6 +171,7 @@
             <button id="nav-news" class="nav-btn" onclick="switchTab('news')">📰 Wiadomości</button>
             <button id="nav-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
             <button id="nav-obsada" class="nav-btn" onclick="switchTab('obsada')">👥 Zespół Redakcyjny</button>
+            <button id="nav-cityhall" class="nav-btn cityhall-link" onclick="switchTab('cityhall')">🏛️ Urząd Miasta</button>
             <button id="nav-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ PANEL ADMINISTRATORA</button>
         </nav>
 
@@ -217,11 +227,20 @@
             <div id="team-grid" class="team-grid"></div>
         </section>
 
+        <!-- ZAKŁADKA URZĄD MIASTA (CITY HALL) -->
+        <section id="tab-cityhall" class="tab-section">
+            <div class="page-header cityhall-header">
+                <h1>🏛️ Urząd Miasta Los Santos</h1>
+                <p>Oficjalne ogłoszenia, dekrety, ustawy i komunikaty rządowe</p>
+            </div>
+            <div id="cityhall-grid" class="cards-grid"></div>
+        </section>
+
         <!-- PANEL ADMINISTRATORA -->
         <section id="tab-admin" class="tab-section">
             <div class="page-header">
                 <h1>⭐ Panel Zarządzania Portalem</h1>
-                <p>Publikacja treści oraz zarządzanie redakcją</p>
+                <p>Publikacja treści oraz zarządzanie redakcją i urzędem</p>
             </div>
 
             <div class="admin-panel">
@@ -232,7 +251,7 @@
                         <div class="form-row">
                             <label>Gdzie opublikować?</label>
                             <select id="art-target" class="form-field">
-                                <option value="featured">🔥 Wyróżniony wpis na Stronie Głównym (Hero Article)</option>
+                                <option value="featured">🔥 Wyróżniony wpis na Stronie Głównej (Hero Article)</option>
                                 <option value="home">🏠 Zwykły wpis na Stronę Główną & Wiadomości</option>
                                 <option value="news">📰 Tylko Zakładka Wiadomości</option>
                             </select>
@@ -291,6 +310,35 @@
                     </form>
                 </div>
 
+                <!-- SEKCJA URZĘDU MIASTA (CITY HALL PANEL) -->
+                <div id="cityhall-admin-panel" class="admin-card" style="display: none; border-color: var(--accent-blue);">
+                    <div class="admin-card-title cityhall-title">🏛️ Panel Urzędu Miasta</div>
+                    <form onsubmit="createCityHallPost(event)">
+                        <div class="form-row">
+                            <label>Typ Dokumentu / Ogłoszenia</label>
+                            <select id="ch-tag" class="form-field">
+                                <option value="📜 DEKRET">📜 Dekret Rządowy</option>
+                                <option value="⚖️ USTAWA">⚖️ Nowa Ustawa</option>
+                                <option value="📢 KOMUNIKAT">📢 Komunikat Burmistrza</option>
+                                <option value="💼 PRACA">💼 Oferta Pracy w Rządzie</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Tytuł Dokumentu</label>
+                            <input type="text" id="ch-title" class="form-field" placeholder="np. Zmiana stawek podatkowych..." required>
+                        </div>
+                        <div class="form-row">
+                            <label>Grafika / Herb (URL, opcjonalnie)</label>
+                            <input type="url" id="ch-media-url" class="form-field" placeholder="https://...">
+                        </div>
+                        <div class="form-row">
+                            <label>Treść / Ustalenia</label>
+                            <textarea id="ch-content" class="form-field" placeholder="Treść oficjalnego ogłoszenia..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit btn-cityhall">Wydaj Dekret / Ogłoszenie</button>
+                    </form>
+                </div>
+
                 <!-- SEKCJA SZEFA (DODAWANIE KADRY) -->
                 <div id="boss-panel" class="admin-card" style="display: none; border-color: var(--accent-purple);">
                     <div class="admin-card-title boss-title">👑 Panel Szefa (Zarządzanie Zespołem)</div>
@@ -342,6 +390,11 @@
             '1391147972024078519'  
         ];
 
+        // RANGI / ID URZĘDU MIASTA (City Hall - wpisz tutaj ID użytkowników urzędu lub pozostaw puste, jeśli zarządza tym admin/szef)
+        const CITY_HALL_DISCORD_IDS = [
+            // np. 'ID_URZEDNIKA'
+        ];
+
         // SUPABASE CLIENT
         const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
@@ -349,11 +402,13 @@
 
         let isAdmin = false;
         let isBoss = false;
+        let isCityHall = false;
 
         const DEFAULT_IMG = 'https://raw.githubusercontent.com/feathericons/feather/master/icons/image.svg';
 
         let articles = JSON.parse(localStorage.getItem('wn_articles')) || [];
         let tiktoks = JSON.parse(localStorage.getItem('wn_tiktoks')) || [];
+        let cityhallPosts = JSON.parse(localStorage.getItem('wn_cityhall')) || [];
         
         let teamMembers = JSON.parse(localStorage.getItem('wn_team')) || [
             { id: 1, name: 'Szef Redakcji', role: '👑 Dyrektor Główny', photo: '' }
@@ -390,20 +445,32 @@
                 if (BOSS_DISCORD_IDS.includes(discordId)) {
                     isBoss = true;
                     isAdmin = true;
+                    isCityHall = true;
                     document.getElementById('user-role').innerText = '👑 SZEF REDAKCJI';
                     document.getElementById('user-role').style.color = '#8b5cf6';
                     document.getElementById('nav-admin').style.display = 'inline-block';
                     document.getElementById('boss-panel').style.display = 'block';
+                    document.getElementById('cityhall-admin-panel').style.display = 'block';
                 } else if (ADMIN_DISCORD_IDS.includes(discordId)) {
                     isAdmin = true;
+                    isCityHall = true;
                     document.getElementById('user-role').innerText = '⭐ ADMINISTRATOR';
                     document.getElementById('user-role').style.color = '#f59e0b';
                     document.getElementById('nav-admin').style.display = 'inline-block';
+                    document.getElementById('cityhall-admin-panel').style.display = 'block';
+                } else if (CITY_HALL_DISCORD_IDS.includes(discordId)) {
+                    isCityHall = true;
+                    isAdmin = true; // uprawnienia do usuwania własnych postów w City Hall
+                    document.getElementById('user-role').innerText = '🏛️ URZĄD MIASTA';
+                    document.getElementById('user-role').style.color = '#3b82f6';
+                    document.getElementById('nav-admin').style.display = 'inline-block';
+                    document.getElementById('cityhall-admin-panel').style.display = 'block';
                 }
             }
             renderArticles();
             renderTiktoks();
             renderTeam();
+            renderCityHall();
         }
 
         // TWORZENIE TREŚCI
@@ -423,7 +490,6 @@
                 date: new Date().toLocaleDateString('pl-PL')
             };
 
-            // Jeśli wybrano 'featured', zmień obecny wyróżniony na zwykły
             if (target === 'featured') {
                 articles.forEach(a => { if (a.target === 'featured') a.target = 'home'; });
             }
@@ -455,6 +521,28 @@
             alert('TikTok dodany!');
             renderTiktoks();
             switchTab('tiktoki');
+        }
+
+        function createCityHallPost(e) {
+            e.preventDefault();
+            const tag = document.getElementById('ch-tag').value;
+            const title = document.getElementById('ch-title').value;
+            const mediaUrl = document.getElementById('ch-media-url').value;
+            const content = document.getElementById('ch-content').value;
+            const author = document.getElementById('user-name').innerText || 'Urząd Miasta';
+
+            const newPost = {
+                id: Date.now(),
+                tag, title, mediaUrl, content, author,
+                date: new Date().toLocaleDateString('pl-PL')
+            };
+
+            cityhallPosts.unshift(newPost);
+            localStorage.setItem('wn_cityhall', JSON.stringify(cityhallPosts));
+            e.target.reset();
+            alert('Ogłoszenie Urzędu Miasta opublikowane!');
+            renderCityHall();
+            switchTab('cityhall');
         }
 
         function addTeamMember(e) {
@@ -490,6 +578,15 @@
             }
         }
 
+        function deleteCityHallPost(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm('Usunąć to ogłoszenie urzędowe?')) {
+                cityhallPosts = cityhallPosts.filter(c => c.id !== id);
+                localStorage.setItem('wn_cityhall', JSON.stringify(cityhallPosts));
+                renderCityHall();
+            }
+        }
+
         function deleteMember(id) {
             if (confirm('Usunąć tę osobę z zespołu?')) {
                 teamMembers = teamMembers.filter(m => m.id !== id);
@@ -499,20 +596,27 @@
         }
 
         // MODAL
-        function openArticleModal(id) {
-            const art = articles.find(a => a.id === id);
-            if (!art) return;
+        function openArticleModal(id, type = 'article') {
+            let item;
+            if (type === 'cityhall') {
+                item = cityhallPosts.find(c => c.id === id);
+            } else {
+                item = articles.find(a => a.id === id);
+            }
+            if (!item) return;
 
-            document.getElementById('modal-tag').innerText = art.tag;
-            document.getElementById('modal-title').innerText = art.title;
-            document.getElementById('modal-meta').innerHTML = `<span>✍️ Autor: ${art.author}</span> | <span>📅 Data: ${art.date}</span>`;
-            document.getElementById('modal-content').innerText = art.content;
+            document.getElementById('modal-tag').innerText = item.tag;
+            document.getElementById('modal-title').innerText = item.title;
+            document.getElementById('modal-meta').innerHTML = `<span>✍️ Autor: ${item.author}</span> | <span>📅 Data: ${item.date}</span>`;
+            document.getElementById('modal-content').innerText = item.content;
 
             const mediaWrap = document.getElementById('modal-media-wrap');
-            if (art.mediaType === 'video') {
-                mediaWrap.innerHTML = `<video class="modal-media" controls><source src="${art.mediaUrl}" type="video/mp4"></video>`;
+            if (item.mediaType === 'video' && item.mediaUrl) {
+                mediaWrap.innerHTML = `<video class="modal-media" controls><source src="${item.mediaUrl}" type="video/mp4"></video>`;
+            } else if (item.mediaUrl) {
+                mediaWrap.innerHTML = `<img class="modal-media" src="${item.mediaUrl}" onerror="this.style.display='none'">`;
             } else {
-                mediaWrap.innerHTML = `<img class="modal-media" src="${art.mediaUrl}" onerror="this.style.display='none'">`;
+                mediaWrap.innerHTML = '';
             }
 
             document.getElementById('article-modal').classList.add('active');
@@ -539,7 +643,6 @@
                 return;
             }
 
-            // Wyróżniony artykuł na głównej stronie
             const featuredArt = articles.find(a => a.target === 'featured') || articles[0];
             if (featuredArt && featuredWrap) {
                 const mediaHtml = featuredArt.mediaType === 'video'
@@ -559,7 +662,6 @@
                 `;
             }
 
-            // Zwykła lista
             const homeArticles = articles.filter(a => a.target === 'home' || a.target === 'featured');
             
             const renderCard = (art) => {
@@ -615,6 +717,38 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderCityHall() {
+            const chGrid = document.getElementById('cityhall-grid');
+            if (!chGrid) return;
+
+            if (cityhallPosts.length === 0) {
+                chGrid.innerHTML = `<p style="color: var(--text-muted);">Brak oficjalnych ogłoszeń w Urzędzie Miasta.</p>`;
+                return;
+            }
+
+            chGrid.innerHTML = cityhallPosts.map(ch => {
+                const mediaHtml = ch.mediaUrl ? `<img src="${ch.mediaUrl}" onerror="this.style.display='none'">` : `<div style="background:#111; height:100%; display:flex; align-items:center; justify-content:center; color:var(--accent-blue); font-weight:800;">🏛️ URZĄD MIASTA</div>`;
+
+                return `
+                <div class="card" onclick="openArticleModal(${ch.id}, 'cityhall')">
+                    <div class="card-media">
+                        <span class="card-tag" style="background:var(--accent-blue);">${ch.tag}</span>
+                        ${mediaHtml}
+                    </div>
+                    <div class="card-content">
+                        <div class="card-title">${ch.title}</div>
+                        <div class="card-meta">
+                            <span>🏛️ ${ch.author}</span>
+                            <span>📅 ${ch.date}</span>
+                        </div>
+                        <div class="card-snippet">${ch.content}</div>
+                        <button class="card-btn" style="color:var(--accent-blue); border-color:var(--accent-blue);">Zobacz Dokument ➔</button>
+                        ${isAdmin ? `<button class="btn-delete" onclick="deleteCityHallPost(${ch.id}, event)">🗑️ Usuń Ogłoszenie</button>` : ''}
+                    </div>
+                </div>
+            `}).join('');
         }
 
         function renderTeam() {
