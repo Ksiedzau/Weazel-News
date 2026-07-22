@@ -40,7 +40,9 @@
         }
 
         .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.9rem; letter-spacing: 1px; }
+        .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.9rem; letter-spacing: 1px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
         .brand-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
         .brand-title span { color: var(--accent-red); }
 
@@ -66,7 +68,55 @@
         .tab-section { display: none; }
         .tab-section.active { display: block; }
 
-        .page-header { margin-bottom: 2rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
+        /* ULEPSZONY HERO BANNER STRONY GŁÓWNEJ */
+        .hero-banner {
+            background: linear-gradient(135deg, #181c2b 0%, #0f121d 100%);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 35px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .hero-tag { font-size: 0.8rem; font-weight: 800; color: var(--accent-red); text-transform: uppercase; letter-spacing: 2px; }
+        .hero-title { font-size: 2.2rem; font-weight: 900; line-height: 1.2; text-transform: uppercase; color: #fff; }
+        .hero-desc { color: var(--text-muted); font-size: 1rem; max-width: 750px; line-height: 1.6; }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 900; color: var(--accent-gold); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .feature-box {
+            background: var(--bg-header);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .feature-box h3 { font-size: 1rem; color: #fff; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .feature-box p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+        .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; }
         .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
 
@@ -77,7 +127,7 @@
 
         .card-media { width: 100%; height: 190px; background: #121520; overflow: hidden; position: relative; }
         .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; }
-        .card-tag { position: absolute; top: 10px; left: 10px; background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; z-index: 2; }
+        .card-tag { position: absolute; top: 10px; left: 10px; background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
         .card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
         .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
@@ -101,7 +151,6 @@
 
         /* PANEL ADMINISTRATORA */
         .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .admin-card-title.boss-title { color: var(--accent-purple); }
@@ -136,8 +185,8 @@
         </div>
 
         <nav class="nav-links">
-            <button id="nav-home" class="nav-btn active" onclick="switchTab('home')">Strona Główna</button>
-            <button id="nav-news" class="nav-btn" onclick="switchTab('news')">Wiadomości</button>
+            <button id="nav-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
+            <button id="nav-news" class="nav-btn" onclick="switchTab('news')">📰 Wiadomości</button>
             <button id="nav-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
             <button id="nav-obsada" class="nav-btn" onclick="switchTab('obsada')">👥 Zespół Redakcyjny</button>
             <button id="nav-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ PANEL ADMINISTRATORA</button>
@@ -157,11 +206,48 @@
     </header>
 
     <main>
-        <!-- STRONA GŁÓWNA -->
+        <!-- ULEPSZONA STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-section active">
+            
+            <div class="hero-banner">
+                <div class="hero-tag">🔴 Oficjalny Portal Informacyjny</div>
+                <h1 class="hero-title">Największa Redakcja w Los Santos</h1>
+                <p class="hero-desc">Dostarczamy najświeższe wiadomości, relacje z pościgów, raporty policyjne oraz najgorętsze plotki ze świata gwiazd 24 godziny na dobę.</p>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Relacje Na Żywo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Niezależne Dziennikarstwo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">#1</div>
+                    <div class="stat-label">Źródło Informacji LS</div>
+                </div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-box">
+                    <h3>⚡ Błyskawiczne Informacje</h3>
+                    <p>Nasi reporterzy są zawsze na miejscu wydarzeń przed służbami ratunkowymi.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>🎤 Ekskluzywne Wywiady</h3>
+                    <p>Rozmowy z kluczowymi postaciami stanu, politykami i szefami organizacji.</p>
+                </div>
+                <div class="feature-box">
+                    <h3>📱 Wideo & Tiktoki</h3>
+                    <p>Oglądaj krótkie podsumowania najważniejszych akcji w nowoczesnej formie.</p>
+                </div>
+            </div>
+
             <div class="page-header">
-                <h1>Ostatnie Wiadomości</h1>
-                <p>Bieżące relacje i nagłówki z Los Santos</p>
+                <h1>Gorące Nagłówki</h1>
+                <p>Ostatnio opublikowane artykuły i wiadomości</p>
             </div>
             <div id="home-grid" class="cards-grid"></div>
         </section>
@@ -169,8 +255,8 @@
         <!-- ZAKŁADKA WIADOMOŚCI -->
         <section id="tab-news" class="tab-section">
             <div class="page-header">
-                <h1>Wszystkie Wiadomości</h1>
-                <p>Archiwum artykułów, reportaży i wiadomości prasowych</p>
+                <h1>Wszystkie Artykuły</h1>
+                <p>Archiwum wiadomości z całego Los Santos</p>
             </div>
             <div id="news-grid" class="cards-grid"></div>
         </section>
@@ -179,7 +265,7 @@
         <section id="tab-tiktoki" class="tab-section">
             <div class="page-header">
                 <h1>📱 Weazel Tiktoki & Shorts</h1>
-                <p>Krótkie klipy wideo, relacje uliczne i wywiady</p>
+                <p>Krótkie klipy wideo z ulic miasta</p>
             </div>
             <div id="tiktok-grid" class="cards-grid"></div>
         </section>
@@ -188,7 +274,7 @@
         <section id="tab-obsada" class="tab-section">
             <div class="page-header">
                 <h1>👥 Zespół Redakcyjny</h1>
-                <p>Oficjalna obsada oraz zarząd Weazel News</p>
+                <p>Oficjalna kadra i zarząd Weazel News</p>
             </div>
             <div id="team-grid" class="team-grid"></div>
         </section>
@@ -197,11 +283,11 @@
         <section id="tab-admin" class="tab-section">
             <div class="page-header">
                 <h1>⭐ Panel Zarządzania Portalem</h1>
-                <p>Opcje i publikacja treści</p>
+                <p>Publikacja treści oraz zarządzanie redakcją</p>
             </div>
 
             <div class="admin-panel">
-                <!-- DODAWANIE ARTYKUŁU -->
+                <!-- FORMULARZ DODAWANIA ARTYKUŁU Z EMOTKAMI -->
                 <div class="admin-card">
                     <div class="admin-card-title">📰 Nowa Wiadomość / Artykuł</div>
                     <form onsubmit="createArticle(event)">
@@ -212,17 +298,19 @@
                         <div class="form-row">
                             <label>Kategoria / Tag</label>
                             <select id="art-tag" class="form-field">
-                                <option value="WIADOMOŚCI">Wiadomości</option>
-                                <option value="KRYMINAŁ">Kryminał</option>
-                                <option value="EVENTS">Events</option>
-                                <option value="WYWIAD">Wywiad</option>
+                                <option value="📰 WIADOMOŚCI">📰 Wiadomości</option>
+                                <option value="🚨 KRYMINAŁ">🚨 Kryminał</option>
+                                <option value="🎤 WYWIAD">🎤 Wywiad</option>
+                                <option value="🎪 EVENTS">🎪 Events / Wydarzenie</option>
+                                <option value="⚽ SPORT">⚽ Sport</option>
+                                <option value="🚗 MOTORYZACJA">🚗 Motoryzacja</option>
                             </select>
                         </div>
                         <div class="form-row">
                             <label>Typ Mediów</label>
                             <select id="art-media-type" class="form-field">
-                                <option value="image">Obrazek (URL)</option>
-                                <option value="video">Wideo MP4 (Direct URL)</option>
+                                <option value="image">🖼️ Obrazek (URL)</option>
+                                <option value="video">🎥 Wideo MP4 (Direct URL)</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -257,7 +345,7 @@
                     </form>
                 </div>
 
-                <!-- ODCINEK SZEFA (DODAWANIE KADRY) -->
+                <!-- SEKCJA SZEFA (DODAWANIE KADRY) -->
                 <div id="boss-panel" class="admin-card" style="display: none; border-color: var(--accent-purple);">
                     <div class="admin-card-title boss-title">👑 Zarządzanie Kadrami (Rola Szef)</div>
                     <form onsubmit="addTeamMember(event)">
@@ -280,7 +368,7 @@
         </section>
     </main>
 
-    <!-- OKNO MODALNE DO ODCZYTU PEŁNEGO ARTYKUŁU -->
+    <!-- MODAL - PEŁNY ARTYKUŁ -->
     <div id="article-modal" class="modal-overlay" onclick="closeArticleModal(event)">
         <div class="modal-container" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeArticleModal()">&times;</button>
@@ -297,7 +385,7 @@
     </footer>
 
     <script>
-        // DISCORD ID Z UPRAWNIENIAMI
+        // DISCORD ID Z UPRAWNIENIAMI SZEFA
         const BOSS_DISCORD_IDS = [
             '1487414745534431233' // Twoje ID jako SZEF
         ];
@@ -315,7 +403,6 @@
         let isAdmin = false;
         let isBoss = false;
 
-        // DOMYŚLNE ZDJĘCIE AWARYJNE
         const DEFAULT_IMG = 'https://raw.githubusercontent.com/feathericons/feather/master/icons/image.svg';
 
         let articles = JSON.parse(localStorage.getItem('wn_articles')) || [];
@@ -372,7 +459,7 @@
             renderTeam();
         }
 
-        // DANE I FORMULARZE
+        // TWORZENIE TREŚCI
         function createArticle(e) {
             e.preventDefault();
             const title = document.getElementById('art-title').value;
@@ -391,7 +478,7 @@
             articles.unshift(newArt);
             localStorage.setItem('wn_articles', JSON.stringify(articles));
             e.target.reset();
-            alert('Artykuł opublikowany!');
+            alert('Wiadomość została opublikowana!');
             renderArticles();
             switchTab('news');
         }
@@ -412,7 +499,7 @@
             tiktoks.unshift(newTt);
             localStorage.setItem('wn_tiktoks', JSON.stringify(tiktoks));
             e.target.reset();
-            alert('TikTok opublikowany!');
+            alert('TikTok został opublikowany!');
             renderTiktoks();
             switchTab('tiktoki');
         }
@@ -427,14 +514,14 @@
             teamMembers.push(newMember);
             localStorage.setItem('wn_team', JSON.stringify(teamMembers));
             e.target.reset();
-            alert('Dodano nowego członka kadry!');
+            alert('Dodano nowego członka zespołu!');
             renderTeam();
             switchTab('obsada');
         }
 
         function deleteArticle(id, event) {
             event.stopPropagation();
-            if (confirm('Usunąć ten artykuł?')) {
+            if (confirm('Usunąć ten wpis?')) {
                 articles = articles.filter(a => a.id !== id);
                 localStorage.setItem('wn_articles', JSON.stringify(articles));
                 renderArticles();
@@ -458,7 +545,7 @@
             }
         }
 
-        // ODTWARZANIE PEŁNEGO ARTYKUŁU
+        // MODAL ARTYKUŁÓW
         function openArticleModal(id) {
             const art = articles.find(a => a.id === id);
             if (!art) return;
@@ -484,7 +571,7 @@
             }
         }
 
-        // RENDEROWANIE
+        // RENDEROWANIE WIDOKÓW
         function renderArticles() {
             const homeGrid = document.getElementById('home-grid');
             const newsGrid = document.getElementById('news-grid');
@@ -565,7 +652,7 @@
             `).join('');
         }
 
-        // NAWIGACJA
+        // SWITCH TAB
         function switchTab(tabName) {
             document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
