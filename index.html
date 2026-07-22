@@ -23,27 +23,48 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Blokada poziomego przewijania na telefonie */
+        html, body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%;
+            overflow-x: hidden; 
+        }
 
         header { 
             background-color: var(--bg-header);
             border-bottom: 2px solid var(--accent-red);
-            padding: 1rem 2rem;
+            padding: 0.8rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            width: 100%;
         }
 
-        .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.9rem; letter-spacing: 1px; }
-        .brand-title { font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #fff; }
+        .brand { display: flex; align-items: center; gap: 8px; cursor: pointer; flex-shrink: 0; }
+        .brand-badge { background: var(--accent-red); color: #fff; padding: 3px 6px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; }
+        .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; }
         .brand-title span { color: var(--accent-red); }
 
-        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
-        .nav-btn { color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: transparent; transition: 0.2s; }
+        /* Menu nawigacyjne przewijane poziomo na telefonie, żeby się nie rozjeżdżało */
+        .nav-links { 
+            display: flex; 
+            gap: 6px; 
+            overflow-x: auto; 
+            max-width: 100%; 
+            padding-bottom: 4px;
+            scrollbar-width: none; 
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-btn { color: var(--text-muted); padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; border: none; background: transparent; white-space: nowrap; transition: 0.2s; }
         .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
         
         .nav-btn.cityhall-nav { color: var(--accent-blue); border: 1px solid var(--accent-blue); }
@@ -52,67 +73,74 @@
         .nav-btn.admin-link { color: var(--accent-gold); border: 1px solid var(--accent-gold); display: none; }
         .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
-        .auth-box { display: flex; align-items: center; gap: 12px; }
-        .btn-discord { background: #5865F2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
-        .btn-discord:hover { background: #4752C4; }
+        .auth-box { display: flex; align-items: center; flex-shrink: 0; }
+        .btn-discord { background: #5865F2; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
         
-        .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
-        .user-name { font-weight: 700; font-size: 0.85rem; color: #fff; }
-        .user-badge { font-size: 0.7rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
-        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
+        .user-info { display: none; align-items: center; gap: 8px; background: var(--bg-card); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
+        .user-name { font-weight: 700; font-size: 0.75rem; color: #fff; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-badge { font-size: 0.65rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
+        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
 
-        main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 2rem 1.5rem; }
+        main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 1rem; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .page-header { margin-bottom: 1.5rem; border-left: 4px solid var(--accent-red); padding-left: 12px; }
+        .page-header { margin-bottom: 1.2rem; border-left: 4px solid var(--accent-red); padding-left: 10px; }
         .page-header.cityhall-header { border-left-color: var(--accent-blue); }
         .page-header.recruitment-header { border-left-color: var(--accent-gold); }
-        .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
-        .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+        .page-header h1 { font-size: 1.25rem; font-weight: 800; text-transform: uppercase; color: #fff; }
+        .page-header p { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
 
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
-        .card:hover { transform: translateY(-4px); border-color: var(--accent-red); }
+        /* Siatka kart dopasowana do ekranów telefonów */
+        .cards-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; }
+        @media (min-width: 576px) {
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
 
-        .card-media { width: 100%; height: 190px; background: #121520; object-fit: cover; }
-        .card-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
-        .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
-        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
-        .card-text { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; flex: 1; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; }
+        .card:hover { transform: translateY(-2px); border-color: var(--accent-red); }
+
+        .card-media { width: 100%; height: 160px; background: #121520; object-fit: cover; }
+        .card-body { padding: 12px; display: flex; flex-direction: column; flex: 1; }
+        .card-tag { background: var(--accent-red); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 6px; }
+        .card-title { font-size: 0.95rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        .card-meta { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; }
+        .card-text { font-size: 0.8rem; color: #d1d5db; line-height: 1.4; flex: 1; word-break: break-word; }
+
+        .recruitment-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; width: 100%; }
+        .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 10px; font-size: 1.1rem; }
+        .recruitment-box p { line-height: 1.5; color: var(--text-muted); margin-bottom: 15px; font-size: 0.85rem; }
+
+        .admin-panel { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; }
+        @media(min-width: 768px) { .admin-panel { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+
+        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: none; width: 100%; }
+        .admin-card-title { font-size: 1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
         
-        .btn-red { background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; cursor: pointer; text-align: center; transition: 0.2s; }
-        .btn-red:hover { background: var(--accent-red); color: #fff; }
-        .btn-danger { background: rgba(220, 38, 38, 0.15); color: #f87171; border-color: #dc2626; }
-        .btn-danger:hover { background: #dc2626; color: #fff; }
+        .form-row { margin-bottom: 12px; width: 100%; }
+        .form-row label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .form-field { width: 100%; padding: 8px 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.85rem; }
+        textarea.form-field { min-height: 80px; resize: vertical; }
 
-        .recruitment-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 30px; max-width: 800px; margin: 0 auto; }
-        .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 15px; font-size: 1.4rem; }
-        .recruitment-box p { line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
-
-        .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; display: none; }
-        .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-        
-        .form-row { margin-bottom: 16px; }
-        .form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-        .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.9rem; }
-        textarea.form-field { min-height: 100px; resize: vertical; }
-
-        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; text-decoration: none; display: block; text-align: center; transition: 0.2s; }
         .btn-submit:hover { background: #d97706; }
 
-        /* MODAL */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; }
+        /* MODAL NA TELEFONIE */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 10px; }
         .modal-overlay.active { display: flex; }
-        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; font-weight: 700; }
-        .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
-        .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
+        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; max-width: 100%; width: 100%; max-height: 90vh; overflow-y: auto; padding: 15px; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 12px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+        .modal-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 8px; color: #fff; }
+        .modal-text { font-size: 0.85rem; line-height: 1.5; color: #e5e7eb; white-space: pre-line; margin-top: 10px; word-break: break-word; }
 
-        footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; }
+        footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1rem; text-align: center; color: var(--text-muted); font-size: 0.7rem; margin-top: auto; width: 100%; }
+
+        @media (max-width: 600px) {
+            header { flex-direction: column; align-items: stretch; gap: 8px; }
+            .brand { justify-content: space-between; }
+            .auth-box { justify-content: flex-end; }
+        }
     </style>
 </head>
 <body>
@@ -128,7 +156,7 @@
             <button id="btn-tab-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci')">📰 Wiadomości</button>
             <button id="btn-tab-artykuly" class="nav-btn" onclick="switchTab('artykuly')">📝 Artykuły</button>
             <button id="btn-tab-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
-            <button id="btn-tab-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall')">🏛️ Ogłoszenia City Hall</button>
+            <button id="btn-tab-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall')">🏛️ City Hall</button>
             <button id="btn-tab-rekrutacja" class="nav-btn" onclick="switchTab('rekrutacja')">💼 Rekrutacja</button>
             <button id="btn-tab-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ Panel Admina</button>
         </nav>
@@ -141,7 +169,7 @@
                     <div id="user-name" class="user-name"></div>
                     <div id="user-role" class="user-badge">Redaktor</div>
                 </div>
-                <button class="btn-logout" onclick="logout()">[ Wyloguj ]</button>
+                <button class="btn-logout" onclick="logout()">[ X ]</button>
             </div>
         </div>
     </header>
@@ -201,7 +229,7 @@
             <div class="recruitment-box">
                 <h2>Chcesz współtworzyć media w Los Santos?</h2>
                 <p>Poszukujemy ambitnych dziennikarzy, reporterów oraz osób do obsługi kamer i mediów społecznościowych.</p>
-                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:15px;">Złóż podanie na Discordzie</a>
+                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:10px;">Złóż podanie na Discordzie</a>
             </div>
         </section>
 
@@ -231,13 +259,6 @@
                         <div class="form-row">
                             <label>Etykieta (Tag)</label>
                             <input type="text" id="art-tag" class="form-field" placeholder="np. PILNE" required>
-                        </div>
-                        <div class="form-row">
-                            <label>Typ Mediów</label>
-                            <select id="art-media-type" class="form-field">
-                                <option value="image">Zdjęcie</option>
-                                <option value="video">Wideo</option>
-                            </select>
                         </div>
                         <div class="form-row">
                             <label>Link do mediów (URL)</label>
@@ -309,7 +330,7 @@
         &copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.
     </footer>
 
-    <!-- Skrypty we właściwej kolejności -->
+    <!-- Skrypty -->
     <script src="config.js"></script>
     <script src="supabase.js"></script>
     <script src="app.js"></script>
