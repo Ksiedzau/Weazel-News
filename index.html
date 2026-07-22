@@ -331,11 +331,12 @@
     <script>
         // === 1. KONFIGURACJA SUPABASE ===
         // Podmień poniższe wartości na swoje dane z panelu Supabase.com
-        const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
-        
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+       <script>
+    // === 1. KONFIGURACJA SUPABASE ===
+    const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // Funkcja logowania przez Discord
         async function zalogujPrzezDiscord() {
             const { error } = await supabase.auth.signInWithOAuth({
