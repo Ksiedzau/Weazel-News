@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weazel News | Los Santos</title>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
@@ -47,7 +49,7 @@
         .nav-btn.cityhall-nav { color: var(--accent-blue); border: 1px solid var(--accent-blue); }
         .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; }
 
-        .nav-btn.admin-link { color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+        .nav-btn.admin-link { color: var(--accent-gold); border: 1px solid var(--accent-gold); display: none; }
         .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
         .auth-box { display: flex; align-items: center; gap: 12px; }
@@ -71,17 +73,17 @@
         .page-header p { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
 
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; cursor: pointer; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: 0.2s; }
         .card:hover { transform: translateY(-4px); border-color: var(--accent-red); }
 
-        .card-media { width: 100%; height: 190px; background: #121520; overflow: hidden; position: relative; }
+        .card-media { width: 100%; height: 190px; background: #121520; position: relative; }
         .card-media img, .card-media video { width: 100%; height: 100%; object-fit: cover; }
         .card-tag { position: absolute; top: 10px; left: 10px; background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; z-index: 2; }
 
         .card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
-        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
-        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; display: flex; gap: 12px; }
-        .card-snippet { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; display: flex; gap: 12px; }
+        .card-snippet { font-size: 0.85rem; color: #d1d5db; line-height: 1.5; flex: 1; }
         .card-btn { background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); padding: 6px 12px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; margin-top: 12px; text-transform: uppercase; cursor: pointer; text-align: center; }
         .card-btn:hover { background: var(--accent-red); color: #fff; }
 
@@ -92,14 +94,6 @@
         .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 15px; font-size: 1.4rem; }
         .recruitment-box p { line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; font-weight: 700; }
-        .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
-        .modal-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #000; }
-        .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
-
         .admin-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
@@ -109,8 +103,17 @@
         .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.9rem; }
         textarea.form-field { min-height: 120px; resize: vertical; }
 
-        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center;}
+        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; text-decoration: none; display: inline-block; text-align: center; }
         .btn-submit:hover { background: #d97706; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; font-weight: 700; }
+        .modal-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
+        .modal-media { width: 100%; max-height: 400px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #000; }
+        .modal-text { font-size: 1rem; line-height: 1.7; color: #e5e7eb; white-space: pre-line; margin-top: 15px; }
 
         footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: auto; }
     </style>
@@ -200,12 +203,8 @@
             </div>
             <div class="recruitment-box">
                 <h2>Chcesz współtworzyć media w Los Santos?</h2>
-                <p>Poszukujemy ambitnych dziennikarzy, reporterów oraz osób do obsługi kamer i mediów społecznościowych. Zapewniamy profesjonalne wdrożenie, atrakcyjne premie i elastyczne godziny pracy.</p>
-                <p><strong>Wymagania:</strong><br>
-                - Znajomość zasad ortografii i kultury słowa<br>
-                - Posiadanie licencji / prawa jazdy<br>
-                - Zaangażowanie i dyspozycyjność</p>
-                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:10px;">Złóż podanie na Discordzie</a>
+                <p>Poszukujemy ambitnych dziennikarzy, reporterów oraz osób do obsługi kamer i mediów społecznościowych.</p>
+                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:15px;">Złóż podanie na Discordzie</a>
             </div>
         </section>
 
@@ -215,10 +214,9 @@
                 <h1>Panel Administratora</h1>
                 <p>Zarządzanie treściami w serwisie</p>
             </div>
-
             <div class="admin-panel">
                 <div class="admin-card">
-                    <div class="admin-card-title">Dodaj Wpis / Artykuł / Wiadomość</div>
+                    <div class="admin-card-title">Dodaj Wpis</div>
                     <form onsubmit="createPost(event)">
                         <div class="form-row">
                             <label>Kategoria docelowa</label>
@@ -232,14 +230,14 @@
                         </div>
                         <div class="form-row">
                             <label>Etykieta (Tag)</label>
-                            <input type="text" id="post-tag" class="form-field" placeholder="np. PILNE / WYWIAD / DEKRET" required>
+                            <input type="text" id="post-tag" class="form-field" placeholder="np. PILNE / DEKRET" required>
                         </div>
                         <div class="form-row">
                             <label>Tytuł</label>
                             <input type="text" id="post-title" class="form-field" required>
                         </div>
                         <div class="form-row">
-                            <label>Link do mediów (Zdjęcie / Wideo MP4)</label>
+                            <label>Link do mediów (Zdjęcie / Wideo)</label>
                             <input type="url" id="post-media" class="form-field" placeholder="https://...">
                         </div>
                         <div class="form-row">
@@ -269,171 +267,9 @@
         &copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.
     </footer>
 
-    <script>
-        let posts = JSON.parse(localStorage.getItem('wn_posts_v3')) || [
-            {
-                id: 1,
-                target: 'home',
-                tag: 'PILNE',
-                title: 'Witaj w nowym systemie Weazel News!',
-                media: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800',
-                content: 'System został w pełni zaktualizowany. Teraz wszystkie kategorie działają poprawnie, a panel administratora jest widoczny dla każdego zalogowanego użytkownika.',
-                author: 'Zarząd Weazel News',
-                date: '2026-07-22'
-            }
-        ];
-
-        function loginWithDiscord() {
-            // Symulacja poprawnego logowania od ręki, żebyś widział panel bez błędów kluczy Supabase
-            localStorage.setItem('wn_logged_user', JSON.stringify({
-                name: 'Redaktor Naczelny',
-                avatar: 'https://cdn.jsdelivr.net/npm/@feathericons/feather/dist/icons/user.svg'
-            }));
-            checkUser();
-            alert('Zalogowano pomyślnie!');
-        }
-
-        function logout() {
-            localStorage.removeItem('wn_logged_user');
-            window.location.reload();
-        }
-
-        function checkUser() {
-            const user = JSON.parse(localStorage.getItem('wn_logged_user'));
-            if (user) {
-                document.getElementById('btn-login').style.display = 'none';
-                document.getElementById('user-info').style.display = 'flex';
-                document.getElementById('user-name').innerText = user.name;
-                document.getElementById('user-avatar').src = user.avatar;
-                document.getElementById('nav-admin').style.display = 'inline-block';
-            } else {
-                document.getElementById('nav-admin').style.display = 'none';
-            }
-            renderAll();
-        }
-
-        function createPost(e) {
-            e.preventDefault();
-            const target = document.getElementById('post-target').value;
-            const tag = document.getElementById('post-tag').value;
-            const title = document.getElementById('post-title').value;
-            const media = document.getElementById('post-media').value;
-            const content = document.getElementById('post-content').value;
-            const user = JSON.parse(localStorage.getItem('wn_logged_user'));
-            const author = user ? user.name : 'Redakcja';
-
-            const newPost = {
-                id: Date.now(),
-                target, tag, title, media, content, author,
-                date: new Date().toLocaleDateString('pl-PL')
-            };
-
-            posts.unshift(newPost);
-            localStorage.setItem('wn_posts_v3', JSON.stringify(posts));
-            e.target.reset();
-            alert('Opublikowano pomyślnie!');
-            renderAll();
-            switchTab(target);
-        }
-
-        function deletePost(id, event) {
-            if (event) event.stopPropagation();
-            if (confirm('Usunąć ten wpis?')) {
-                posts = posts.filter(p => p.id !== id);
-                localStorage.setItem('wn_posts_v3', JSON.stringify(posts));
-                renderAll();
-            }
-        }
-
-        function openModal(id) {
-            const item = posts.find(p => p.id === id);
-            if (!item) return;
-
-            document.getElementById('modal-tag').innerText = item.tag;
-            document.getElementById('modal-title').innerText = item.title;
-            document.getElementById('modal-meta').innerHTML = `<span>✍️ ${item.author}</span> | <span>📅 ${item.date}</span>`;
-            document.getElementById('modal-content').innerText = item.content;
-
-            const mediaWrap = document.getElementById('modal-media-wrap');
-            if (item.media && (item.media.endsWith('.mp4') || item.media.includes('video'))) {
-                mediaWrap.innerHTML = `<video class="modal-media" controls><source src="${item.media}" type="video/mp4"></video>`;
-            } else if (item.media) {
-                mediaWrap.innerHTML = `<img class="modal-media" src="${item.media}" onerror="this.style.display='none'">`;
-            } else {
-                mediaWrap.innerHTML = '';
-            }
-
-            document.getElementById('article-modal').classList.add('active');
-        }
-
-        function closeModal(e) {
-            if (!e || e.target.id === 'article-modal' || e.target.classList.contains('modal-close')) {
-                document.getElementById('article-modal').classList.remove('active');
-            }
-        }
-
-        function renderGrid(targetId, filterTarget) {
-            const grid = document.getElementById(targetId);
-            if (!grid) return;
-
-            const filtered = filterTarget === 'home' ? posts : posts.filter(p => p.target === filterTarget);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów w tej kategorii.</p>`;
-                return;
-            }
-
-            const user = JSON.parse(localStorage.getItem('wn_logged_user'));
-
-            grid.innerHTML = filtered.map(item => {
-                const isVideo = item.media && item.media.endsWith('.mp4');
-                const mediaHtml = isVideo 
-                    ? `<video controls><source src="${item.media}" type="video/mp4"></video>`
-                    : `<img src="${item.media}" onerror="this.style.display='none'">`;
-
-                const tagBg = filterTarget === 'cityhall' ? 'background:var(--accent-blue);' : '';
-
-                return `
-                    <div class="card" onclick="openModal(${item.id})">
-                        <div class="card-media">
-                            <span class="card-tag" style="${tagBg}">${item.tag}</span>
-                            ${mediaHtml}
-                        </div>
-                        <div class="card-content">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-meta">
-                                <span>✍️ ${item.author}</span>
-                                <span>📅 ${item.date}</span>
-                            </div>
-                            <div class="card-snippet">${item.content}</div>
-                            <button class="card-btn">Czytaj Więcej ➔</button>
-                            ${user ? `<button class="btn-delete" onclick="deletePost(${item.id}, event)">🗑️ Usuń</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderAll() {
-            renderGrid('home-grid', 'home');
-            renderGrid('wiadomosci-grid', 'wiadomosci');
-            renderGrid('artykuly-grid', 'artykuly');
-            renderGrid('tiktok-grid', 'tiktoki');
-            renderGrid('cityhall-grid', 'cityhall');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-
-            const targetSection = document.getElementById('tab-' + tabName);
-            const targetBtn = document.getElementById('nav-' + tabName);
-
-            if (targetSection) targetSection.classList.add('active');
-            if (targetBtn) targetBtn.classList.add('active');
-        }
-
-        checkUser();
-    </script>
+    <!-- Podłączenie Twoich skryptów z projektu -->
+    <script src="config.js"></script>
+    <script src="supabase.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
