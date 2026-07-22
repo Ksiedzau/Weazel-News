@@ -35,7 +35,7 @@
             overflow-x: hidden; 
         }
 
-        /* NAGŁÓWEK - UKŁAD RESPONSYWNY */
+        /* NAGŁÓWEK - KOMPAKTOWY I RESPONSYWNY */
         header { 
             background-color: var(--bg-header);
             border-bottom: 2px solid var(--accent-red);
@@ -61,49 +61,47 @@
         .brand-title { font-size: 0.9rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; }
         .brand-title span { color: var(--accent-red); }
 
-        /* PASKOWE MENU PRZEWIJANE POZIOMO NA TELEFONIE */
+        /* MENU JAKO MINI-SIATKA PIGUŁEK NA TELEFONIE */
         .nav-links { 
-            display: flex; 
-            flex-direction: row; 
-            align-items: center;
-            gap: 5px; 
-            overflow-x: auto; 
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
             width: 100%;
-            padding-bottom: 4px;
-            scrollbar-width: none; 
-            white-space: nowrap;
+            padding-bottom: 2px;
         }
-        .nav-links::-webkit-scrollbar { display: none; }
 
         .nav-btn { 
             color: var(--text-muted); 
-            padding: 6px 10px; 
-            border-radius: 6px; 
+            padding: 6px 4px; 
+            border-radius: 5px; 
             font-weight: 700; 
-            font-size: 0.7rem; 
+            font-size: 0.6rem; 
             text-transform: uppercase; 
             cursor: pointer; 
-            border: none; 
-            background: rgba(255,255,255,0.05); 
-            flex-shrink: 0; 
+            border: 1px solid var(--border-color); 
+            background: rgba(255,255,255,0.03); 
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             transition: 0.2s; 
         }
-        .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
+        .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; border-color: var(--text-muted); }
         
-        .nav-btn.cityhall-nav { color: var(--accent-blue); border: 1px solid var(--accent-blue); }
-        .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; }
+        .nav-btn.cityhall-nav { color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.05); }
+        .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
 
-        .nav-btn.admin-link { color: var(--accent-gold); border: 1px solid var(--accent-gold); display: none; }
-        .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
+        .nav-btn.admin-link { color: var(--accent-gold); border-color: rgba(245, 158, 11, 0.4); display: none; background: rgba(245, 158, 11, 0.05); grid-column: span 3; }
+        .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; border-color: var(--accent-gold); }
 
         .auth-box { display: flex; align-items: center; flex-shrink: 0; }
-        .btn-discord { background: #5865F2; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.7rem; cursor: pointer; white-space: nowrap; }
+        .btn-discord { background: #5865F2; color: #fff; border: none; padding: 4px 8px; border-radius: 5px; font-weight: 700; font-size: 0.65rem; cursor: pointer; white-space: nowrap; }
         
-        .user-info { display: none; align-items: center; gap: 5px; background: var(--bg-card); padding: 3px 6px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .user-avatar { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
-        .user-name { font-weight: 700; font-size: 0.65rem; color: #fff; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .user-badge { font-size: 0.55rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
-        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
+        .user-info { display: none; align-items: center; gap: 4px; background: var(--bg-card); padding: 2px 5px; border-radius: 15px; border: 1px solid var(--border-color); }
+        .user-avatar { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
+        .user-name { font-weight: 700; font-size: 0.6rem; color: #fff; max-width: 50px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-badge { font-size: 0.5rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
+        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.55rem; font-weight: 700; cursor: pointer; }
 
         /* UKŁAD DLA TABLETÓW I KOMPUTERÓW (OD 768px W GÓRĘ) */
         @media (min-width: 768px) {
@@ -117,11 +115,21 @@
                 width: auto;
             }
             .nav-links {
+                display: flex;
+                flex-direction: row;
                 width: auto;
-                overflow-x: visible;
                 flex: 1;
                 justify-content: center;
+                gap: 6px;
                 padding-bottom: 0;
+            }
+            .nav-btn {
+                font-size: 0.7rem;
+                padding: 6px 10px;
+                grid-column: auto;
+            }
+            .nav-btn.admin-link {
+                grid-column: auto;
             }
         }
 
@@ -196,7 +204,7 @@
         </div>
 
         <nav class="nav-links">
-            <button id="btn-tab-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
+            <button id="btn-tab-home" class="nav-btn active" onclick="switchTab('home')">🏠 Główna</button>
             <button id="btn-tab-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci')">📰 Wiadomości</button>
             <button id="btn-tab-artykuly" class="nav-btn" onclick="switchTab('artykuly')">📝 Artykuły</button>
             <button id="btn-tab-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
