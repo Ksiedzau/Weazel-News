@@ -47,6 +47,7 @@
             top: 0;
             z-index: 100;
             width: 100%;
+            gap: 10px;
         }
 
         .header-left {
@@ -55,79 +56,33 @@
             gap: 10px;
         }
 
-        /* PRZYCISK HAMBURGER (MENU BOCZNE) NA TELEFONIE */
-        .menu-toggle-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .brand { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .brand { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
         .brand-badge { background: var(--accent-red); color: #fff; padding: 2px 5px; border-radius: 4px; font-weight: 900; font-size: 0.7rem; }
         .brand-title { font-size: 0.9rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; }
         .brand-title span { color: var(--accent-red); }
 
-        /* BOCZNE MENU (DRAWER) */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 998;
-        }
-        .sidebar-overlay.active { display: block; }
-
-        .nav-links { 
-            position: fixed;
-            top: 0;
-            left: -260px;
-            width: 260px;
-            height: 100%;
-            background: var(--bg-header);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 20px 12px;
-            z-index: 999;
-            transition: left 0.3s ease;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
-        }
-        .nav-links.active { left: 0; }
-
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
+        /* ROZWIJANA LISTA DLA TELEFONÓW (SELECT) */
+        .mobile-nav-select {
+            background: var(--bg-input);
             color: #fff;
-            font-weight: 800;
-            font-size: 0.85rem;
-        }
-        .sidebar-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
+            border: 1px solid var(--border-color);
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            outline: none;
+            max-width: 140px;
         }
 
+        /* KLASYCZNE MENU (UKRYTE NA MOBILNYCH, WIDOCZNE NA PC) */
+        .nav-links { 
+            display: none; 
+        }
+
+        /* STYLY DLA PRZYCISKÓW WERSJI PC */
         .nav-btn { 
             color: var(--text-muted); 
-            padding: 10px 12px; 
+            padding: 6px 10px; 
             border-radius: 6px; 
             font-weight: 700; 
             font-size: 0.75rem; 
@@ -135,8 +90,6 @@
             cursor: pointer; 
             border: none; 
             background: rgba(255,255,255,0.03); 
-            text-align: left;
-            width: 100%;
             transition: 0.2s; 
         }
         .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
@@ -156,31 +109,10 @@
         .user-badge { font-size: 0.55rem; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; }
         .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
 
-        /* UKŁAD DLA TABLETÓW I KOMPUTERÓW (OD 900px W GÓRĘ) - POWRÓT DO MENU POZIOMEGO */
+        /* UKŁAD DLA KOMPUTERÓW (OD 900px W GÓRĘ) - POKAZUJEMY KLASYCZNE MENU, CHOWAMY SELECT */
         @media (min-width: 900px) {
-            .menu-toggle-btn { display: none; }
-            .sidebar-overlay { display: none !important; }
-            
-            .nav-links {
-                position: static;
-                width: auto;
-                height: auto;
-                background: transparent;
-                border: none;
-                flex-direction: row;
-                padding: 0;
-                box-shadow: none;
-                gap: 6px;
-                flex: 1;
-                justify-content: center;
-            }
-            .sidebar-header { display: none; }
-            .nav-btn {
-                width: auto;
-                text-align: center;
-                padding: 6px 9px;
-                font-size: 0.7rem;
-            }
+            .mobile-nav-select { display: none; }
+            .nav-links { display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
         }
 
         main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 12px; }
@@ -233,32 +165,34 @@
 </head>
 <body>
 
-    <!-- TŁO PRZY WYSUNIĘTYM MENU BOCZNYM -->
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
     <header>
         <div class="header-left">
-            <button class="menu-toggle-btn" onclick="toggleSidebar()">
-                ☰ MENU
-            </button>
             <div class="brand" onclick="switchTab('home')">
                 <div class="brand-badge">LIVE</div>
                 <div class="brand-title">WEAZEL <span>NEWS</span></div>
             </div>
+
+            <!-- ROZWIJANA LISTA (SELECT) TYLKO NA TELEFONACH -->
+            <select id="mobile-select" class="mobile-nav-select" onchange="handleMobileSelect(this.value)">
+                <option value="home">🏠 Główna</option>
+                <option value="wiadomosci">📰 Wiadomości</option>
+                <option value="artykuly">📝 Artykuły</option>
+                <option value="tiktoki">📱 Tiktoki</option>
+                <option value="cityhall">🏛️ City Hall</option>
+                <option value="rekrutacja">💼 Rekrutacja</option>
+                <option id="mobile-admin-option" value="admin" style="display:none;">⭐ Panel Admina</option>
+            </select>
         </div>
 
-        <nav id="nav-links" class="nav-links">
-            <div class="sidebar-header">
-                <span>Nawigacja</span>
-                <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
-            </div>
-            <button id="btn-tab-home" class="nav-btn active" onclick="switchTab('home'); toggleSidebar()">🏠 Strona Główna</button>
-            <button id="btn-tab-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci'); toggleSidebar()">📰 Wiadomości</button>
-            <button id="btn-tab-artykuly" class="nav-btn" onclick="switchTab('artykuly'); toggleSidebar()">📝 Artykuły</button>
-            <button id="btn-tab-tiktoki" class="nav-btn" onclick="switchTab('tiktoki'); toggleSidebar()">📱 Tiktoki</button>
-            <button id="btn-tab-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall'); toggleSidebar()">🏛️ City Hall</button>
-            <button id="btn-tab-rekrutacja" class="nav-btn" onclick="switchTab('rekrutacja'); toggleSidebar()">💼 Rekrutacja</button>
-            <button id="btn-tab-admin" class="nav-btn admin-link" onclick="switchTab('admin'); toggleSidebar()">⭐ Panel Admina</button>
+        <!-- KLASYCZNE MENU DLA KOMPUTERÓW -->
+        <nav class="nav-links">
+            <button id="btn-tab-home" class="nav-btn active" onclick="switchTab('home')">🏠 Strona Główna</button>
+            <button id="btn-tab-wiadomosci" class="nav-btn" onclick="switchTab('wiadomosci')">📰 Wiadomości</button>
+            <button id="btn-tab-artykuly" class="nav-btn" onclick="switchTab('artykuly')">📝 Artykuły</button>
+            <button id="btn-tab-tiktoki" class="nav-btn" onclick="switchTab('tiktoki')">📱 Tiktoki</button>
+            <button id="btn-tab-cityhall" class="nav-btn cityhall-nav" onclick="switchTab('cityhall')">🏛️ City Hall</button>
+            <button id="btn-tab-rekrutacja" class="nav-btn" onclick="switchTab('rekrutacja')">💼 Rekrutacja</button>
+            <button id="btn-tab-admin" class="nav-btn admin-link" onclick="switchTab('admin')">⭐ Panel Admina</button>
         </nav>
 
         <div class="auth-box">
@@ -435,12 +369,19 @@
     <script src="supabase.js"></script>
     <script src="app.js"></script>
     <script>
-        // Funkcja obsługująca wysuwanie i zwijanie menu bocznego na telefonie
-        function toggleSidebar() {
-            const navLinks = document.getElementById('nav-links');
-            const overlay = document.getElementById('sidebar-overlay');
-            navLinks.classList.toggle('active');
-            overlay.classList.toggle('active');
+        // Funkcja synchronizująca listę rozwijaną z przełączaniem zakładek
+        function handleMobileSelect(tabName) {
+            switchTab(tabName);
+        }
+
+        // Dodatkowa funkcja pomocnicza aktualizująca zaznaczenie w liście select, jeśli zakłady zmieniają się z poziomu kodu JS
+        const originalSwitchTab = window.switchTab;
+        if (typeof originalSwitchTab === 'function') {
+            window.switchTab = function(tabName) {
+                originalSwitchTab(tabName);
+                const mobileSelect = document.getElementById('mobile-select');
+                if (mobileSelect) mobileSelect.value = tabName;
+            }
         }
     </script>
 </body>
