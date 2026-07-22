@@ -25,6 +25,7 @@ function switchTab(tabId) {
     if (tabId === 'artykuly') loadCategoryContent('artykuly', 'artykuly-grid');
     if (tabId === 'tiktoki') loadTiktoks();
     if (tabId === 'cityhall') loadCityHallNotices();
+    if (tabId === 'kadra') loadTeamMembers();
 }
 
 // --- AUTORYZACJA DISCORD PRZEZ SUPABASE ---
@@ -51,8 +52,8 @@ async function logout() {
     location.reload();
 }
 
-// Globalna zmienna do sprawdzania uprawnień w widoku kart
 let currentUserRole = null;
+let isUserBoss = false;
 
 // --- SPRAWDZANIE SESJI I UPRAWNIEN ---
 async function checkUserSession() {
@@ -87,6 +88,7 @@ async function checkUserSession() {
         const isAdmin = window.ADMIN_DISCORD_IDS && window.ADMIN_DISCORD_IDS.includes(String(discordId));
         const isCityHall = window.CITY_HALL_DISCORD_IDS && window.CITY_HALL_DISCORD_IDS.includes(String(discordId));
 
+        isUserBoss = isBoss; // Zapamiętujemy czy to szef
         const adminTabBtn = document.getElementById('btn-tab-admin');
 
         if (isBoss) {
@@ -95,6 +97,11 @@ async function checkUserSession() {
             currentUserRole = 'admin';
             if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
+            
+            // Pokaż formularz dodawania kadry tylko dla szefa w panelu admina
+            const bossCard = document.getElementById('boss-team-card');
+            if (bossCard) bossCard.style.display = 'block';
+
         } else if (isAdmin) {
             roleName = "Administrator";
             roleColor = "var(--accent-gold)";
@@ -116,12 +123,12 @@ async function checkUserSession() {
             roleBadge.style.color = roleColor;
         }
 
-        // Odśwież widok, aby pokazać przyciski usuwania jeśli użytkownik jest adminem
         loadHomeContent();
+        loadTeamMembers();
     }
 }
 
-// --- POBIERANIE TREŚCI Z BAZY Z NOWYM WYGLĄDEM ---
+// --- POBIERANIE STRONY GŁÓWNEJ (NAPRAWIONE HERO) ---
 async function loadHomeContent() {
     const grid = document.getElementById('home-grid');
     if (!grid) return;
@@ -141,17 +148,16 @@ async function loadHomeContent() {
         return;
     }
 
-    // Wyciągamy pierwszy artykuł jako główny "Hero / Breaking News", reszta do gridu poniżej
     const heroItem = data[0];
     const restItems = data.slice(1);
 
     let html = '';
 
-    // SEKCJA HERO (Główny news na górze strony)
+    // Poprawiony kafelek główny z klasą hero-image-box zapobiegającą rozjeżdżaniu
     html += `
         <div class="news-hero" onclick="openModal('${escapeHtml(heroItem.title)}', '${heroItem.created_at}', '${heroItem.media_url || ''}', '${escapeHtml(heroItem.content)}')">
-            <div class="hero-image-container">
-                <img src="${heroItem.media_url || 'https://via.placeholder.com/800x450?text=Weazel+News'}" alt="Hero Image" onerror="this.src='https://via.placeholder.com/800x450?text=Weazel+News'">
+            <div class="hero-image-box">
+                <img src="${heroItem.media_url || ''}" alt="Hero Image" onerror="this.src='https://via.placeholder.com/800x450?text=Weazel+News'">
                 <div class="hero-badge">GORĄCY TEMAT</div>
             </div>
             <div class="hero-content">
@@ -164,7 +170,6 @@ async function loadHomeContent() {
         </div>
     `;
 
-    // Jeśli są inne artykuły, tworzymy dla nich nowoczesną siatkę
     if (restItems.length > 0) {
         html += `<div class="news-subgrid">`;
         html += restItems.map(item => `
@@ -275,9 +280,68 @@ async function loadTiktoks() {
     `).join('');
 }
 
+// --- POBIERANIE KADRY ---
+async function loadTeamMembers() {
+    const grid = document.getElementById('kadra-grid');
+    if (!grid) return;
+
+    const { data, error } = await window.supabase
+        .from('team')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+    if (error || !data || data.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted)">Brak członków kadry w bazie.</p>';
+        return;
+    }
+
+    grid.innerHTML = data.map(item => `
+        <div class="team-card">
+            <div class="team-avatar-box">
+                <img src="${item.avatar_url || 'https://via.placeholder.com/150?text=Avatar'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/150?text=Avatar'">
+            </div>
+            <div class="team-info">
+                <h3 class="team-name">${item.name}</h3>
+                <span class="team-role">${item.role || 'Pracownik'}</span>
+                <p class="team-desc">${item.description || ''}</p>
+                ${isUserBoss ? `<button class="delete-btn" onclick="deleteArticle('team', ${item.id})"><i class="fas fa-trash"></i> Usuń z kadry</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// --- DODAWANIE PRACOWNIKA DO KADRY (TYLKO SZEF) ---
+async function createTeamMember(event) {
+    event.preventDefault();
+    if (!isUserBoss) {
+        alert('Tylko Szefostwo może dodawać osoby do kadry!');
+        return;
+    }
+
+    const name = document.getElementById('team-name').value;
+    const role = document.getElementById('team-role').value;
+    const avatar_url = document.getElementById('team-avatar').value;
+    const description = document.getElementById('team-desc').value;
+
+    const { error } = await window.supabase.from('team').insert([{ 
+        name, 
+        role, 
+        avatar_url, 
+        description 
+    }]);
+    
+    if (error) {
+        alert('Błąd podczas dodawania do kadry: ' + error.message);
+    } else {
+        alert('Pracownik dodany pomyślnie do kadry!');
+        event.target.reset();
+        loadTeamMembers();
+    }
+}
+
 // --- FUNKCJA USUWANIA WPISÓW ---
 async function deleteArticle(tableName, id) {
-    if (!confirm('Czy na pewno chcesz trwale usunąć ten wpis?')) return;
+    if (!confirm('Czy na pewno chcesz trwale usunąć ten element?')) return;
 
     const { error } = await window.supabase
         .from(tableName)
@@ -287,8 +351,7 @@ async function deleteArticle(tableName, id) {
     if (error) {
         alert('Błąd podczas usuwania: ' + error.message);
     } else {
-        alert('Wpis został usunięty.');
-        // Odśwież bieżącą zakładkę
+        alert('Usunięto pomyślnie.');
         const activeTab = document.querySelector('.tab-content.active');
         if (activeTab) {
             const tabId = activeTab.id.replace('tab-', '');
@@ -299,7 +362,7 @@ async function deleteArticle(tableName, id) {
     }
 }
 
-// --- TWORZENIE WPISÓW (PANEL ADMINA) ---
+// --- TWORZENIE ARTYKUŁÓW I TIKTOKÓW ---
 async function createArticle(event) {
     event.preventDefault();
     const target = document.getElementById('art-target').value;
@@ -357,7 +420,7 @@ async function createTiktok(event) {
     }
 }
 
-// --- OBSŁUGA MODALA ---
+// --- MODAL ---
 function openModal(title, date, mediaUrl, content) {
     document.getElementById('m-title').innerText = title;
     document.getElementById('m-meta').innerText = new Date(date).toLocaleDateString('pl-PL');
