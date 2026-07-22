@@ -291,28 +291,18 @@
 
     <footer>&copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.</footer>
 
-    <!-- BEZPOŚREDNIA INICJALIZACJA (BEZ ZALEŻNOŚCI OD PLIKU CONFIG) -->
+    <!-- INICJALIZACJA SUPABASE (JEDYNIE TUTAJ) -->
     <script>
         const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
-        // Inicjalizacja globalna klienta Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const supabase = window.supabaseClient;
-
-        async function loginWithDiscord() {
-            try {
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'discord',
-                    options: { redirectTo: window.location.origin }
-                });
-                if (error) alert('Błąd logowania Discord: ' + error.message);
-            } catch (err) {
-                alert('Wystąpił błąd podczas próby logowania.');
-            }
-        }
+        // Przypisanie do globalnego obiektu okna
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
+    
+    <!-- GŁÓWNY SKRYPT APLIKACJI -->
     <script src="app.js"></script>
+    
     <script>
         function toggleMobileMenu() {
             document.getElementById('mobile-sidebar').classList.toggle('active');
