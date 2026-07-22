@@ -1,108 +1,216 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admina</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 0 10px; }
-    h2 { border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 30px; }
-    form { display: flex; flex-direction: column; gap: 10px; }
-    input, textarea, select, button { padding: 8px; font-size: 14px; }
-    button { background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-    button:hover { background: #0056b3; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wirtualne Newsy</title>
+    <!-- Biblioteka Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        header {
+            background: var(--card); border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; }
+        nav { display: flex; gap: 0.5rem; }
+        .nav-btn {
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 1rem;
+        }
+        .nav-btn:hover, .nav-btn.active { color: var(--text); background: var(--border); }
+
+        .btn {
+            background: var(--accent); color: white; border: none; padding: 0.5rem 1rem;
+            border-radius: 0.375rem; cursor: pointer; font-weight: 600;
+        }
+        .btn:hover { background: var(--accent-hover); }
+        .btn-danger { background: var(--danger); }
+
+        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 0.5rem; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .card-media { width: 100%; height: 180px; background: #000; object-fit: cover; }
+        .card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+        .card-title { font-size: 1.2rem; font-weight: bold; }
+        .card-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .card-text { color: var(--text-muted); font-size: 0.9rem; flex: 1; margin-top: 0.5rem; }
+
+        .user-panel { display: flex; align-items: center; gap: 1rem; }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
+
+        /* Formularze w panelu admina */
+        .admin-form {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;
+            display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin-x: auto;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .form-group label { font-size: 0.85rem; color: var(--text-muted); }
+        .form-group input, .form-group textarea, .form-group select {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            padding: 0.6rem; border-radius: 0.25rem;
+        }
+
+        /* Modal z artykułem */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: var(--card); padding: 2rem; border-radius: 0.5rem;
+            max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;
+        }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-  <h1>Panel Zarządzania Treścią</h1>
+    <header>
+        <div class="logo" onclick="switchTab('home')">📰 Wirtualne Newsy</div>
+        <nav>
+            <button class="nav-btn active" id="btn-tab-home" onclick="switchTab('home')">Główna</button>
+            <button class="nav-btn" id="btn-tab-tiktoki" onclick="switchTab('tiktoki')">TikToki</button>
+            <button class="nav-btn" id="btn-tab-team" onclick="switchTab('team')">Kadra</button>
+            <button class="nav-btn" id="btn-tab-admin" style="display:none;" onclick="switchTab('admin')">Panel Admina</button>
+        </nav>
+        <div class="user-panel">
+            <button class="btn" id="btn-login" onclick="loginWithDiscord()">Zaloguj przez Discord</button>
+            <div id="user-info" style="display:none; align-items:center; gap:0.5rem;">
+                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                <div>
+                    <div id="user-name" style="font-weight:bold; font-size:0.85rem;"></div>
+                    <div id="user-role" style="font-size:0.75rem; color:var(--text-muted);">Użytkownik</div>
+                </div>
+                <button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="logout()">Wyloguj</button>
+            </div>
+        </div>
+    </header>
 
-  <!-- FORMULARZ 1: ARTYKUŁY -->
-  <h2>Dodaj Artykuł / News</h2>
-  <form id="form-article">
-    <input type="text" id="art-title" placeholder="Tytuł artykułu" required>
-    <input type="text" id="art-target" placeholder="Dla kogo (np. Wszyscy / Kadra)" required>
-    <input type="text" id="art-tag" placeholder="Tag (np. Informacja, Ogłoszenie)" required>
-    <select id="art-media-type">
-      <option value="image">Zdjęcie (URL)</option>
-      <option value="video">Wideo (URL)</option>
-    </select>
-    <input type="url" id="art-media-url" placeholder="Link URL do zdjęcia/wideo" required>
-    <textarea id="art-content" placeholder="Treść artykułu..." rows="4" required></textarea>
-    <input type="text" id="art-author" placeholder="Autor" required>
-    <input type="date" id="art-date" required>
-    <button type="submit">Dodaj Artykuł</button>
-  </form>
+    <main>
+        <!-- TAB 1: STRONA GŁÓWNA -->
+        <section id="tab-home" class="tab-content active">
+            <h2 style="margin-bottom: 1rem;">Ostatnie Wiadomości</h2>
+            <div class="grid" id="news-grid"></div>
+        </section>
 
-  <!-- FORMULARZ 2: TIKTOKI -->
-  <h2>Dodaj TikTok</h2>
-  <form id="form-tiktok">
-    <input type="text" id="tt-title" placeholder="Tytuł / Nagłówek" required>
-    <input type="url" id="tt-url" placeholder="Link do TikToka" required>
-    <textarea id="tt-desc" placeholder="Krótki opis" rows="2" required></textarea>
-    <input type="text" id="tt-author" placeholder="Autor" required>
-    <input type="date" id="tt-date" required>
-    <button type="submit">Dodaj TikTok</button>
-  </form>
+        <!-- TAB 2: TIKTOKI -->
+        <section id="tab-tiktoki" class="tab-content">
+            <h2 style="margin-bottom: 1rem;">Materiały Wideo / TikToki</h2>
+            <div class="grid" id="tiktok-grid"></div>
+        </section>
 
-  <!-- FORMULARZ 3: KADRA -->
-  <h2>Dodaj Członka Kadry</h2>
-  <form id="form-team">
-    <input type="text" id="team-name" placeholder="Imię i Nazwisko" required>
-    <input type="text" id="team-role" placeholder="Rola / Stanowisko" required>
-    <input type="url" id="team-photo" placeholder="Link do zdjęcia (URL)">
-    <button type="submit">Dodaj do Kadry</button>
-  </form>
+        <!-- TAB 3: KADRA -->
+        <section id="tab-team" class="tab-content">
+            <h2 style="margin-bottom: 1rem;">Nasza Redakcja</h2>
+            <div class="grid" id="team-grid"></div>
+        </section>
 
-  <!-- SKRYPT OBSŁUGUJĄCY ZAPIS DO SUPABASE -->
-  <script type="module">
-    import { supabase } from './supabase.js';
+        <!-- TAB 4: PANEL ADMINA (Widoczny tylko dla uprawnionych) -->
+        <section id="tab-admin" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem; text-align:center;">Panel Zarządzania Treścią</h2>
 
-    // 1. Obsługa Artykułów
-    document.getElementById('form-article').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const { data, error } = await supabase.from('articles').insert([{
-        title: document.getElementById('art-title').value,
-        target: document.getElementById('art-target').value,
-        tag: document.getElementById('art-tag').value,
-        media_type: document.getElementById('art-media-type').value,
-        media_url: document.getElementById('art-media-url').value,
-        content: document.getElementById('art-content').value,
-        author: document.getElementById('art-author').value,
-        date: document.getElementById('art-date').value
-      }]);
+            <form class="admin-form" onsubmit="createArticle(event)">
+                <h3>Dodaj Nowy Artykuł</h3>
+                <div class="form-group">
+                    <label>Tytuł</label>
+                    <input type="text" id="art-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Tag / Kategoria</label>
+                    <input type="text" id="art-tag" placeholder="np. Ogłoszenie, Event" required>
+                </div>
+                <div class="form-group">
+                    <label>Typ Mediów</label>
+                    <select id="art-media-type">
+                        <option value="image">Zdjęcie (URL)</option>
+                        <option value="video">Wideo MP4 (URL)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Link URL do Zdjęcia/Wideo</label>
+                    <input type="url" id="art-media-url" required>
+                </div>
+                <div class="form-group">
+                    <label>Treść Artykułu</label>
+                    <textarea id="art-content" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn">Opublikuj Artykuł</button>
+            </form>
 
-      if (error) alert('Błąd: ' + error.message);
-      else { alert('Dodano artykuł!'); e.target.reset(); }
-    });
+            <form class="admin-form" onsubmit="createTiktok(event)">
+                <h3>Dodaj TikTok / Wideo</h3>
+                <div class="form-group">
+                    <label>Tytuł</label>
+                    <input type="text" id="tt-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Link do Wideo (URL / MP4)</label>
+                    <input type="url" id="tt-url" required>
+                </div>
+                <div class="form-group">
+                    <label>Krótki Opis</label>
+                    <textarea id="tt-desc" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn">Dodaj Wideo</button>
+            </form>
 
-    // 2. Obsługa TikToków
-    document.getElementById('form-tiktok').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const { data, error } = await supabase.from('tiktoks').insert([{
-        title: document.getElementById('tt-title').value,
-        url: document.getElementById('tt-url').value,
-        desc: document.getElementById('tt-desc').value,
-        author: document.getElementById('tt-author').value,
-        date: document.getElementById('tt-date').value
-      }]);
+            <div id="boss-panel" style="display:none;">
+                <form class="admin-form" onsubmit="addTeamMember(event)">
+                    <h3 style="color:#8b5cf6;">Panel Szefa: Dodaj Członka Kadry</h3>
+                    <div class="form-group">
+                        <label>Imię i Nazwisko / Nick</label>
+                        <input type="text" id="member-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Rola / Stanowisko</label>
+                        <input type="text" id="member-role" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Zdjęcie Profilowe (URL)</label>
+                        <input type="url" id="member-photo">
+                    </div>
+                    <button type="submit" class="btn" style="background:#8b5cf6;">Dodaj do Redakcji</button>
+                </form>
+            </div>
+        </section>
+    </main>
 
-      if (error) alert('Błąd: ' + error.message);
-      else { alert('Dodano TikTok!'); e.target.reset(); }
-    });
+    <!-- MODAL DO CZYTANIA PEŁNEGO ARTYKUŁU -->
+    <div class="modal" id="modal-art" onclick="closeModal(event)">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 id="m-title"></h2>
+            <div id="m-meta" style="color:var(--text-muted); font-size:0.85rem; margin:0.5rem 0;"></div>
+            <div id="m-media" style="margin: 1rem 0;"></div>
+            <p id="m-content" style="line-height:1.6; white-space:pre-wrap;"></p>
+        </div>
+    </div>
 
-    // 3. Obsługa Kadry
-    document.getElementById('form-team').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const { data, error } = await supabase.from('team').insert([{
-        name: document.getElementById('team-name').value,
-        role: document.getElementById('team-role').value,
-        photo: document.getElementById('team-photo').value
-      }]);
-
-      if (error) alert('Błąd: ' + error.message);
-      else { alert('Dodano osobę do kadry!'); e.target.reset(); }
-    });
-  </script>
+    <!-- Wczytanie konfiguracji i logiki -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
