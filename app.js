@@ -28,16 +28,27 @@ async function checkUser() {
         document.getElementById('user-name').innerText = user.user_metadata.full_name || 'Użytkownik';
         document.getElementById('user-avatar').src = user.user_metadata.avatar_url || '';
 
-        const discordId = user.user_metadata.provider_id || user.identities?.[0]?.id;
+        // Pobieramy ID na kilka sposobów, aby mieć 100% pewności
+        const discordId = user.user_metadata.provider_id 
+                       || user.identities?.[0]?.id 
+                       || user.identities?.[0]?.identity_data?.sub 
+                       || user.id;
 
-        if (BOSS_DISCORD_IDS.includes(discordId)) {
+        // Wypisujemy ID w konsoli przeglądarki do weryfikacji
+        console.log("Twoje wykryte Discord ID to:", discordId);
+
+        // Zamieniamy wszystko na Stringi do dokładnego porównania
+        const isBossUser = BOSS_DISCORD_IDS.map(String).includes(String(discordId));
+        const isAdminUser = ADMIN_DISCORD_IDS.map(String).includes(String(discordId));
+
+        if (isBossUser) {
             isBoss = true;
             isAdmin = true;
             document.getElementById('user-role').innerText = '👑 SZEF';
             document.getElementById('user-role').style.color = '#8b5cf6';
             document.getElementById('btn-tab-admin').style.display = 'inline-block';
             document.getElementById('boss-panel').style.display = 'block';
-        } else if (ADMIN_DISCORD_IDS.includes(discordId)) {
+        } else if (isAdminUser) {
             isAdmin = true;
             document.getElementById('user-role').innerText = '⭐ ADMIN';
             document.getElementById('btn-tab-admin').style.display = 'inline-block';
