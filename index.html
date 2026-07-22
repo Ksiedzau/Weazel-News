@@ -3,40 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Ogłoszeniowy - DOJ & Rekrutacja</title>
+    <title>Portal Ogłoszeniowy</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #18191a; color: #e4e6eb; margin: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
         
-        /* Nagłówek i przełącznik użytkowników */
-        header { display: flex; justify-content: space-between; align-items: center; background: #242526; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        select, input, button, textarea { padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; color: #fff; border-radius: 6px; }
-        button { cursor: pointer; background: #2d88ff; border: none; font-weight: bold; }
-        button:hover { background: #1a73e8; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        select, input, button, textarea { padding: 8px 12px; background: #2d2d2d; border: 1px solid #444; color: #fff; border-radius: 4px; }
+        button { cursor: pointer; background: #007bff; border: none; font-weight: bold; }
+        button:hover { background: #0056b3; }
 
-        /* Układ główny */
-        .main-layout { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
-        .sidebar, .feed, .panel { background: #242526; padding: 20px; border-radius: 8px; }
+        .layout { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
+        .sidebar, .feed, .panel { background: #1e1e1e; padding: 15px; border-radius: 8px; }
 
-        /* Kategorie */
-        .category-item { padding: 10px; margin-bottom: 5px; background: #3a3b3c; border-radius: 5px; cursor: pointer; }
-        .category-item:hover, .category-item.active { background: #4e4f50; border-left: 4px solid #2d88ff; }
-        .tag-doj { background: #1b4f72; color: #5adeff; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .cat-btn { display: block; width: 100%; text-align: left; padding: 8px; margin-bottom: 5px; background: #2d2d2d; border: none; border-radius: 4px; color: #fff; }
+        .cat-btn:hover { background: #3d3d3d; }
 
-        /* Karty Ogłoszeń */
-        .card { background: #3a3b3c; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #888; }
-        .card.doj { border-left-color: #5adeff; }
+        .card { background: #2d2d2d; padding: 15px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #007bff; }
+        .card.doj { border-left-color: #f39c12; }
         .card.rekrutacja { border-left-color: #2ecc71; }
-        .card-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
 
-        /* Tabela w panelu */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #4e4f50; padding: 10px; text-align: left; }
-        th { background: #3a3b3c; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+        th { background: #2d2d2d; }
 
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
-        .modal-content { background: #242526; padding: 25px; border-radius: 8px; width: 400px; display: flex; flex-direction: column; gap: 10px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+        .modal-box { background: #1e1e1e; padding: 20px; border-radius: 8px; width: 400px; display: flex; flex-direction: column; gap: 10px; }
     </style>
 </head>
 <body>
@@ -45,134 +37,110 @@
     <header>
         <div>
             <h2>Portal Ogłoszeniowy</h2>
-            <small id="userRoleInfo"></small>
+            <small id="roleBadge" style="color: #007bff;"></small>
         </div>
         <div>
-            <label>Symuluj zalogowanego jako: </label>
-            <select id="userSelect" onchange="switchUser()">
-                <!-- Genorowane w JS -->
-            </select>
-            <button onclick="openModal()">+ Dodaj Ogłoszenie</button>
-            <button onclick="togglePanel()" style="background: #e67e22;">⚙️ Panel Admina/Zarządzania</button>
+            <label>Zalogowany jako: </label>
+            <select id="userSelect" onchange="switchUser()"></select>
+            <button onclick="openModal()">+ Dodaj</button>
+            <button onclick="togglePanel()" style="background: #6c757d;">⚙️ Panel Admina</button>
         </div>
     </header>
 
-    <div class="main-layout">
-        <!-- Panel Boczny z Kategoriami -->
+    <div class="layout">
         <div class="sidebar">
-            <h3>Kategorie</h3>
-            <div class="category-item active" onclick="filterCategory('all')">Wszystkie</div>
-            <div class="category-item" onclick="filterCategory('Ogólne')">Ogólne</div>
-            <div class="category-item" onclick="filterCategory('Rekrutacja')">📢 Rekrutacja</div>
-            <div class="category-item" onclick="filterCategory('Ogłoszenia DOJ')">⚖️ Ogłoszenia DOJ <span class="tag-doj">DOJ</span></div>
+            <h4>Kategorie</h4>
+            <button class="cat-btn" onclick="filterCategory('all')">Wszystkie</button>
+            <button class="cat-btn" onclick="filterCategory('Ogólne')">Ogólne</button>
+            <button class="cat-btn" onclick="filterCategory('Rekrutacja')">📢 Rekrutacja</button>
+            <button class="cat-btn" onclick="filterCategory('Ogłoszenia DOJ')">⚖️ Ogłoszenia DOJ</button>
         </div>
 
-        <!-- Główna Lista Ogłoszeń -->
         <div>
             <div id="feed" class="feed"></div>
 
-            <!-- Panel Zarządzania / Admina -->
+            <!-- Panel Admina / Zarządzania -->
             <div id="adminPanel" class="panel" style="display: none; margin-top: 20px;">
-                <h2 id="panelTitle">Panel Zarządzania</h2>
+                <h3>Panel Admina</h3>
                 
-                <!-- Sekcja nadawania rang (Widoczna tylko dla Admina) -->
-                <div id="roleManagementSection" style="margin-bottom: 30px; display: none;">
-                    <h3>Opcja nadawania rangi DOJ (Tylko dla Admina)</h3>
+                <!-- Nadawanie rangi DOJ (Widoczne tylko dla Admina) -->
+                <div id="roleManager" style="display: none; margin-bottom: 20px;">
+                    <h4>Zarządzanie Rangami (Opcja dodania rangi DOJ)</h4>
                     <table>
                         <thead>
-                            <tr>
-                                <th>Użytkownik</th>
-                                <th>Ranga</th>
-                                <th>Akcja (Zmień Rangę)</th>
-                            </tr>
+                            <tr><th>Użytkownik</th><th>Obecna Ranga</th><th>Zmień Rangę</th></tr>
                         </thead>
-                        <tbody id="userTableBody"></tbody>
+                        <tbody id="usersTable"></tbody>
                     </table>
                 </div>
 
                 <!-- Lista Ogłoszeń w Panelu -->
-                <h3>Zarządzanie Ogłoszeniami</h3>
-                <p id="panelInfoText" style="color: #aaa; font-size: 14px;"></p>
+                <h4 id="panelTitle">Zarządzanie Ogłoszeniami</h4>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Tytuł</th>
-                            <th>Kategoria</th>
-                            <th>Autor</th>
-                            <th>Akcje</th>
-                        </tr>
+                        <tr><th>Tytuł</th><th>Kategoria</th><th>Autor</th><th>Akcja</th></tr>
                     </thead>
-                    <tbody id="announcementsTableBody"></tbody>
+                    <tbody id="panelAnnouncements"></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Dodawania Ogłoszenia -->
+<!-- Modal Dodawania -->
 <div id="modal" class="modal">
-    <div class="modal-content">
-        <h3>Nowe Ogłoszenie</h3>
-        <input type="text" id="postTitle" placeholder="Tytuł ogłoszenia">
-        <select id="postCategory">
+    <div class="modal-box">
+        <h3>Dodaj Ogłoszenie</h3>
+        <input type="text" id="title" placeholder="Tytuł">
+        <select id="category">
             <option value="Ogólne">Ogólne</option>
             <option value="Rekrutacja">📢 Rekrutacja</option>
-            <option value="Ogłoszenia DOJ" id="dojOption">⚖️ Ogłoszenia DOJ</option>
+            <option value="Ogłoszenia DOJ" id="dojOpt">⚖️ Ogłoszenia DOJ</option>
         </select>
-        <textarea id="postContent" rows="4" placeholder="Treść ogłoszenia..."></textarea>
+        <textarea id="content" rows="4" placeholder="Treść..."></textarea>
         <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <button onclick="closeModal()" style="background: #555;">Anuluj</button>
-            <button onclick="addAnnouncement()">Opublikuj</button>
+            <button onclick="addPost()">Dodaj</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Baza użytkowników
     let users = [
         { id: 1, name: "Jan Kowalski", role: "User" },
-        { id: 2, name: "Anna Nowak", role: "DOJ" },
-        { id: 3, name: "Piotr Admin", role: "Admin" }
+        { id: 2, name: "Marek Prokurator", role: "DOJ" },
+        { id: 3, name: "Admin Główny", role: "Admin" }
+    ];
+
+    let posts = [
+        { id: 1, title: "Rekrutacja do Sądów", category: "Rekrutacja", content: "Szukamy nowych pracowników.", authorId: 2, authorName: "Marek Prokurator" },
+        { id: 2, title: "Wybór Sędziego", category: "Ogłoszenia DOJ", content: "Ogłoszenie oficjalne z wydziału DOJ.", authorId: 2, authorName: "Marek Prokurator" },
+        { id: 3, title: "Kupię Auto", category: "Ogólne", content: "Szukam czegoś szybkiego.", authorId: 1, authorName: "Jan Kowalski" }
     ];
 
     let currentUser = users[0];
-    let currentCategory = 'all';
-
-    // Baza ogłoszeń
-    let announcements = [
-        { id: 1, title: "Otwarta rekrutacja do Sądów", category: "Rekrutacja", content: "Zapraszamy do składania podań na stanowiska pomocnicze.", authorId: 2, authorName: "Anna Nowak" },
-        { id: 2, title: "Oficjalny Komunikat DOJ", category: "Ogłoszenia DOJ", content: "Wchodzą w życie nowe rozporządzenia prawne.", authorId: 2, authorName: "Anna Nowak" },
-        { id: 3, title: "Sprzedam auto", category: "Ogólne", content: "Auto w stanie idealnym, cena do negocjacji.", authorId: 1, authorName: "Jan Kowalski" }
-    ];
+    let activeCat = 'all';
 
     function init() {
-        renderUserSelect();
+        const sel = document.getElementById('userSelect');
+        sel.innerHTML = users.map(u => `<option value="${u.id}">${u.name} [${u.role}]</option>`).join('');
         switchUser();
     }
 
-    function renderUserSelect() {
-        const select = document.getElementById('userSelect');
-        select.innerHTML = '';
-        users.forEach(u => {
-            select.innerHTML += `<option value="${u.id}">${u.name} (${u.role})</option>`;
-        });
-        select.value = currentUser.id;
-    }
-
     function switchUser() {
-        const selectedId = parseInt(document.getElementById('userSelect').value);
-        currentUser = users.find(u => u.id === selectedId);
-
-        document.getElementById('userRoleInfo').innerText = `Ranga: ${currentUser.role}`;
-
-        // Zablokuj/Odblokuj opcję ogłoszeń DOJ w formularzu
-        const dojOption = document.getElementById('dojOption');
+        const id = parseInt(document.getElementById('userSelect').value);
+        currentUser = users.find(u => u.id === id);
+        
+        document.getElementById('roleBadge').innerText = `Twoja Ranga: ${currentUser.role}`;
+        
+        // Zabezpieczenie kategorii DOJ przy dodawaniu
+        const dojOpt = document.getElementById('dojOpt');
         if (currentUser.role === 'DOJ' || currentUser.role === 'Admin') {
-            dojOption.disabled = false;
-            dojOption.innerText = "⚖️ Ogłoszenia DOJ";
+            dojOpt.disabled = false;
+            dojOpt.innerText = "⚖️ Ogłoszenia DOJ";
         } else {
-            dojOption.disabled = true;
-            dojOption.innerText = "⚖️ Ogłoszenia DOJ (Tylko dla DOJ)";
+            dojOpt.disabled = true;
+            dojOpt.innerText = "⚖️ Ogłoszenia DOJ (Tylko ranga DOJ)";
         }
 
         renderFeed();
@@ -180,128 +148,108 @@
     }
 
     function filterCategory(cat) {
-        currentCategory = cat;
+        activeCat = cat;
         renderFeed();
     }
 
     function renderFeed() {
         const feed = document.getElementById('feed');
-        feed.innerHTML = '';
+        const filtered = posts.filter(p => activeCat === 'all' || p.category === activeCat);
 
-        const filtered = announcements.filter(a => currentCategory === 'all' || a.category === currentCategory);
-
-        if(filtered.length === 0) {
-            feed.innerHTML = '<p style="color: #aaa;">Brak ogłoszeń w tej kategorii.</p>';
+        if(!filtered.length) {
+            feed.innerHTML = '<p style="color: #888;">Brak ogłoszeń.</p>';
             return;
         }
 
-        filtered.forEach(a => {
-            let typeClass = '';
-            if (a.category === 'Ogłoszenia DOJ') typeClass = 'doj';
-            if (a.category === 'Rekrutacja') typeClass = 'rekrutacja';
+        feed.innerHTML = filtered.map(p => {
+            let cls = '';
+            if (p.category === 'Ogłoszenia DOJ') cls = 'doj';
+            if (p.category === 'Rekrutacja') cls = 'rekrutacja';
 
-            feed.innerHTML += `
-                <div class="card ${typeClass}">
-                    <div class="card-header">
-                        <span>${a.title}</span>
-                        <small>[${a.category}]</small>
+            return `
+                <div class="card ${cls}">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <span>${p.title}</span>
+                        <small>${p.category}</small>
                     </div>
-                    <div>${a.content}</div>
-                    <small style="color: #aaa; display:block; margin-top:10px;">Autor: ${a.authorName}</small>
+                    <p style="margin: 10px 0;">${p.content}</p>
+                    <small style="color:#aaa;">Autor: ${p.authorName}</small>
                 </div>
             `;
-        });
+        }).join('');
     }
 
     function renderPanel() {
-        const roleSection = document.getElementById('roleManagementSection');
-        const infoText = document.getElementById('panelInfoText');
-        const tbody = document.getElementById('announcementsTableBody');
+        const roleManager = document.getElementById('roleManager');
+        const panelTitle = document.getElementById('panelTitle');
+        const tbodyUsers = document.getElementById('usersTable');
+        const tbodyPosts = document.getElementById('panelAnnouncements');
 
-        // 1. ZARZĄDZANIE RANGAMI (Widoczne tylko dla Admina)
+        // 1. Opcja nadawania rang (Tylko Admin)
         if (currentUser.role === 'Admin') {
-            roleSection.style.display = 'block';
-            renderUserRolesTable();
-            infoText.innerText = "Jako Admin widzisz ogłoszenia wszystkich użytkowników.";
-        } else {
-            roleSection.style.display = 'none';
-        }
-
-        // 2. FILTROWANIE W PANELU DLA DOJ
-        let visibleAnnouncements = [];
-        if (currentUser.role === 'Admin') {
-            visibleAnnouncements = announcements; // Admin widzi wszystko
-        } else if (currentUser.role === 'DOJ') {
-            // Ranga DOJ widzi TYLKO SWOJE ogłoszenia!
-            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
-            infoText.innerText = "Jako członek DOJ widzisz w panelu wyłącznie swoje własne ogłoszenia.";
-        } else {
-            visibleAnnouncements = announcements.filter(a => a.authorId === currentUser.id);
-            infoText.innerText = "Widzisz wyłącznie swoje własne ogłoszenia.";
-        }
-
-        tbody.innerHTML = '';
-        visibleAnnouncements.forEach(a => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${a.title}</td>
-                    <td>${a.category}</td>
-                    <td>${a.authorName}</td>
-                    <td><button onclick="deleteAnnouncement(${a.id})" style="background: #e74c3c;">Usuń</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    function renderUserRolesTable() {
-        const tbody = document.getElementById('userTableBody');
-        tbody.innerHTML = '';
-        users.forEach(u => {
-            tbody.innerHTML += `
+            roleManager.style.display = 'block';
+            tbodyUsers.innerHTML = users.map(u => `
                 <tr>
                     <td>${u.name}</td>
-                    <td><strong>${u.role}</strong></td>
+                    <td><b>${u.role}</b></td>
                     <td>
-                        <button onclick="setRole(${u.id}, 'User')" style="background: #555;">Daj User</button>
-                        <button onclick="setRole(${u.id}, 'DOJ')" style="background: #1b4f72;">Daj Rangi DOJ</button>
-                        <button onclick="setRole(${u.id}, 'Admin')" style="background: #e67e22;">Daj Admin</button>
+                        <button onclick="setRole(${u.id}, 'User')" style="background:#555;">User</button>
+                        <button onclick="setRole(${u.id}, 'DOJ')" style="background:#f39c12;">Ranga DOJ</button>
+                        <button onclick="setRole(${u.id}, 'Admin')" style="background:#007bff;">Admin</button>
                     </td>
                 </tr>
-            `;
-        });
+            `).join('');
+            panelTitle.innerText = "Zarządzanie Wszystkimi Ogłoszeniami";
+        } else {
+            roleManager.style.display = 'none';
+        }
+
+        // 2. Filtrowanie w Panelu Admina:
+        // Osoby z rangą DOJ widzą w panelu TYLKO SWOJE ogłoszenia!
+        let visiblePosts = posts;
+        if (currentUser.role === 'DOJ') {
+            visiblePosts = posts.filter(p => p.authorId === currentUser.id);
+            panelTitle.innerText = "Zarządzanie Twoimi Ogłoszeniami (Widok DOJ)";
+        } else if (currentUser.role === 'User') {
+            visiblePosts = posts.filter(p => p.authorId === currentUser.id);
+            panelTitle.innerText = "Moje Ogłoszenia";
+        }
+
+        tbodyPosts.innerHTML = visiblePosts.map(p => `
+            <tr>
+                <td>${p.title}</td>
+                <td>${p.category}</td>
+                <td>${p.authorName}</td>
+                <td><button onclick="deletePost(${p.id})" style="background:#d9534f;">Usuń</button></td>
+            </tr>
+        `).join('');
     }
 
     function setRole(userId, newRole) {
-        const u = users.find(user => user.id === userId);
+        const u = users.find(x => x.id === userId);
         if (u) {
             u.role = newRole;
-            renderUserSelect();
-            switchUser();
-            alert(`Pomyślnie zmieniono rangę użytkownika ${u.name} na ${newRole}`);
+            init();
+            alert(`Zmieniono rangę ${u.name} na ${newRole}`);
         }
     }
 
-    function addAnnouncement() {
-        const title = document.getElementById('postTitle').value;
-        const category = document.getElementById('postCategory').value;
-        const content = document.getElementById('postContent').value;
+    function addPost() {
+        const title = document.getElementById('title').value;
+        const category = document.getElementById('category').value;
+        const content = document.getElementById('content').value;
 
-        if (!title || !content) {
-            alert("Uzupełnij tytuł i treść!");
-            return;
-        }
+        if (!title || !content) return alert("Wypełnij pola!");
 
-        // Blokada zabezpieczająca
         if (category === 'Ogłoszenia DOJ' && currentUser.role !== 'DOJ' && currentUser.role !== 'Admin') {
-            alert("Nie masz uprawnień (Rangi DOJ), aby publikować w tej kategorii!");
-            return;
+            return alert("Nie masz rangi DOJ!");
         }
 
-        announcements.unshift({
+        posts.unshift({
             id: Date.now(),
-            title: title,
-            category: category,
-            content: content,
+            title,
+            category,
+            content,
             authorId: currentUser.id,
             authorName: currentUser.name
         });
@@ -309,13 +257,12 @@
         closeModal();
         renderFeed();
         renderPanel();
-
-        document.getElementById('postTitle').value = '';
-        document.getElementById('postContent').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('content').value = '';
     }
 
-    function deleteAnnouncement(id) {
-        announcements = announcements.filter(a => a.id !== id);
+    function deletePost(id) {
+        posts = posts.filter(p => p.id !== id);
         renderFeed();
         renderPanel();
     }
