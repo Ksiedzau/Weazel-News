@@ -4,6 +4,6 @@ window.SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
 // --- LISTY ID Z DISCORDA ---
 // Wklej odpowiednie ID użytkowników z Discorda w cudzysłowach:
-window.BOSS_DISCORD_IDS = ['1487414745534431233']; 
+window.BOSS_DISCORD_IDS = ['']; 
 window.ADMIN_DISCORD_IDS = ['TWOJE_DISCORD_ID'];
-window.CITY_HALL_DISCORD_IDS = ['ID_OSOBY_Z_CITY_HALL']; // ID osób z rangą City Hall
+window.CITY_HALL_DISCORD_IDS = ['1487414745534431233']; // ID osób z rangą City Hall
