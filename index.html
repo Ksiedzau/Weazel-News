@@ -3,108 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wirtualne Newsy</title>
-    <!-- Biblioteka Supabase -->
+    <title>Portal Informacyjny</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --danger: #ef4444;
-            --border: #334155;
+            --bg-main: #0a0a0a;
+            --bg-card: #141414;
+            --bg-card-hover: #1f1f1f;
+            --text-main: #ffffff;
+            --text-muted: #a3a3a3;
+            --accent-red: #dc2626;
+            --accent-red-hover: #b91c1c;
+            --border-color: #262626;
+            --cityhall-gold: #eab308;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* Górny Pasek Nav */
         header {
-            background: var(--card); border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 10;
+            background: #000000;
+            border-bottom: 2px solid var(--accent-red);
+            padding: 0.8rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.15);
         }
 
-        .logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); cursor: pointer; }
-        nav { display: flex; gap: 0.5rem; }
+        .logo { font-size: 1.4rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
+        .logo span { color: var(--accent-red); }
+
+        nav { display: flex; gap: 0.3rem; flex-wrap: wrap; }
         .nav-btn {
-            background: transparent; border: none; color: var(--text-muted);
-            padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 1rem;
+            background: transparent; border: 1px solid transparent; color: var(--text-muted);
+            padding: 0.5rem 0.9rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+            transition: all 0.2s ease; text-transform: uppercase;
         }
-        .nav-btn:hover, .nav-btn.active { color: var(--text); background: var(--border); }
+        .nav-btn:hover { color: #fff; border-color: var(--border-color); background: #121212; }
+        .nav-btn.active { color: #fff; background: var(--accent-red); border-color: var(--accent-red); }
 
-        .btn {
-            background: var(--accent); color: white; border: none; padding: 0.5rem 1rem;
-            border-radius: 0.375rem; cursor: pointer; font-weight: 600;
+        /* Przycisk Akcji / Logowanie */
+        .btn-red {
+            background: var(--accent-red); color: #fff; border: none; padding: 0.52rem 1.2rem;
+            border-radius: 4px; cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 0.8rem;
+            transition: background 0.2s;
         }
-        .btn:hover { background: var(--accent-hover); }
-        .btn-danger { background: var(--danger); }
+        .btn-red:hover { background: var(--accent-red-hover); }
 
-        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+        .btn-danger { background: #991b1b; }
+        .btn-danger:hover { background: #7f1d1d; }
+
+        /* Kontener Główny */
+        main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; width: 100%; flex: 1; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .section-header {
+            border-left: 4px solid var(--accent-red); padding-left: 0.8rem; margin-bottom: 1.5rem;
+            font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Siatka Kart */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
         .card {
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 0.5rem; overflow: hidden; display: flex; flex-direction: column;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s;
         }
-        .card-media { width: 100%; height: 180px; background: #000; object-fit: cover; }
-        .card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
-        .card-title { font-size: 1.2rem; font-weight: bold; }
-        .card-meta { font-size: 0.8rem; color: var(--text-muted); }
-        .card-text { color: var(--text-muted); font-size: 0.9rem; flex: 1; margin-top: 0.5rem; }
+        .card:hover { transform: translateY(-3px); border-color: var(--accent-red); }
+        .card-media { width: 100%; height: 190px; background: #000; object-fit: cover; border-bottom: 1px solid var(--border-color); }
+        .card-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+        .card-tag { font-size: 0.7rem; font-weight: 800; color: var(--accent-red); text-transform: uppercase; letter-spacing: 1px; }
+        .card-title { font-size: 1.15rem; font-weight: 700; color: #fff; line-height: 1.3; }
+        .card-meta { font-size: 0.75rem; color: var(--text-muted); }
+        .card-text { color: #d4d4d4; font-size: 0.88rem; flex: 1; line-height: 1.5; margin-top: 0.3rem; }
 
-        .user-panel { display: flex; align-items: center; gap: 1rem; }
-        .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
+        /* Profil Użytkownika w Nagłówku */
+        .user-panel { display: flex; align-items: center; gap: 0.8rem; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 4px; border: 1px solid var(--accent-red); }
 
-        /* Formularze w panelu admina */
+        /* Panel Admina i Formularze */
         .admin-form {
-            background: var(--card); border: 1px solid var(--border);
-            padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;
-            display: flex; flex-direction: column; gap: 1rem; max-width: 600px; margin-x: auto;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            padding: 1.5rem; border-radius: 6px; margin-bottom: 2rem; max-width: 650px; margin-x: auto;
         }
-        .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
-        .form-group label { font-size: 0.85rem; color: var(--text-muted); }
+        .admin-form h3 { border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; color: #fff; font-size: 1.1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+        .form-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
         .form-group input, .form-group textarea, .form-group select {
-            background: var(--bg); border: 1px solid var(--border); color: var(--text);
-            padding: 0.6rem; border-radius: 0.25rem;
+            background: #000; border: 1px solid var(--border-color); color: #fff;
+            padding: 0.65rem; border-radius: 4px; font-size: 0.9rem; outline: none;
         }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-red); }
 
-        /* Modal z artykułem */
+        /* Modal / Pop-up czytania */
         .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            display: none; justify-content: center; align-items: center; z-index: 100;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(4px);
         }
         .modal.active { display: flex; }
         .modal-box {
-            background: var(--card); padding: 2rem; border-radius: 0.5rem;
-            max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative;
+            background: var(--bg-card); border: 1px solid var(--accent-red); padding: 2rem; border-radius: 6px;
+            max-width: 750px; width: 92%; max-height: 85vh; overflow-y: auto; position: relative;
         }
-        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo" onclick="switchTab('home')">📰 Wirtualne Newsy</div>
+        <div class="logo" onclick="switchTab('home')">CITY<span>NEWS</span></div>
         <nav>
-            <button class="nav-btn active" id="btn-tab-home" onclick="switchTab('home')">Główna</button>
+            <button class="nav-btn active" id="btn-tab-home" onclick="switchTab('home')">Strona Główna</button>
             <button class="nav-btn" id="btn-tab-tiktoki" onclick="switchTab('tiktoki')">TikToki</button>
-            <button class="nav-btn" id="btn-tab-team" onclick="switchTab('team')">Kadra</button>
-            <button class="nav-btn" id="btn-tab-admin" style="display:none;" onclick="switchTab('admin')">Panel Admina</button>
+            <button class="nav-btn" id="btn-tab-wiadomosci" onclick="switchTab('wiadomosci')">Wiadomości</button>
+            <button class="nav-btn" id="btn-tab-artykuly" onclick="switchTab('artykuly')">Artykuły</button>
+            <button class="nav-btn" id="btn-tab-cityhall" onclick="switchTab('cityhall')">🏛️ City Hall</button>
+            <button class="nav-btn" id="btn-tab-rekrutacja" onclick="switchTab('rekrutacja')">Rekrutacja</button>
+            <button class="nav-btn" id="btn-tab-admin" style="display:none;" onclick="switchTab('admin')">⚙️ Panel Zarządzania</button>
         </nav>
         <div class="user-panel">
-            <button class="btn" id="btn-login" onclick="loginWithDiscord()">Zaloguj przez Discord</button>
-            <div id="user-info" style="display:none; align-items:center; gap:0.5rem;">
+            <button class="btn-red" id="btn-login" onclick="loginWithDiscord()">Zaloguj Discord</button>
+            <div id="user-info" style="display:none; align-items:center; gap:0.6rem;">
                 <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
                 <div>
                     <div id="user-name" style="font-weight:bold; font-size:0.85rem;"></div>
-                    <div id="user-role" style="font-size:0.75rem; color:var(--text-muted);">Użytkownik</div>
+                    <div id="user-role" style="font-size:0.72rem; color:var(--text-muted);">Użytkownik</div>
                 </div>
-                <button class="btn btn-danger" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="logout()">Wyloguj</button>
+                <button class="btn-red btn-danger" style="padding:0.3rem 0.6rem; font-size:0.7rem;" onclick="logout()">X</button>
             </div>
         </div>
     </header>
@@ -112,35 +138,67 @@
     <main>
         <!-- TAB 1: STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-content active">
-            <h2 style="margin-bottom: 1rem;">Ostatnie Wiadomości</h2>
-            <div class="grid" id="news-grid"></div>
+            <h2 class="section-header">Najnowsze Wpisy</h2>
+            <div class="grid" id="home-grid"></div>
         </section>
 
         <!-- TAB 2: TIKTOKI -->
         <section id="tab-tiktoki" class="tab-content">
-            <h2 style="margin-bottom: 1rem;">Materiały Wideo / TikToki</h2>
+            <h2 class="section-header">Materiały Wideo / TikToki</h2>
             <div class="grid" id="tiktok-grid"></div>
         </section>
 
-        <!-- TAB 3: KADRA -->
-        <section id="tab-team" class="tab-content">
-            <h2 style="margin-bottom: 1rem;">Nasza Redakcja</h2>
-            <div class="grid" id="team-grid"></div>
+        <!-- TAB 3: WIADOMOŚCI -->
+        <section id="tab-wiadomosci" class="tab-content">
+            <h2 class="section-header">Wiadomości z Miasta</h2>
+            <div class="grid" id="wiadomosci-grid"></div>
         </section>
 
-        <!-- TAB 4: PANEL ADMINA (Widoczny tylko dla uprawnionych) -->
-        <section id="tab-admin" class="tab-content">
-            <h2 style="margin-bottom: 1.5rem; text-align:center;">Panel Zarządzania Treścią</h2>
+        <!-- TAB 4: ARTYKUŁY -->
+        <section id="tab-artykuly" class="tab-content">
+            <h2 class="section-header">Artykuły i Publicystyka</h2>
+            <div class="grid" id="artykuly-grid"></div>
+        </section>
 
-            <form class="admin-form" onsubmit="createArticle(event)">
-                <h3>Dodaj Nowy Artykuł</h3>
+        <!-- TAB 5: CITY HALL -->
+        <section id="tab-cityhall" class="tab-content">
+            <h2 class="section-header" style="border-color: var(--cityhall-gold);">🏛️ Oficjalne Ogłoszenia City Hall</h2>
+            <div class="grid" id="cityhall-grid"></div>
+        </section>
+
+        <!-- TAB 6: REKRUTACJA -->
+        <section id="tab-rekrutacja" class="tab-content">
+            <h2 class="section-header">Dołącz do Naszego Zespołu</h2>
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); padding:2rem; border-radius:6px; max-width:800px; margin:0 auto;">
+                <h3 style="margin-bottom:1rem; color:var(--accent-red);">Rekrutacja Otwarta!</h3>
+                <p style="line-height:1.6; color:#ccc; margin-bottom:1.5rem;">
+                    Chcesz tworzyć materiały, pisać artykuły lub nagrywać TikToki dla naszego portalu? Złóż podanie i dołącz do redakcji!
+                </p>
+                <a href="TU_WSTAW_LINK_DO_FORMULARZA_LUB_DISCORDA" target="_blank" class="btn-red" style="text-decoration:none; display:inline-block;">Aplikuj Teraz</a>
+            </div>
+        </section>
+
+        <!-- TAB 7: PANEL ADMINA -->
+        <section id="tab-admin" class="tab-content">
+            <h2 class="section-header">Panel Zarządzania Treścią</h2>
+
+            <!-- Formularz Dodawania Wpisu (Admin / Szef) -->
+            <form class="admin-form" id="form-general-art" onsubmit="createArticle(event)">
+                <h3>Dodaj Wpis (Wiadomość / Artykuł)</h3>
+                <div class="form-group">
+                    <label>Kategoria / Zakładka</label>
+                    <select id="art-target" required>
+                        <option value="wiadomosci">Wiadomości</option>
+                        <option value="artykuly">Artykuły</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Tytuł</label>
                     <input type="text" id="art-title" required>
                 </div>
                 <div class="form-group">
-                    <label>Tag / Kategoria</label>
-                    <input type="text" id="art-tag" placeholder="np. Ogłoszenie, Event" required>
+                    <label>Tag (np. Pilarz, Event, Pilne)</label>
+                    <input type="text" id="art-tag" required>
                 </div>
                 <div class="form-group">
                     <label>Typ Mediów</label>
@@ -150,66 +208,65 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Link URL do Zdjęcia/Wideo</label>
+                    <label>Link URL do Media</label>
                     <input type="url" id="art-media-url" required>
                 </div>
                 <div class="form-group">
-                    <label>Treść Artykułu</label>
-                    <textarea id="art-content" rows="4" required></textarea>
+                    <label>Treść</label>
+                    <textarea id="art-content" rows="5" required></textarea>
                 </div>
-                <button type="submit" class="btn">Opublikuj Artykuł</button>
+                <button type="submit" class="btn-red">Opublikuj Wpis</button>
             </form>
 
-            <form class="admin-form" onsubmit="createTiktok(event)">
+            <!-- Formularz Dodawania Ogłoszenia City Hall (City Hall / Szef) -->
+            <form class="admin-form" id="form-cityhall-art" style="display:none;" onsubmit="createCityHallNotice(event)">
+                <h3 style="color:var(--cityhall-gold);">🏛️ Dodaj Ogłoszenie City Hall</h3>
+                <div class="form-group">
+                    <label>Tytuł Ogłoszenia</label>
+                    <input type="text" id="ch-title" required>
+                </div>
+                <div class="form-group">
+                    <label>Link do Grafiki / Dokumentu (URL)</label>
+                    <input type="url" id="ch-media-url" required>
+                </div>
+                <div class="form-group">
+                    <label>Treść Ogłoszenia</label>
+                    <textarea id="ch-content" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn-red" style="background:var(--cityhall-gold); color:#000;">Opublikuj w City Hall</button>
+            </form>
+
+            <!-- Formularz TikToka -->
+            <form class="admin-form" id="form-tiktok-art" onsubmit="createTiktok(event)">
                 <h3>Dodaj TikTok / Wideo</h3>
                 <div class="form-group">
                     <label>Tytuł</label>
                     <input type="text" id="tt-title" required>
                 </div>
                 <div class="form-group">
-                    <label>Link do Wideo (URL / MP4)</label>
+                    <label>Link URL do Wideo (MP4)</label>
                     <input type="url" id="tt-url" required>
                 </div>
                 <div class="form-group">
                     <label>Krótki Opis</label>
                     <textarea id="tt-desc" rows="2"></textarea>
                 </div>
-                <button type="submit" class="btn">Dodaj Wideo</button>
+                <button type="submit" class="btn-red">Opublikuj Wideo</button>
             </form>
-
-            <div id="boss-panel" style="display:none;">
-                <form class="admin-form" onsubmit="addTeamMember(event)">
-                    <h3 style="color:#8b5cf6;">Panel Szefa: Dodaj Członka Kadry</h3>
-                    <div class="form-group">
-                        <label>Imię i Nazwisko / Nick</label>
-                        <input type="text" id="member-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Rola / Stanowisko</label>
-                        <input type="text" id="member-role" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Zdjęcie Profilowe (URL)</label>
-                        <input type="url" id="member-photo">
-                    </div>
-                    <button type="submit" class="btn" style="background:#8b5cf6;">Dodaj do Redakcji</button>
-                </form>
-            </div>
         </section>
     </main>
 
-    <!-- MODAL DO CZYTANIA PEŁNEGO ARTYKUŁU -->
+    <!-- MODAL PEŁNEJ TREŚCI -->
     <div class="modal" id="modal-art" onclick="closeModal(event)">
         <div class="modal-box">
             <button class="modal-close" onclick="closeModal()">×</button>
-            <h2 id="m-title"></h2>
-            <div id="m-meta" style="color:var(--text-muted); font-size:0.85rem; margin:0.5rem 0;"></div>
-            <div id="m-media" style="margin: 1rem 0;"></div>
-            <p id="m-content" style="line-height:1.6; white-space:pre-wrap;"></p>
+            <h2 id="m-title" style="margin-bottom:0.5rem;"></h2>
+            <div id="m-meta" style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;"></div>
+            <div id="m-media" style="margin-bottom:1.5rem;"></div>
+            <p id="m-content" style="line-height:1.6; white-space:pre-wrap; color:#e5e5e5;"></p>
         </div>
     </div>
 
-    <!-- Wczytanie konfiguracji i logiki -->
     <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
