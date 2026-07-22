@@ -3,89 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weazel News | Los Santos</title>
+    <title>Weazel News | Los Santos Edition</title>
+    <!-- Biblioteka Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,800;0,900;1,900&display=swap');
+
         :root {
-            --bg-dark: #0a0c10;
-            --bg-card: #141822;
-            --primary: #e11d48;
-            --primary-hover: #be123c;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #232a3b;
+            --bg-dark: #090a0f;
+            --bg-panel: #11131c;
+            --bg-card: #161925;
+            --accent: #e11d48;
+            --accent-hover: #f43f5e;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: #23283b;
+            --gold: #f59e0b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-        header { background: #0f1219; border-bottom: 2px solid var(--primary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; font-style: italic; }
+        /* NAWIGACJA / HEADER */
+        header { 
+            background: linear-gradient(180deg, rgba(17,19,28,0.95) 0%, rgba(9,10,15,0.98) 100%);
+            border-bottom: 2px solid var(--accent);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-box { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-badge { background: var(--accent); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-style: italic; font-size: 1.1rem; }
+        .logo-text { font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; font-style: italic; }
+        .logo-text span { color: var(--accent); }
+
+        .nav-menu { display: flex; gap: 10px; background: rgba(255,255,255,0.03); padding: 6px; border-radius: 8px; border: 1px solid var(--border); }
+        .nav-item { color: var(--text-sub); text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.25s ease; }
+        .nav-item:hover, .nav-item.active { background-color: var(--accent); color: #fff; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); }
+        .nav-item.admin-btn { display: none; background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+        .nav-item.admin-btn:hover, .nav-item.admin-btn.active { background: var(--gold); color: #000; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
+
+        /* PROFIL / LOGOWANIE */
+        .auth-container { display: flex; align-items: center; gap: 15px; }
+        .btn-discord { background: #5865F2; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; font-size: 0.85rem; text-transform: uppercase; }
+        .btn-discord:hover { background: #4752C4; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4); }
         
-        .nav-links { display: flex; gap: 8px; }
-        .nav-links a { color: var(--text-muted); text-decoration: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .nav-links a.active, .nav-links a:hover { background-color: var(--border); color: var(--text-main); }
-        .admin-link { color: #f59e0b !important; display: none; } /* Domyślnie ukryte */
+        .user-box { display: none; align-items: center; gap: 12px; background: var(--bg-card); padding: 6px 14px; border-radius: 30px; border: 1px solid var(--border); }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-weight: 800; font-size: 0.9rem; }
+        .user-badge { font-size: 0.65rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 8px; }
+        .btn-logout:hover { text-decoration: underline; }
 
-        .auth-btn { background-color: #5865F2; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .auth-btn:hover { background-color: #4752C4; }
-
-        .user-profile { display: none; align-items: center; gap: 12px; }
-        .user-avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--primary); }
-        .user-info { display: flex; flex-direction: column; }
-        .user-name { font-weight: 700; font-size: 0.95rem; }
-        .user-role { font-size: 0.75rem; color: #10b981; font-weight: 600; text-transform: uppercase; }
-        .logout-btn { background: #272f45; color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .logout-btn:hover { background: #ef4444; color: #fff; }
-
-        main { flex: 1; padding: 2.5rem 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+        /* GŁÓWNA ZAWARTOŚĆ */
+        main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 2.5rem 1.5rem; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
 
-        .card { background-color: var(--bg-card); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); }
-        h1, h2 { color: var(--text-main); margin-bottom: 1rem; font-weight: 800; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NAGŁÓWKI SEKCJI */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-left: 5px solid var(--accent); padding-left: 15px; }
+        .section-header h1 { font-size: 1.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .section-header p { color: var(--text-sub); font-size: 0.9rem; margin-top: 4px; }
+
+        /* KARTY ARTYKUŁÓW */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+        .article-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }
+        .article-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); }
         
-        /* Grid z Artykułami */
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
-        .article-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
-        .article-img { width: 100%; height: 180px; object-fit: cover; background-color: #1a202c; }
-        .article-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
-        .article-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
-        .article-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
-        .article-text { font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; flex: 1; }
+        .article-img-wrap { width: 100%; height: 200px; position: relative; overflow: hidden; background: #000; }
+        .article-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .article-card:hover .article-img { transform: scale(1.05); }
+        .article-tag { position: absolute; top: 12px; left: 12px; background: var(--accent); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Formularz dodawania artykułu */
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 12px; background: #0f1219; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 0.95rem; }
-        .form-control:focus { outline: none; border-color: var(--primary); }
-        textarea.form-control { resize: vertical; min-height: 120px; }
-        .submit-btn { background: var(--primary); color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
-        .submit-btn:hover { background: var(--primary-hover); }
+        .article-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+        .article-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; color: #fff; }
+        .article-meta { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 15px; display: flex; gap: 15px; font-weight: 600; }
+        .article-content { font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; flex: 1; white-space: pre-line; }
+
+        .btn-delete-art { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; font-size: 0.8rem; }
+        .btn-delete-art:hover { background: #ef4444; color: white; }
+
+        /* PANEL REDAKTORA / FORMULARZ */
+        .admin-box { background: var(--bg-panel); border: 1px solid var(--gold); border-radius: 12px; padding: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-full { grid-column: span 2; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: var(--text-sub); margin-bottom: 8px; letter-spacing: 1px; }
+        .form-input { width: 100%; padding: 12px 16px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 0.95rem; transition: 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+        textarea.form-input { min-height: 160px; resize: vertical; }
+
+        .btn-publish { background: var(--gold); color: #000; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; width: 100%; transition: 0.2s; font-size: 1rem; }
+        .btn-publish:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4); }
+
+        /* KARTA REKRUTACJI */
+        .info-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; line-height: 1.8; }
+        .info-card h3 { color: var(--accent); margin-bottom: 10px; }
+
+        footer { background: #06070a; border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--text-sub); font-size: 0.85rem; margin-top: auto; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">Weazel News</div>
-        <nav class="nav-links">
-            <a id="nav-home" class="active" onclick="switchTab('home')">Główna</a>
-            <a id="nav-news" onclick="switchTab('news')">Wiadomości</a>
-            <a id="nav-rekrutacja" onclick="switchTab('rekrutacja')">Rekrutacja</a>
-            <!-- Ukryta zakładka widoczna tylko dla redakcji z dodanym ID Discorda -->
-            <a id="nav-admin" class="admin-link" onclick="switchTab('admin')"> Panel Redaktora</a>
+        <div class="logo-box" onclick="switchTab('home')">
+            <div class="logo-badge">LIVE</div>
+            <div class="logo-text">WEAZEL <span>NEWS</span></div>
+        </div>
+
+        <nav class="nav-menu">
+            <a id="nav-home" class="nav-item active" onclick="switchTab('home')">Strona Główna</a>
+            <a id="nav-news" class="nav-item" onclick="switchTab('news')">Wiadomości</a>
+            <a id="nav-rekrutacja" class="nav-item" onclick="switchTab('rekrutacja')">Rekrutacja</a>
+            <a id="nav-admin" class="nav-item admin-btn" onclick="switchTab('admin')">⭐ Panel Redaktora</a>
         </nav>
-        <div>
-            <button id="btn-login" class="auth-btn" onclick="zalogujPrzezDiscord()">
+
+        <div class="auth-container">
+            <button id="btn-login" class="btn-discord" onclick="zalogujPrzezDiscord()">
                 Zaloguj przez Discord
             </button>
-            <div id="user-profile" class="user-profile">
+
+            <div id="user-profile" class="user-box">
                 <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                <div class="user-info">
+                <div class="user-details">
                     <span id="user-name" class="user-name"></span>
-                    <span id="user-role" class="user-role">Czytelnik</span>
+                    <span id="user-role" class="user-badge">Czytelnik</span>
                 </div>
-                <button class="logout-btn" onclick="wyloguj()">Wyloguj</button>
+                <button class="btn-logout" onclick="wyloguj()">[ Wyloguj ]</button>
             </div>
         </div>
     </header>
@@ -93,62 +150,102 @@
     <main>
         <!-- ZAKŁADKA GŁÓWNA -->
         <div id="tab-home" class="tab-content active">
-            <div class="card">
-                <h1> Oficjalny Portal Weazel News</h1>
-                <p style="color: var(--text-muted);">Prawda, szybkość, rzetelność. Najświeższe wydarzenia, wiadomości kryminalne oraz wywiady prosto z serca miasta.</p>
+            <div class="section-header">
+                <div>
+                    <h1>Ostatnie Wiadomości</h1>
+                    <p>Najświeższe wieści z Los Santos i okolic w czasie rzeczywistym</p>
+                </div>
             </div>
-            <h2>Ostatnie Nagłówki</h2>
-            <div id="home-news-grid" class="news-grid">
-                <!-- Najnowsze artykuły wczytają się tutaj -->
-            </div>
+            <div id="home-news-grid" class="news-grid"></div>
         </div>
 
         <!-- ZAKŁADKA WIADOMOŚCI -->
         <div id="tab-news" class="tab-content">
-            <h2>Wszystkie Artykuły</h2>
-            <div id="all-news-grid" class="news-grid">
-                <!-- Wszystkie artykuły -->
+            <div class="section-header">
+                <div>
+                    <h1>Archiwum Artykułów</h1>
+                    <p>Wszystkie opublikowane wpisy naszych redaktorów</p>
+                </div>
             </div>
+            <div id="all-news-grid" class="news-grid"></div>
         </div>
 
         <!-- ZAKŁADKA REKRUTACJA -->
         <div id="tab-rekrutacja" class="tab-content">
-            <div class="card">
-                <h2>Chcesz dołączyć do zespołu Weazel News?</h2>
-                <p style="color: var(--text-muted); margin-bottom: 15px;">Szukamy utalentowanych dziennikarzy, fotoreporterów oraz montażystów. Jeśli masz „lekkie pióro” i szukasz emocjonującej pracy w terenie – zgłoś się do nas!</p>
-                <p>Wymagania: Wiek min. 18 lat (IC), znajomość ortografii, nienaganna kultura osobista.</p>
+            <div class="section-header">
+                <div>
+                    <h1>Dołącz Do Redakcji</h1>
+                    <p>Kształtuj z nami lokalną prasę i media</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <h3>Poszukujemy Dziennikarzy oraz Fotoreporterów!</h3>
+                <p>Masz w sobie pasję do odkrywania prawdy? Chcesz być zawsze w centrum najważniejszych wydarzeń w mieście? Weazel News otwiera rekrutację dla nowych talentów!</p>
+                <br>
+                <p><b>Wymagania:</b></p>
+                <ul style="margin-left: 20px; color: var(--text-sub);">
+                    <li>Nienaganna kultura osobista oraz znajomość języka polskiego.</li>
+                    <li>Umiejętność pracy pod presją czasu i w trudnym terenie.</li>
+                    <li>Aktywne konto na Discordzie redakcyjnym.</li>
+                </ul>
+                <br>
+                <p>Zgłoszenia prosimy kierować bezpośrednio do Zarządu Redakcji na Discordzie.</p>
             </div>
         </div>
 
-        <!-- ZAKŁADKA ADMIN / REDAKCJA (Dla uprawnionych) -->
+        <!-- ZAKŁADKA ADMIN / PANEL REDAKTORA -->
         <div id="tab-admin" class="tab-content">
-            <div class="card">
-                <h2> Dodaj Nowy Artykuł</h2>
+            <div class="section-header">
+                <div>
+                    <h1>⭐ Panel Zarządzania Artykułami</h1>
+                    <p>Formularz widoczny wyłącznie dla zweryfikowanej redakcji</p>
+                </div>
+            </div>
+
+            <div class="admin-box">
                 <form id="add-article-form" onsubmit="dodajArtykul(event)">
-                    <div class="form-group">
-                        <label>Tytuł artykułu</label>
-                        <input type="text" id="art-title" class="form-control" placeholder="np. Strzelanina w Pillbox Hill!" required>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tytuł Artykułu</label>
+                            <input type="text" id="art-title" class="form-input" placeholder="np. Pościg na Highway 1..." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kategoria / Tag</label>
+                            <select id="art-tag" class="form-input">
+                                <option value="WIADOMOŚCI">Wiadomości</option>
+                                <option value="KRYMINAŁ">Kryminał</option>
+                                <option value="WYWIAD">Wywiad</option>
+                                <option value="EVENTS">Wydarzenie</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group form-full">
+                            <label>Link do zdjęcia (URL / Imgur)</label>
+                            <input type="url" id="art-image" class="form-input" placeholder="https://i.imgur.com/..." required>
+                        </div>
+
+                        <div class="form-group form-full">
+                            <label>Treść Artykułu</label>
+                            <textarea id="art-content" class="form-input" placeholder="Napisz treść wiadomości..." required></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Link do zdjęcia (URL / Imgur)</label>
-                        <input type="url" id="art-image" class="form-control" placeholder="https://i.imgur.com/..." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Treść artykułu</label>
-                        <textarea id="art-content" class="form-control" placeholder="Wpisz treść artykułu..." required></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn">Opublikuj Artykuł</button>
+
+                    <button type="submit" class="btn-publish">🚀 Opublikuj Artykuł</button>
                 </form>
             </div>
         </div>
     </main>
 
+    <footer>
+        &copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.
+    </footer>
+
     <script>
-        // === 1. LISTA ID DISCORDA UPRAWNIONYCH DO PANELU REDAKCYJNEGO ===
-        // Tutaj wklejasz ID użytkowników z Discorda, którzy mają mieć rangę REDAKTOR
+        // === 1. LISTA UPRAWNIONYCH DISCORD ID (REDAKCJA) ===
         const ALLOWED_DISCORD_IDS = [
-            '1391147972024078519', // Twoje ID Discorda (lub ID redaktorów)
-            'TUTAJ_MOZESZ_DODAC_KOLEJNE_ID'
+            '1529556227317698791', // Twój Discord ID
+            '1391147972024078519'  // ID Twojego Ziomka
         ];
 
         // === 2. KONFIGURACJA SUPABASE ===
@@ -156,18 +253,22 @@
         const SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Lokalny zapis artykułów (działa od razu bez ustawiania baz danych)
-        let localArticles = JSON.parse(localStorage.getItem('weazel_articles')) || [
+        let isEditor = false;
+
+        // Domyślne artykuły startowe
+        let articles = JSON.parse(localStorage.getItem('weazel_articles')) || [
             {
+                id: 1,
                 title: 'Otwarcie Nowego Studia Weazel News!',
-                image: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop',
-                content: 'Z przyjemnością ogłaszamy otwarcie nowej siedziby redakcji. Nowoczesny sprzęt i jeszcze szybsze relacje z terenu!',
+                tag: 'WIADOMOŚCI',
+                image: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop',
+                content: 'Witamy w nowym portalu informacyjnym Weazel News. Od dziś nasi redaktorzy będą dostarczać Wam najświeższe relacje i informacje prosto z terenu.',
                 author: 'Zarząd Redakcji',
                 date: '22.07.2026'
             }
         ];
 
-        // === 3. LOGOWANIE DISCORD ===
+        // === 3. LOGOWANIE OAUTH (DISCORD) ===
         async function zalogujPrzezDiscord() {
             try {
                 const { error } = await supabaseClient.auth.signInWithOAuth({
@@ -185,7 +286,7 @@
             window.location.reload();
         }
 
-        // === 4. SPRAWDZANIE UPRAWNIEŃ I RANG ===
+        // === 4. SPRAWDZANIE KONT A I NADAWANIE RANG ===
         async function sprawdzUzytkownika() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (user) {
@@ -194,54 +295,72 @@
                 document.getElementById('user-name').innerText = user.user_metadata.full_name || 'Użytkownik';
                 document.getElementById('user-avatar').src = user.user_metadata.avatar_url || 'https://via.placeholder.com/35';
 
-                // Wyciąganie ID Discorda z konta Supabase
                 const discordId = user.user_metadata.provider_id || user.identities?.[0]?.id;
 
-                // Sprawdzanie czy użytkownik jest na liście rang
                 if (ALLOWED_DISCORD_IDS.includes(discordId)) {
-                    document.getElementById('user-role').innerText = ' Redaktor';
+                    isEditor = true;
+                    document.getElementById('user-role').innerText = '⭐ Redaktor';
                     document.getElementById('user-role').style.color = '#f59e0b';
-                    document.getElementById('nav-admin').style.display = 'inline-block'; // Pokazuje panel redaktora
+                    document.getElementById('nav-admin').style.display = 'inline-block';
                 }
             }
+            renderArticles();
         }
 
-        // === 5. DODAWANIE I WYŚWIETLANIE ARTYKUŁÓW ===
+        // === 5. DODAWANIE ORAZ USUWANIE ARTYKUŁÓW ===
         function dodajArtykul(e) {
             e.preventDefault();
             const title = document.getElementById('art-title').value;
+            const tag = document.getElementById('art-tag').value;
             const image = document.getElementById('art-image').value;
             const content = document.getElementById('art-content').value;
             const author = document.getElementById('user-name').innerText || 'Redaktor';
 
             const newArticle = {
+                id: Date.now(),
                 title,
+                tag,
                 image,
                 content,
                 author,
                 date: new Date().toLocaleDateString('pl-PL')
             };
 
-            localArticles.unshift(newArticle);
-            localStorage.setItem('weazel_articles', JSON.stringify(localArticles));
+            articles.unshift(newArticle);
+            localStorage.setItem('weazel_articles', JSON.stringify(articles));
 
             document.getElementById('add-article-form').reset();
-            alert('Artykuł opublikowany pomyślnie!');
+            alert('Artykuł opublikowany!');
             renderArticles();
-            switchTab('news');
+            switchTab('home');
+        }
+
+        function usunArtykul(id) {
+            if (confirm('Czy na pewno chcesz usunąć ten artykuł?')) {
+                articles = articles.filter(a => a.id !== id);
+                localStorage.setItem('weazel_articles', JSON.stringify(articles));
+                renderArticles();
+            }
         }
 
         function renderArticles() {
             const homeGrid = document.getElementById('home-news-grid');
             const allGrid = document.getElementById('all-news-grid');
 
-            const html = localArticles.map(art => `
+            const html = articles.map(art => `
                 <div class="article-card">
-                    <img class="article-img" src="${art.image}" alt="Zdjęcie" onerror="this.src='https://via.placeholder.com/400x200?text=Weazel+News'">
+                    <div class="article-img-wrap">
+                        <span class="article-tag">${art.tag || 'WIADOMOŚCI'}</span>
+                        <img class="article-img" src="${art.image}" alt="Zdjęcie" onerror="this.src='https://via.placeholder.com/600x300?text=Weazel+News'">
+                    </div>
                     <div class="article-body">
                         <div class="article-title">${art.title}</div>
-                        <div class="article-meta">Autor: <b>${art.author}</b> | ${art.date}</div>
-                        <div class="article-text">${art.content}</div>
+                        <div class="article-meta">
+                            <span>✍️ ${art.author}</span>
+                            <span>📅 ${art.date}</span>
+                        </div>
+                        <div class="article-content">${art.content}</div>
+                        ${isEditor ? `<button class="btn-delete-art" onclick="usunArtykul(${art.id})">🗑️ Usuń artykuł</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -250,10 +369,10 @@
             if (allGrid) allGrid.innerHTML = html;
         }
 
-        // === 6. NAWIGACJA ZAKŁADEK ===
+        // === 6. PRZEŁĄCZANIE ZAKŁADEK ===
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
 
             const activeTab = document.getElementById('tab-' + tabName);
             const activeNav = document.getElementById('nav-' + tabName);
@@ -262,9 +381,8 @@
             if (activeNav) activeNav.classList.add('active');
         }
 
-        // Startowe wywołania
+        // Startowe zainicjowanie
         sprawdzUzytkownika();
-        renderArticles();
     </script>
 </body>
 </html>
