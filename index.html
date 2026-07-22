@@ -138,7 +138,6 @@
         .sidebar-btn.cityhall-sidebar { color: var(--accent-blue); }
         .sidebar-btn.admin-sidebar { color: var(--accent-gold); display: none; }
 
-        /* CIEMNE TŁO POD MENU BOCZNYM */
         .sidebar-overlay {
             position: fixed;
             top: 0;
@@ -158,14 +157,10 @@
         .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-title span { color: var(--accent-red); }
 
-        /* KLASYCZNE MENU W NAGŁÓWKU (UKRYTE NA MOBILNYCH) */
-        .nav-links { 
-            display: none; 
-        }
+        .nav-links { display: none; }
 
         .auth-box { display: flex; align-items: center; flex-shrink: 0; }
         
-        /* PRZYCISK LOGOWANIA - ZAWSZE TYLKO IKONA DISCORDA */
         .btn-discord { 
             background: #5865F2; 
             color: #fff; 
@@ -185,9 +180,6 @@
             height: 22px;
             fill: currentColor;
         }
-        .discord-text {
-            display: none;
-        }
         
         .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); }
         .user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
@@ -197,33 +189,32 @@
 
         /* ==========================================================
            UKŁAD DLA KOMPUTERÓW / PC (OD 1000px W GÓRĘ)
-           Przywrócony całkowicie stary układ zakładek i styl
+           Zmniejszona skala / odstępy / czcionki
            ========================================================== */
         @media (min-width: 1000px) {
             header {
-                padding: 15px 30px;
+                padding: 10px 24px;
             }
             .mobile-menu-btn { 
                 display: none; 
             }
-            .brand-badge { padding: 4px 8px; font-size: 0.8rem; }
-            .brand-title { font-size: 1.3rem; white-space: normal; }
+            .brand-badge { padding: 3px 6px; font-size: 0.75rem; }
+            .brand-title { font-size: 1.15rem; white-space: normal; }
             
             .nav-links { 
                 display: flex; 
                 align-items: center; 
-                gap: 6px; 
+                gap: 4px; 
                 flex: 1; 
                 justify-content: center; 
             }
             
-            /* Stary, oryginalny styl przycisków zakładek */
             .nav-btn { 
                 color: var(--text-muted); 
-                padding: 8px 14px; 
+                padding: 6px 11px; 
                 border-radius: 6px; 
                 font-weight: 700; 
-                font-size: 0.95rem; 
+                font-size: 0.85rem; 
                 text-transform: uppercase; 
                 cursor: pointer; 
                 border: none; 
@@ -239,85 +230,88 @@
             .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
             .btn-discord {
-                width: 40px;
-                height: 40px;
-                padding: 0;
+                width: 36px;
+                height: 36px;
+            }
+            .btn-discord svg {
+                width: 19px;
+                height: 19px;
             }
 
-            .user-info { padding: 4px 10px; border-radius: 20px; gap: 10px; }
-            .user-avatar { width: 30px; height: 30px; }
-            .user-name { font-size: 0.85rem; max-width: 100px; }
-            .user-badge { font-size: 0.7rem; }
-            .btn-logout { font-size: 0.85rem; }
+            .user-info { padding: 3px 8px; border-radius: 18px; gap: 8px; }
+            .user-avatar { width: 26px; height: 26px; }
+            .user-name { font-size: 0.8rem; max-width: 90px; }
+            .user-badge { font-size: 0.65rem; }
+            .btn-logout { font-size: 0.8rem; }
         }
 
-        main { flex: 1; max-width: 1500px; margin: 0 auto; width: 100%; padding: 25px; }
-        @media (min-width: 1000px) { main { padding: 35px; } }
+        main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 20px; }
+        @media (min-width: 1000px) { main { padding: 24px; } }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .page-header { margin-bottom: 2rem; border-left: 6px solid var(--accent-red); padding-left: 16px; }
+        .page-header { margin-bottom: 1.5rem; border-left: 5px solid var(--accent-red); padding-left: 14px; }
         .page-header.cityhall-header { border-left-color: var(--accent-blue); }
         .page-header.recruitment-header { border-left-color: var(--accent-gold); }
-        .page-header h1 { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; color: #fff; }
-        @media (min-width: 1000px) { .page-header h1 { font-size: 2.1rem; } }
-        .page-header p { color: var(--text-muted); font-size: 1rem; margin-top: 6px; }
-        @media (min-width: 1000px) { .page-header p { font-size: 1.15rem; margin-top: 8px; } }
+        .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
+        @media (min-width: 1000px) { .page-header h1 { font-size: 1.8rem; } }
+        .page-header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+        @media (min-width: 1000px) { .page-header p { font-size: 1.05rem; margin-top: 6px; } }
 
-        .cards-grid { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        .cards-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 750px) {
-            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 28px; }
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
         }
 
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; }
-        .card:hover { border-color: var(--accent-red); transform: translateY(-4px); }
-        .card-media { width: 100%; height: 200px; background: #121520; object-fit: cover; }
-        @media (min-width: 1000px) { .card-media { height: 220px; } }
-        .card-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
-        @media (min-width: 1000px) { .card-body { padding: 22px; } }
-        .card-tag { background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 10px; }
-        .card-title { font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        @media (min-width: 1000px) { .card-title { font-size: 1.35rem; margin-bottom: 10px; } }
-        .card-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
-        .card-text { font-size: 0.95rem; color: #d1d5db; line-height: 1.5; word-break: break-word; }
-        @media (min-width: 1000px) { .card-text { font-size: 1.05rem; line-height: 1.6; } }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; }
+        .card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
+        .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; }
+        @media (min-width: 1000px) { .card-media { height: 190px; } }
+        .card-body { padding: 15px; display: flex; flex-direction: column; flex: 1; }
+        @media (min-width: 1000px) { .card-body { padding: 18px; } }
+        .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
+        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+        @media (min-width: 1000px) { .card-title { font-size: 1.2rem; margin-bottom: 8px; } }
+        .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        .card-text { font-size: 0.9rem; color: #d1d5db; line-height: 1.45; word-break: break-word; }
+        @media (min-width: 1000px) { .card-text { font-size: 0.95rem; line-height: 1.5; } }
 
-        .recruitment-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; width: 100%; }
-        @media (min-width: 1000px) { .recruitment-box { padding: 35px; } }
-        .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 12px; font-size: 1.4rem; }
-        @media (min-width: 1000px) { .recruitment-box h2 { font-size: 1.6rem; } }
-        .recruitment-box p { line-height: 1.6; color: var(--text-muted); margin-bottom: 20px; font-size: 1rem; }
-        @media (min-width: 1000px) { .recruitment-box p { font-size: 1.15rem; margin-bottom: 24px; } }
+        .recruitment-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; width: 100%; }
+        @media (min-width: 1000px) { .recruitment-box { padding: 28px; } }
+        .recruitment-box h2 { color: var(--accent-gold); margin-bottom: 10px; font-size: 1.25rem; }
+        @media (min-width: 1000px) { .recruitment-box h2 { font-size: 1.4rem; } }
+        .recruitment-box p { line-height: 1.5; color: var(--text-muted); margin-bottom: 16px; font-size: 0.95rem; }
+        @media (min-width: 1000px) { .recruitment-box p { font-size: 1.05rem; margin-bottom: 20px; } }
 
-        .admin-panel { display: flex; flex-direction: column; gap: 20px; width: 100%; }
-        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: none; width: 100%; }
-        @media (min-width: 1000px) { .admin-card { padding: 28px; } }
-        .admin-card-title { font-size: 1.2rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
-        @media (min-width: 1000px) { .admin-card-title { font-size: 1.4rem; margin-bottom: 20px; padding-bottom: 10px; } }
+        .admin-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; display: none; width: 100%; }
+        @media (min-width: 1000px) { .admin-card { padding: 22px; } }
+        .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
+        @media (min-width: 1000px) { .admin-card-title { font-size: 1.25rem; margin-bottom: 16px; padding-bottom: 8px; } }
         
-        .form-row { margin-bottom: 15px; width: 100%; }
-        @media (min-width: 1000px) { .form-row { margin-bottom: 20px; } }
-        .form-row label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
-        .form-field { width: 100%; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; font-size: 1rem; }
-        @media (min-width: 1000px) { .form-field { padding: 14px 16px; font-size: 1.1rem; } }
-        textarea.form-field { min-height: 120px; resize: vertical; }
+        .form-row { margin-bottom: 12px; width: 100%; }
+        @media (min-width: 1000px) { .form-row { margin-bottom: 15px; } }
+        .form-row label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.95rem; }
+        @media (min-width: 1000px) { .form-field { padding: 11px 14px; font-size: 1rem; } }
+        textarea.form-field { min-height: 100px; resize: vertical; }
 
-        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 1rem; text-transform: uppercase; cursor: pointer; text-decoration: none; display: block; text-align: center; }
-        @media (min-width: 1000px) { .btn-submit { padding: 16px; font-size: 1.1rem; } }
+        .btn-submit { width: 100%; background: var(--accent-gold); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: 800; font-size: 0.95rem; text-transform: uppercase; cursor: pointer; text-decoration: none; display: block; text-align: center; }
+        @media (min-width: 1000px) { .btn-submit { padding: 13px; font-size: 1rem; } }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 15px; }
         .modal-overlay.active { display: flex; }
-        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
-        @media (min-width: 1000px) { .modal-container { padding: 35px; } }
-        .modal-close { position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; }
-        .modal-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; color: #fff; }
-        @media (min-width: 1000px) { .modal-title { font-size: 1.8rem; margin-bottom: 12px; } }
-        .modal-text { font-size: 1rem; line-height: 1.6; color: #e5e7eb; white-space: pre-line; margin-top: 15px; word-break: break-word; }
-        @media (min-width: 1000px) { .modal-text { font-size: 1.15rem; line-height: 1.7; margin-top: 18px; } }
+        .modal-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 20px; position: relative; }
+        @media (min-width: 1000px) { .modal-container { padding: 28px; } }
+        .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.6rem; cursor: pointer; }
+        .modal-title { font-size: 1.35rem; font-weight: 900; margin-bottom: 8px; color: #fff; }
+        @media (min-width: 1000px) { .modal-title { font-size: 1.6rem; margin-bottom: 10px; } }
+        .modal-text { font-size: 0.95rem; line-height: 1.5; color: #e5e7eb; white-space: pre-line; margin-top: 12px; word-break: break-word; }
+        @media (min-width: 1000px) { .modal-text { font-size: 1.05rem; line-height: 1.6; margin-top: 15px; } }
 
-        footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: auto; width: 100%; }
-        @media (min-width: 1000px) { footer { padding: 1.8rem; font-size: 1rem; } }
+        footer { background: var(--bg-header); border-top: 1px solid var(--border-color); padding: 1.2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; width: 100%; }
+        @media (min-width: 1000px) { footer { padding: 1.4rem; font-size: 0.9rem; } }
     </style>
 </head>
 <body>
@@ -328,7 +322,7 @@
         <div class="sidebar-header">
             <div class="brand" onclick="toggleMobileMenu(); switchTab('home')">
                 <div class="brand-badge">LIVE</div>
-                <div class="brand-title" style="font-size: 1.1rem;">WEAZEL <span>NEWS</span></div>
+                <div class="brand-title" style="font-size: 1.05rem;">WEAZEL <span>NEWS</span></div>
             </div>
             <button class="sidebar-close" onclick="toggleMobileMenu()">&times;</button>
         </div>
@@ -442,7 +436,7 @@
             <div class="recruitment-box">
                 <h2>Chcesz współtworzyć media w Los Santos?</h2>
                 <p>Poszukujemy ambitnych dziennikarzy, reporterów oraz osób do obsługi kamer i mediów społecznościowych.</p>
-                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:20px;">Złóż podanie na Discordzie</a>
+                <a href="https://discord.com" target="_blank" class="btn-submit" style="text-decoration:none; margin-top:16px;">Złóż podanie na Discordzie</a>
             </div>
         </section>
 
@@ -546,6 +540,31 @@
     <!-- Skrypty -->
     <script src="config.js"></script>
     <script src="supabase.js"></script>
+    <script>
+        // Bezpieczna funkcja logowania przez Discord w Supabase
+        async function loginWithDiscord() {
+            try {
+                if (typeof supabase === 'undefined' && typeof window.supabaseClient === 'undefined') {
+                    alert('Błąd: Klient Supabase nie został zainicjalizowany.');
+                    return;
+                }
+                const client = window.supabaseClient || supabase;
+                const { error } = await client.auth.signInWithOAuth({
+                    provider: 'discord',
+                    options: {
+                        redirectTo: window.location.origin
+                    }
+                });
+                if (error) {
+                    console.error('Błąd logowania Discord:', error.message);
+                    alert('Nie udało się zalogować przez Discord: ' + error.message);
+                }
+            } catch (err) {
+                console.error('Błąd logowania:', err);
+                alert('Wystąpił błąd podczas próby logowania.');
+            }
+        }
+    </script>
     <script src="app.js"></script>
     <script>
         function toggleMobileMenu() {
@@ -559,8 +578,6 @@
         if (typeof originalSwitchTab === 'function') {
             window.switchTab = function(tabName) {
                 originalSwitchTab(tabName);
-                
-                // Synchronizacja aktywnego przycisku w menu bocznym telefonu
                 document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
                 const targetSbBtn = document.getElementById('sb-btn-' + tabName);
                 if (targetSbBtn) targetSbBtn.classList.add('active');
