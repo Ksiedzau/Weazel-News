@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weazel News | Los Santos</title>
-    <!-- Oficjalny globalny SDK Supabase v2 -->
+    <!-- Oficjalny globalny SDK Supabase v2 z CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -291,16 +291,17 @@
 
     <footer>&copy; Weazel News Los Santos. Wszelkie prawa zastrzeżone.</footer>
 
-    <!-- INICJALIZACJA SUPABASE (JEDYNIE TUTAJ) -->
+    <!-- INICJALIZACJA KLIENTA SUPABASE -->
     <script>
-        const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
+        const SUPABASE_URL = 'TUTAJ_WKLEJ_SWOJ_URL';
+        const SUPABASE_ANON_KEY = 'TUTAJ_WKLEJ_SWOJ_ANON_KEY';
 
-        // Przypisanie do globalnego obiektu okna
+        // Globalna instancja Supabase
         window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     
-    <!-- GŁÓWNY SKRYPT APLIKACJI -->
+    <!-- PLIKI SKRYPTÓW APLIKACJI -->
+    <script src="config.js"></script>
     <script src="app.js"></script>
     
     <script>
