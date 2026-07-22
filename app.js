@@ -25,15 +25,25 @@ function switchTab(tabId) {
 
 // --- AUTORYZACJA DISCORD PRZEZ SUPABASE ---
 async function loginWithDiscord() {
-    const { error } = await window.supabase.auth.signInWithOAuth({
+    console.log("Kliknięto logowanie przez Discord...");
+    if (!window.supabase) {
+        console.error("Obiekt window.supabase nie jest zainicjalizowany!");
+        alert("Błąd: Supabase nie został załadowany.");
+        return;
+    }
+
+    const { data, error } = await window.supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
             redirectTo: window.location.origin + window.location.pathname
         }
     });
+    
     if (error) {
         console.error('Błąd logowania:', error.message);
-        alert('Nie udało się zalogować przez Discord.');
+        alert('Nie udało się zalogować przez Discord: ' + error.message);
+    } else {
+        console.log("Przekierowywanie do Discorda...", data);
     }
 }
 
