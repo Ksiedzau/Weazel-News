@@ -1,453 +1,73 @@
-// --- CZYSZCZENIE URL Z TOKENÓW SUPABASE ---
-if (window.location.hash && window.location.hash.includes('access_token')) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-}
+// app.js - Obsługa logowania i aplikacji Weazel News
 
-// --- ZARZĄDZANIE ZAKŁADKAMI ---
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    const targetTab = document.getElementById(`tab-${tabId}`);
-    const targetBtn = document.getElementById(`btn-tab-${tabId}`);
-
-    if (targetTab) targetTab.classList.add('active');
-    if (targetBtn) targetBtn.classList.add('active');
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    if (tabId === 'home') loadHomeContent();
-    if (tabId === 'wiadomosci') loadCategoryContent('wiadomosci', 'wiadomosci-grid');
-    if (tabId === 'artykuly') loadCategoryContent('artykuly', 'artykuly-grid');
-    if (tabId === 'tiktoki') loadTiktoks();
-    if (tabId === 'cityhall') loadCityHallNotices();
-    if (tabId === 'kadra') loadTeamMembers();
-}
-
-// --- AUTORYZACJA DISCORD PRZEZ SUPABASE ---
-async function loginWithDiscord() {
+document.addEventListener("DOMContentLoaded", () => {
+    // Sprawdzenie czy Supabase jest dostępne
     if (!window.supabase) {
-        alert("Błąd: Supabase nie został załadowany.");
-        return;
+        console.error("Klient Supabase nie został zainicjalizowany! Sprawdź kolejność skryptów w HTML.");
     }
 
-    const { error } = await window.supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-            redirectTo: window.location.origin + window.location.pathname
-        }
-    });
-    
-    if (error) {
-        alert('Nie udało się zalogować przez Discord: ' + error.message);
-    }
-}
-
-async function logout() {
-    await window.supabase.auth.signOut();
-    location.reload();
-}
-
-let currentUserRole = null;
-let isUserBoss = false;
-
-// --- SPRAWDZANIE SESJI I UPRAWNIEN ---
-async function checkUserSession() {
-    const { data: { session } } = await window.supabase.auth.getSession();
-    
-    if (session && session.user) {
-        const user = session.user;
-        const discordId = user.user_metadata?.provider_id || user.id; 
-        const username = user.user_metadata?.full_name || user.user_metadata?.name || 'Użytkownik';
-        const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || '';
-
-        const loginBtn = document.getElementById('btn-login');
-        if (loginBtn) loginBtn.style.display = 'none';
-        
-        const userInfo = document.getElementById('user-info');
-        if (userInfo) userInfo.style.display = 'flex';
-        
-        const userNameEl = document.getElementById('user-name');
-        if (userNameEl) userNameEl.innerText = username;
-
-        const userAvatarEl = document.getElementById('user-avatar');
-        if (avatarUrl && userAvatarEl) {
-            userAvatarEl.src = avatarUrl;
-        }
-
-        let roleName = "Redaktor";
-        let roleColor = "var(--text-muted)";
-
-        document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'none');
-        
-        const isBoss = window.BOSS_DISCORD_IDS && window.BOSS_DISCORD_IDS.includes(String(discordId));
-        const isAdmin = window.ADMIN_DISCORD_IDS && window.ADMIN_DISCORD_IDS.includes(String(discordId));
-        const isCityHall = window.CITY_HALL_DISCORD_IDS && window.CITY_HALL_DISCORD_IDS.includes(String(discordId));
-
-        isUserBoss = isBoss; // Zapamiętujemy czy to szef
-        const adminTabBtn = document.getElementById('btn-tab-admin');
-
-        if (isBoss) {
-            roleName = "Szefostwo";
-            roleColor = "var(--accent-red)";
-            currentUserRole = 'admin';
-            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
-            document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
-            
-            // Pokaż formularz dodawania kadry tylko dla szefa w panelu admina
-            const bossCard = document.getElementById('boss-team-card');
-            if (bossCard) bossCard.style.display = 'block';
-
-        } else if (isAdmin) {
-            roleName = "Administrator";
-            roleColor = "var(--accent-gold)";
-            currentUserRole = 'admin';
-            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
-            document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
-        } else if (isCityHall) {
-            roleName = "City Hall";
-            roleColor = "var(--accent-blue)";
-            currentUserRole = 'cityhall';
-            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
-            const chForm = document.getElementById('form-cityhall-art');
-            if (chForm) chForm.style.display = 'block';
-        }
-
-        const roleBadge = document.getElementById('user-role');
-        if (roleBadge) {
-            roleBadge.innerText = roleName;
-            roleBadge.style.color = roleColor;
-        }
-
-        loadHomeContent();
-        loadTeamMembers();
-    }
-}
-
-// --- POBIERANIE STRONY GŁÓWNEJ (NAPRAWIONE HERO) ---
-async function loadHomeContent() {
-    const grid = document.getElementById('home-grid');
-    if (!grid) return;
-    
-    const { data, error } = await window.supabase
-        .from('articles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Błąd ładowania danych.</p>';
-        return;
+    // Podpięcie nasłuchiwania pod przycisk logowania (jeśli istnieje w HTML, np. o id 'login-btn' lub klasie)
+    const loginButton = document.getElementById("login-btn") || document.querySelector("button[onclick*='login']");
+    if (loginButton) {
+        // Usuwamy stare inline onclick z HTML jeśli koliduje, i przypisujemy czysty nasłuchiwacz
+        loginButton.removeAttribute("onclick");
+        loginButton.addEventListener("click", loginWithDiscord);
     }
 
-    if (!data || data.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Brak wpisów w tej sekcji.</p>';
-        return;
-    }
-
-    const heroItem = data[0];
-    const restItems = data.slice(1);
-
-    let html = '';
-
-    // Poprawiony kafelek główny z klasą hero-image-box zapobiegającą rozjeżdżaniu
-    html += `
-        <div class="news-hero" onclick="openModal('${escapeHtml(heroItem.title)}', '${heroItem.created_at}', '${heroItem.media_url || ''}', '${escapeHtml(heroItem.content)}')">
-            <div class="hero-image-box">
-                <img src="${heroItem.media_url || ''}" alt="Hero Image" onerror="this.src='https://via.placeholder.com/800x450?text=Weazel+News'">
-                <div class="hero-badge">GORĄCY TEMAT</div>
-            </div>
-            <div class="hero-content">
-                <span class="card-tag">${heroItem.tag || 'BREAKING NEWS'}</span>
-                <h2 class="hero-title">${heroItem.title}</h2>
-                <div class="card-meta"><i class="far fa-clock"></i> ${new Date(heroItem.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="hero-text">${heroItem.content ? heroItem.content.substring(0, 160) + '...' : ''}</p>
-                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${heroItem.id})"><i class="fas fa-trash"></i> Usuń wpis</button>` : ''}
-            </div>
-        </div>
-    `;
-
-    if (restItems.length > 0) {
-        html += `<div class="news-subgrid">`;
-        html += restItems.map(item => `
-            <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
-                <div class="card-media-box">
-                    <img class="card-media" src="${item.media_url || ''}" alt="Grafika" onerror="this.src='https://via.placeholder.com/300x180?text=Weazel+News'">
-                </div>
-                <div class="card-body">
-                    <span class="card-tag">${item.tag || 'NEWS'}</span>
-                    <h3 class="card-title">${item.title}</h3>
-                    <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                    <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
-                    ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
-                </div>
-            </div>
-        `).join('');
-        html += `</div>`;
-    }
-
-    grid.innerHTML = html;
-}
-
-async function loadCategoryContent(category, gridId) {
-    const grid = document.getElementById(gridId);
-    if (!grid) return;
-
-    const { data, error } = await window.supabase
-        .from('articles')
-        .select('*')
-        .eq('target', category)
-        .order('created_at', { ascending: false });
-
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Brak wpisów w tej sekcji.</p>';
-        return;
-    }
-
-    grid.innerHTML = data.map(item => `
-        <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
-            <div class="card-media-box">
-                <img class="card-media" src="${item.media_url || ''}" alt="Grafika">
-            </div>
-            <div class="card-body">
-                <span class="card-tag">${item.tag || category}</span>
-                <h3 class="card-title">${item.title}</h3>
-                <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
-                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('articles', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-async function loadCityHallNotices() {
-    const grid = document.getElementById('cityhall-grid');
-    if (!grid) return;
-
-    const { data, error } = await window.supabase
-        .from('city_hall')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Brak ogłoszeń urzędowych.</p>';
-        return;
-    }
-
-    grid.innerHTML = data.map(item => `
-        <div class="card" onclick="openModal('${escapeHtml(item.title)}', '${item.created_at}', '${item.media_url || ''}', '${escapeHtml(item.content)}')">
-            <div class="card-media-box">
-                <img class="card-media" src="${item.media_url || ''}" alt="Dekret">
-            </div>
-            <div class="card-body" style="border-top: 3px solid var(--accent-blue);">
-                <span class="card-tag" style="background:var(--accent-blue)">CITY HALL</span>
-                <h3 class="card-title">${item.title}</h3>
-                <div class="card-meta">${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
-                <p class="card-text">${item.content ? item.content.substring(0, 85) + '...' : ''}</p>
-                ${currentUserRole === 'admin' || currentUserRole === 'cityhall' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('city_hall', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-async function loadTiktoks() {
-    const grid = document.getElementById('tiktok-grid');
-    if (!grid) return;
-
-    const { data, error } = await window.supabase
-        .from('tiktoks')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Brak materiałów wideo.</p>';
-        return;
-    }
-
-    grid.innerHTML = data.map(item => `
-        <div class="card">
-            <video class="card-media" controls src="${item.media_url}"></video>
-            <div class="card-body">
-                <span class="card-tag" style="background:var(--accent-gold); color:#000;">TIKTOK</span>
-                <h3 class="card-title">${item.title}</h3>
-                <p class="card-text">${item.description || ''}</p>
-                ${currentUserRole === 'admin' ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteArticle('tiktoks', ${item.id})"><i class="fas fa-trash"></i> Usuń</button>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-// --- POBIERANIE KADRY ---
-async function loadTeamMembers() {
-    const grid = document.getElementById('kadra-grid');
-    if (!grid) return;
-
-    const { data, error } = await window.supabase
-        .from('team')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = '<p style="color:var(--text-muted)">Brak członków kadry w bazie.</p>';
-        return;
-    }
-
-    grid.innerHTML = data.map(item => `
-        <div class="team-card">
-            <div class="team-avatar-box">
-                <img src="${item.avatar_url || 'https://via.placeholder.com/150?text=Avatar'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/150?text=Avatar'">
-            </div>
-            <div class="team-info">
-                <h3 class="team-name">${item.name}</h3>
-                <span class="team-role">${item.role || 'Pracownik'}</span>
-                <p class="team-desc">${item.description || ''}</p>
-                ${isUserBoss ? `<button class="delete-btn" onclick="deleteArticle('team', ${item.id})"><i class="fas fa-trash"></i> Usuń z kadry</button>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-// --- DODAWANIE PRACOWNIKA DO KADRY (TYLKO SZEF) ---
-async function createTeamMember(event) {
-    event.preventDefault();
-    if (!isUserBoss) {
-        alert('Tylko Szefostwo może dodawać osoby do kadry!');
-        return;
-    }
-
-    const name = document.getElementById('team-name').value;
-    const role = document.getElementById('team-role').value;
-    const avatar_url = document.getElementById('team-avatar').value;
-    const description = document.getElementById('team-desc').value;
-
-    const { error } = await window.supabase.from('team').insert([{ 
-        name, 
-        role, 
-        avatar_url, 
-        description 
-    }]);
-    
-    if (error) {
-        alert('Błąd podczas dodawania do kadry: ' + error.message);
-    } else {
-        alert('Pracownik dodany pomyślnie do kadry!');
-        event.target.reset();
-        loadTeamMembers();
-    }
-}
-
-// --- FUNKCJA USUWANIA WPISÓW ---
-async function deleteArticle(tableName, id) {
-    if (!confirm('Czy na pewno chcesz trwale usunąć ten element?')) return;
-
-    const { error } = await window.supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        alert('Błąd podczas usuwania: ' + error.message);
-    } else {
-        alert('Usunięto pomyślnie.');
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab) {
-            const tabId = activeTab.id.replace('tab-', '');
-            switchTab(tabId);
-        } else {
-            loadHomeContent();
-        }
-    }
-}
-
-// --- TWORZENIE ARTYKUŁÓW I TIKTOKÓW ---
-async function createArticle(event) {
-    event.preventDefault();
-    const target = document.getElementById('art-target').value;
-    const title = document.getElementById('art-title').value;
-    const tag = document.getElementById('art-tag').value;
-    const media_url = document.getElementById('art-media-url').value;
-    const content = document.getElementById('art-content').value;
-
-    const { error } = await window.supabase.from('articles').insert([{ 
-        target, 
-        title, 
-        tag, 
-        media_url, 
-        content 
-    }]);
-    
-    if (error) {
-        alert('Błąd podczas dodawania artykułu: ' + error.message);
-    } else {
-        alert('Artykuł dodany pomyślnie!');
-        event.target.reset();
-        loadHomeContent();
-    }
-}
-
-async function createCityHallNotice(event) {
-    event.preventDefault();
-    const title = document.getElementById('ch-title').value;
-    const media_url = document.getElementById('ch-media-url').value;
-    const content = document.getElementById('ch-content').value;
-
-    const { error } = await window.supabase.from('city_hall').insert([{ title, media_url, content }]);
-    if (error) {
-        alert('Błąd podczas dodawania ogłoszenia: ' + error.message);
-    } else {
-        alert('Dekret City Hall opublikowany!');
-        event.target.reset();
-        loadCityHallNotices();
-    }
-}
-
-async function createTiktok(event) {
-    event.preventDefault();
-    const title = document.getElementById('tt-title').value;
-    const media_url = document.getElementById('tt-url').value;
-    const description = document.getElementById('tt-desc').value;
-
-    const { error } = await window.supabase.from('tiktoks').insert([{ title, media_url, description }]);
-    if (error) {
-        alert('Błąd podczas dodawania TikToka: ' + error.message);
-    } else {
-        alert('TikTok dodany pomyślnie!');
-        event.target.reset();
-        loadTiktoks();
-    }
-}
-
-// --- MODAL ---
-function openModal(title, date, mediaUrl, content) {
-    document.getElementById('m-title').innerText = title;
-    document.getElementById('m-meta').innerText = new Date(date).toLocaleDateString('pl-PL');
-    
-    const mediaContainer = document.getElementById('m-media');
-    if (mediaUrl && mediaUrl !== 'null' && mediaUrl !== '') {
-        mediaContainer.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin-bottom:15px;" alt="Zdjęcie artykułu">`;
-    } else {
-        mediaContainer.innerHTML = '';
-    }
-    
-    document.getElementById('m-content').innerText = content;
-    document.getElementById('modal-art').classList.add('active');
-}
-
-function closeModal(event) {
-    if (!event || event.target.id === 'modal-art' || event.target.classList.contains('modal-close')) {
-        document.getElementById('modal-art').classList.remove('active');
-    }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-window.addEventListener('DOMContentLoaded', () => {
+    // Sprawdzenie aktualnej sesji użytkownika przy starcie
     checkUserSession();
-    loadHomeContent();
 });
+
+// Główna funkcja logowania przez Discorda (Linia 38 w Twoim kodzie)
+async function loginWithDiscord() {
+    try {
+        if (!window.supabase || !window.supabase.auth) {
+            throw new Error("Obiekt Supabase auth jest niedostępny.");
+        }
+
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
+            provider: 'discord',
+            options: {
+                redirectTo: window.location.origin // wraca na obecną stronę po zalogowaniu
+            }
+        });
+
+        if (error) {
+            console.error("Błąd podczas logowania przez Discorda:", error.message);
+            alert("Nie udało się zalogować: " + error.message);
+        }
+    } catch (err) {
+        console.error("Wystąpił nieoczekiwany błąd w loginWithDiscord:", err);
+    }
+}
+
+// Funkcja sprawdzająca czy użytkownik jest zalogowany
+async function checkUserSession() {
+    if (!window.supabase) return;
+
+    try {
+        const { data: { session }, error } = await window.supabase.auth.getSession();
+        if (error) throw error;
+
+        if (session) {
+            console.log("Zalogowany użytkownik:", session.user);
+            // Tutaj możesz dodać kod ukrywający przycisk logowania i pokazujący panel użytkownika
+        } else {
+            console.log("Brak aktywnej sesji - użytkownik niezalogowany.");
+        }
+    } catch (err) {
+        console.error("Błąd pobierania sesji:", err.message);
+    }
+}
+
+// Opcjonalna funkcja wylogowania
+async function logout() {
+    if (!window.supabase) return;
+    
+    const { error } = await window.supabase.auth.signOut();
+    if (error) {
+        console.error("Błąd wylogowania:", error.message);
+    } else {
+        window.location.reload();
+    }
+}
