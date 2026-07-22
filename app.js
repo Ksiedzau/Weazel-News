@@ -25,7 +25,7 @@ function switchTab(tabId) {
 
 // --- AUTORYZACJA DISCORD PRZEZ SUPABASE ---
 async function loginWithDiscord() {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await window.supabase.auth.signInWithOAuth({
         provider: 'discord',
     });
     if (error) {
@@ -35,29 +35,32 @@ async function loginWithDiscord() {
 }
 
 async function logout() {
-    await supabase.auth.signOut();
+    await window.supabase.auth.signOut();
     location.reload();
 }
 
 // --- SPRAWDZANIE SESJI I UPRAWNIEN ---
 async function checkUserSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await window.supabase.auth.getSession();
     
     if (session && session.user) {
         const user = session.user;
-        // Pobieranie danych z metadanych Discorda (zależnie od konfiguracji dostawcy w Supabase)
         const discordId = user.user_metadata?.provider_id || user.id; 
         const username = user.user_metadata?.full_name || user.user_metadata?.name || 'Użytkownik';
         const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || '';
 
-        document.getElementById('btn-login').style.display = 'none';
+        const loginBtn = document.getElementById('btn-login');
+        if (loginBtn) loginBtn.style.display = 'none';
         
         const userInfo = document.getElementById('user-info');
-        userInfo.style.display = 'flex';
+        if (userInfo) userInfo.style.display = 'flex';
         
-        document.getElementById('user-name').innerText = username;
-        if (avatarUrl) {
-            document.getElementById('user-avatar').src = avatarUrl;
+        const userNameEl = document.getElementById('user-name');
+        if (userNameEl) userNameEl.innerText = username;
+
+        const userAvatarEl = document.getElementById('user-avatar');
+        if (avatarUrl && userAvatarEl) {
+            userAvatarEl.src = avatarUrl;
         }
 
         // Przypisywanie ról na podstawie config.js
@@ -67,32 +70,35 @@ async function checkUserSession() {
         // Reset panelu admina
         document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'none');
         
-        // Sprawdzanie ID
         const isBoss = window.BOSS_DISCORD_IDS && window.BOSS_DISCORD_IDS.includes(String(discordId));
         const isAdmin = window.ADMIN_DISCORD_IDS && window.ADMIN_DISCORD_IDS.includes(String(discordId));
         const isCityHall = window.CITY_HALL_DISCORD_IDS && window.CITY_HALL_DISCORD_IDS.includes(String(discordId));
 
+        const adminTabBtn = document.getElementById('btn-tab-admin');
+
         if (isBoss) {
             roleName = "Szefostwo";
             roleColor = "var(--accent-red)";
-            document.getElementById('btn-tab-admin').style.display = 'inline-block';
+            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
         } else if (isAdmin) {
             roleName = "Administrator";
             roleColor = "var(--accent-gold)";
-            document.getElementById('btn-tab-admin').style.display = 'inline-block';
+            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             document.querySelectorAll('.admin-card').forEach(card => card.style.display = 'block');
         } else if (isCityHall) {
             roleName = "City Hall";
             roleColor = "var(--accent-blue)";
-            document.getElementById('btn-tab-admin').style.display = 'inline-block';
+            if (adminTabBtn) adminTabBtn.style.display = 'inline-block';
             const chForm = document.getElementById('form-cityhall-art');
             if (chForm) chForm.style.display = 'block';
         }
 
         const roleBadge = document.getElementById('user-role');
-        roleBadge.innerText = roleName;
-        roleBadge.style.color = roleColor;
+        if (roleBadge) {
+            roleBadge.innerText = roleName;
+            roleBadge.style.color = roleColor;
+        }
     }
 }
 
@@ -101,7 +107,7 @@ async function loadHomeContent() {
     const grid = document.getElementById('home-grid');
     if (!grid) return;
     
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
         .from('articles')
         .select('*')
         .order('created_at', { ascending: false });
@@ -133,7 +139,7 @@ async function loadCategoryContent(category, gridId) {
     const grid = document.getElementById(gridId);
     if (!grid) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
         .from('articles')
         .select('*')
         .eq('target', category)
@@ -161,7 +167,7 @@ async function loadCityHallNotices() {
     const grid = document.getElementById('cityhall-grid');
     if (!grid) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
         .from('city_hall')
         .select('*')
         .order('created_at', { ascending: false });
@@ -188,7 +194,7 @@ async function loadTiktoks() {
     const grid = document.getElementById('tiktok-grid');
     if (!grid) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await window.supabase
         .from('tiktoks')
         .select('*')
         .order('created_at', { ascending: false });
@@ -219,7 +225,7 @@ async function createArticle(event) {
     const media_url = document.getElementById('art-media-url').value;
     const content = document.getElementById('art-content').value;
 
-    const { error } = await supabase.from('articles').insert([{ target, title, tag, media_url, content }]);
+    const { error } = await window.supabase.from('articles').insert([{ target, title, tag, media_url, content }]);
     if (error) {
         alert('Błąd podczas dodawania artykułu: ' + error.message);
     } else {
@@ -234,7 +240,7 @@ async function createCityHallNotice(event) {
     const media_url = document.getElementById('ch-media-url').value;
     const content = document.getElementById('ch-content').value;
 
-    const { error } = await supabase.from('city_hall').insert([{ title, media_url, content }]);
+    const { error } = await window.supabase.from('city_hall').insert([{ title, media_url, content }]);
     if (error) {
         alert('Błąd podczas dodawania ogłoszenia: ' + error.message);
     } else {
@@ -249,7 +255,7 @@ async function createTiktok(event) {
     const media_url = document.getElementById('tt-url').value;
     const description = document.getElementById('tt-desc').value;
 
-    const { error } = await supabase.from('tiktoks').insert([{ title, media_url, description }]);
+    const { error } = await window.supabase.from('tiktoks').insert([{ title, media_url, description }]);
     if (error) {
         alert('Błąd podczas dodawania TikToka: ' + error.message);
     } else {
