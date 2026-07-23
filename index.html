@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weazel News | Los Santos</title>
     <base href="/Weazel-News/">
-    
-    <!-- Oficjalny globalny SDK Supabase v2 z CDN -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -25,19 +24,19 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        
-        html, body { 
-            background-color: var(--bg-body); 
-            color: var(--text-main); 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
+
+        html, body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: 100vw;
-            overflow-x: hidden; 
+            overflow-x: hidden;
         }
 
-        header { 
+        header {
             background-color: var(--bg-header);
             border-bottom: 3px solid var(--accent-red);
             padding: 12px 24px;
@@ -58,33 +57,28 @@
         .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-title span { color: var(--accent-red); }
 
-        /* Menu z Twojego screena */
-        .nav-links { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
-        .nav-btn { 
-            color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700; 
-            font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: rgba(255,255,255,0.03); transition: 0.2s; 
+        .nav-links { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
+        .nav-btn {
+            color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700;
+            font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: rgba(255,255,255,0.03); transition: 0.2s;
             display: flex; align-items: center; gap: 6px;
         }
         .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
         .nav-btn.cityhall-nav { color: var(--accent-blue); }
         .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; }
-        
-        /* Panel admina - ukryty domyślnie, stylizowany na złoto */
         .nav-btn.admin-link { color: var(--accent-gold); display: none; }
         .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
         .auth-box { display: flex; align-items: center; flex-shrink: 0; }
-        
-        /* Przycisk Discord z Twojego screena */
-        .btn-discord { 
-            background: #5865F2; color: #fff; border: none; border-radius: 8px; 
-            font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            gap: 8px; padding: 10px 18px; font-size: 0.85rem; transition: background 0.2s;
+
+        .btn-discord {
+            background: #5865F2; color: #fff; border: none; border-radius: 8px;
+            font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 10px 18px; font-size: 0.85rem; transition: background 0.2s; text-decoration: none;
         }
         .btn-discord:hover { background: #4752c4; }
         .btn-discord svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
-        
-        /* Profil po zalogowaniu */
+
         .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
         .user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
         .user-name { font-weight: 700; font-size: 0.85rem; color: #fff; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -93,17 +87,81 @@
         main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
+
         .page-header { margin-bottom: 1.5rem; border-left: 5px solid var(--accent-red); padding-left: 14px; }
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
         .page-header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
 
+        /* LIVE TICKER */
+        .live-ticker {
+            background: linear-gradient(90deg, #7f1010, var(--accent-red));
+            color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(220,38,38,0.25);
+        }
+        .live-ticker .label {
+            background: #000;
+            color: #fff;
+            padding: 10px 14px;
+            font-weight: 900;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .live-ticker .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+        .ticker-track {
+            overflow: hidden;
+            white-space: nowrap;
+            flex: 1;
+            padding: 10px 0;
+        }
+        .ticker-track-inner {
+            display: inline-block;
+            padding-left: 100%;
+            animation: tickerScroll 35s linear infinite;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .ticker-track-inner span { margin-right: 40px; }
+        .ticker-track-inner span::before { content: "●"; color: #fca5a5; margin-right: 10px; }
+        @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+        /* HERO (wyróżniony artykuł) */
+        .hero-card {
+            display: grid;
+            grid-template-columns: 1fr;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 28px;
+            transition: 0.2s;
+        }
+        .hero-card:hover { border-color: var(--accent-red); }
+        @media (min-width: 800px) { .hero-card { grid-template-columns: 1.3fr 1fr; } }
+        .hero-media { width: 100%; height: 260px; object-fit: cover; background: #000; border: 0; display: block; }
+        @media (min-width: 800px) { .hero-media { height: 100%; min-height: 340px; } }
+        .hero-body { padding: 28px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+        .hero-tag { background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; }
+        .hero-title { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1.2; }
+        .hero-meta { font-size: 0.85rem; color: var(--text-muted); }
+        .hero-text { color: #d1d5db; line-height: 1.55; font-size: 0.95rem; }
+
+        /* GRID KART */
         .cards-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 750px) { .cards-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; } }
 
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; transition: 0.2s; }
         .card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
-        .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; }
+        .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; border: 0; display: block; }
         .card-body { padding: 15px; display: flex; flex-direction: column; flex: 1; }
         .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
         .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
@@ -114,13 +172,19 @@
         .admin-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; width: 100%; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
-        
+
         .form-row { margin-bottom: 12px; width: 100%; }
         .form-row label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
         .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.95rem; }
         textarea.form-field { min-height: 100px; resize: vertical; }
         .btn-submit { background: var(--accent-red); color: #fff; border: none; padding: 10px 20px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn-submit:hover { background: #b91c1c; }
+        .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* Rekrutacja */
+        .recruit-box { background: var(--bg-card); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
+        .recruit-box h2 { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
+        .recruit-box p { color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -133,7 +197,6 @@
             </div>
         </div>
 
-        <!-- TWOJE ORYGINALNE MENU ZE SCREENSHOTA -->
         <nav class="nav-links">
             <button class="nav-btn active" data-tab="home">🏡 Strona Główna</button>
             <button class="nav-btn" data-tab="wiadomosci">📰 Wiadomości</button>
@@ -141,11 +204,9 @@
             <button class="nav-btn" data-tab="tiktoki">📱 Tiktoki</button>
             <button class="nav-btn cityhall-nav" data-tab="cityhall">🏛️ City Hall</button>
             <button class="nav-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
-            <!-- Ukryty Panel Admina, pokaże się tylko zalogowanym -->
             <button class="nav-btn admin-link" id="nav-admin" data-tab="admin">⚙️ Panel Admina</button>
         </nav>
 
-        <!-- Sekcja logowania/profilu -->
         <div class="auth-box">
             <button id="btn-login" class="btn-discord">
                 <svg viewBox="0 0 127.14 96.36">
@@ -163,18 +224,23 @@
     </header>
 
     <main>
-        <!-- ZAKŁADKA 1: STRONA GŁÓWNA -->
+        <!-- STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-content active">
+            <div class="live-ticker">
+                <div class="label"><span class="dot"></span> NA ŻYWO</div>
+                <div class="ticker-track"><div class="ticker-track-inner" id="ticker-track">Ładowanie najnowszych wiadomości z Los Santos...</div></div>
+            </div>
+
             <div class="page-header">
                 <h1>Strona Główna</h1>
                 <p>Najważniejsze wydarzenia z Los Santos</p>
             </div>
-            <div class="cards-grid" id="home-container">
-                <p style="color: var(--text-muted);">Ładowanie najnowszych artykułów...</p>
-            </div>
+
+            <div id="home-featured"></div>
+            <div class="cards-grid" id="home-container"></div>
         </section>
 
-        <!-- ZAKŁADKA 2: WIADOMOŚCI -->
+        <!-- WIADOMOŚCI -->
         <section id="tab-wiadomosci" class="tab-content">
             <div class="page-header">
                 <h1>Wiadomości</h1>
@@ -185,7 +251,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA 3: ARTYKUŁY -->
+        <!-- ARTYKUŁY -->
         <section id="tab-artykuly" class="tab-content">
             <div class="page-header">
                 <h1>Artykuły</h1>
@@ -196,7 +262,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA 4: TIKTOKI -->
+        <!-- TIKTOKI -->
         <section id="tab-tiktoki" class="tab-content">
             <div class="page-header">
                 <h1>Tiktoki</h1>
@@ -207,7 +273,7 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA 5: CITY HALL -->
+        <!-- CITY HALL -->
         <section id="tab-cityhall" class="tab-content">
             <div class="page-header">
                 <h1 style="color: var(--accent-blue);">City Hall</h1>
@@ -218,26 +284,31 @@
             </div>
         </section>
 
-        <!-- ZAKŁADKA 6: REKRUTACJA -->
+        <!-- REKRUTACJA -->
         <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header">
                 <h1>Rekrutacja</h1>
                 <p>Dołącz do zespołu Weazel News już dziś!</p>
             </div>
-            <div style="background: var(--bg-card); padding: 24px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div class="recruit-box">
                 <h2>Chcesz zostać dziennikarzem?</h2>
-                <p style="margin: 10px 0; color: var(--text-muted);">Złóż podanie na naszym Discordzie firmowym!</p>
-                <a href="https://discord.gg/twoj-link" target="_blank" class="btn-discord" style="display: inline-flex; text-decoration: none; margin-top: 10px;">Dołącz do Discorda rekrutacyjnego</a>
+                <p>Szukamy ludzi z pasją do prawdy i szybkim piórem. Dołącz do naszego zespołu redakcyjnego i relacjonuj najważniejsze wydarzenia z Los Santos!</p>
+                <a id="recruit-discord-link" href="https://discord.gg/yQDZNv9heE" target="_blank" rel="noopener" class="btn-discord" style="display: inline-flex;">
+                    <svg viewBox="0 0 127.14 96.36">
+                        <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.5-5c.88-.65,1.72-1.34,2.51-2a75.58,75.58,0,0,0,73,0c.79.71,1.63,1.4,2.51,2a68.43,68.43,0,0,1-10.5,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31-18.83C129.87,48.42,123.72,25.49,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
+                    </svg>
+                    Dołącz na Discord
+                </a>
             </div>
         </section>
 
-        <!-- ZAKŁADKA 7: PANEL ADMINA (DO DODAWANIA NEWSÓW) -->
+        <!-- PANEL ADMINA -->
         <section id="tab-admin" class="tab-content">
             <div class="page-header">
                 <h1 style="color: var(--accent-gold);">Panel Admina</h1>
                 <p>Publikuj nowe treści na stronie</p>
             </div>
-            
+
             <div class="admin-panel">
                 <div class="admin-card">
                     <h2 class="admin-card-title">Stwórz nowy wpis</h2>
@@ -247,32 +318,31 @@
                             <input type="text" id="news-title" class="form-field" required>
                         </div>
                         <div class="form-row">
-                            <label for="news-tag">Miejsce publikacji (Kategoria)</label>
-                            <select id="news-tag" class="form-field">
-                                <option value="STRONA GŁÓWNA">Strona Główna</option>
-                                <option value="WIADOMOŚCI">Wiadomości</option>
-                                <option value="ARTYKUŁY">Artykuły</option>
-                                <option value="TIKTOKI">Tiktoki</option>
-                                <option value="CITY HALL">City Hall (Rządowe)</option>
-                            </select>
+                            <label for="news-tag">Kategoria</label>
+                            <select id="news-tag" class="form-field"></select>
+                            <div class="form-hint">Kategoria „City Hall" jest dostępna tylko dla osób z odpowiednią rangą.</div>
                         </div>
                         <div class="form-row">
                             <label for="news-image">Link do zdjęcia (URL)</label>
-                            <input type="url" id="news-image" class="form-field" placeholder="https://i.imgur.com/xyz.png" required>
+                            <input type="url" id="news-image" class="form-field" placeholder="https://i.imgur.com/xyz.png">
+                        </div>
+                        <div class="form-row">
+                            <label for="news-video">Link do filmu (YouTube lub mp4) — opcjonalnie</label>
+                            <input type="url" id="news-video" class="form-field" placeholder="https://www.youtube.com/watch?v=... lub https://...mp4">
+                            <div class="form-hint">Jeśli podasz film, zostanie wyświetlony zamiast zdjęcia.</div>
                         </div>
                         <div class="form-row">
                             <label for="news-content">Treść</label>
                             <textarea id="news-content" class="form-field" required></textarea>
                         </div>
-                        <button type="submit" class="btn-submit">Dodaj wpis</button>
+                        <button type="submit" class="btn-submit">Opublikuj wpis</button>
                     </form>
                 </div>
             </div>
         </section>
     </main>
 
-    <script src="app.js"></script>
     <script src="config.js"></script>
-<script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
