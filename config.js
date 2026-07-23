@@ -13,7 +13,7 @@ window.SUPABASE_KEY =
 // =====================================================
 
 window.BOSS_DISCORD_IDS = [
-    '1487414745534431233',
+    '',
     '1183805781724893245'
 ];
 
@@ -41,7 +41,7 @@ window.CITY_HALL_DISCORD_IDS = [
 // =====================================================
 
 window.COMPANY_DISCORD_IDS = [
-    // 'ID_OSOBY_Z_FIRMY_1',
+     '1487414745534431233',
     // 'ID_OSOBY_Z_FIRMY_2'
 ];
 
