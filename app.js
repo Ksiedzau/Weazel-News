@@ -1,309 +1,373 @@
-// app.js - Obsługa logowania, zakładek i bazy danych Weazel News
+// app.js - logowanie (Supabase + Discord), zakładki, baza newsów + Panel Admina
 
-const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
+function normalizeTag(s) {
+  return String(s || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 let supabaseInstance = null;
 let currentUser = null;
 
-// Bezpieczna inicjalizacja klienta Supabase
 function getSupabase() {
-    if (supabaseInstance) return supabaseInstance;
+  if (supabaseInstance) return supabaseInstance;
 
-    const supabaseLib = window.supabaseClient || window.supabase;
-    if (!supabaseLib) {
-        console.error("Błąd: Biblioteka Supabase nie została jeszcze załadowana!");
-        return null;
+  const supabaseLib = window.supabase;
+  if (!supabaseLib) {
+    console.error("Supabase CDN nie jest załadowany (window.supabase = undefined).");
+    return null;
+  }
+
+  const url = window.SUPABASE_URL;
+  const key = window.SUPABASE_KEY;
+
+  if (!url || !key) {
+    console.error("Brak window.SUPABASE_URL lub window.SUPABASE_KEY w config.js");
+    return null;
+  }
+
+  supabaseInstance = supabaseLib.createClient(url, key, {
+    auth: {
+      flowType: "pkce",
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
     }
+  });
 
-    if (!window.supabaseClient) {
-        window.supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                flowType: 'pkce',
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        });
-    }
-
-    supabaseInstance = window.supabaseClient;
-    return supabaseInstance;
+  return supabaseInstance;
 }
 
-// Główny punkt startowy aplikacji
-document.addEventListener("DOMContentLoaded", () => {
-    initApp();
-    setupTabSwitching();
-});
+function getDiscordIdFromUser(user) {
+  if (!user) return null;
 
-function initApp() {
-    const supabase = getSupabase();
-    if (!supabase) {
-        setTimeout(initApp, 500); // Ponowna próba za chwilę
-        return;
-    }
+  // najpewniejsze: identities dla provider="discord"
+  const identities = user.identities || [];
+  const discordIdentity = identities.find(i => i.provider === "discord");
+  if (discordIdentity?.id) return String(discordIdentity.id);
 
-    // Obsługa kliknięć przycisków logowania/wylogowania
-    const loginBtn = document.getElementById("btn-login");
-    const logoutBtn = document.getElementById("btn-logout");
+  // fallback (czasem może być inaczej)
+  if (user.id) return String(user.id);
 
-    if (loginBtn) {
-        loginBtn.addEventListener("click", loginWithDiscord);
-    } else {
-        console.error("Nie znaleziono przycisku #btn-login w HTML!");
-    }
+  return null;
+}
 
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", logout);
-    }
+function isUserInDiscordList(user, list) {
+  const ids = Array.isArray(list) ? list.map(String) : [];
+  const did = getDiscordIdFromUser(user);
+  return !!did && ids.includes(String(did));
+}
 
-    // Obsługa formularza dodawania postów
-    const newsForm = document.getElementById("news-form");
-    if (newsForm) {
-        newsForm.addEventListener("submit", handleCreatePost);
-    }
+// --- TAB SWITCHING (działa z Twoim menu na podstawie data-tab) ---
+function switchTab(tabId) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
 
-    // Pobierz posty z bazy
-    fetchPosts();
+  const target = document.getElementById(`tab-${tabId}`) || document.getElementById(tabId);
+  if (target) target.classList.add("active");
 
-    // Nasłuchiwanie stanu zalogowania
-    supabase.auth.onAuthStateChange((event, session) => {
-        console.log("Status logowania:", event, session);
-        
-        if (session && session.user) {
-            currentUser = session.user;
-            updateUI(session.user);
-            
-            // Czyszczenie URL z brzydkich tokenów po powrocie z Discorda
-            if (window.location.search.includes("code=")) {
-                const cleanUrl = window.location.origin + window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
-            }
-        } else {
-            currentUser = null;
-            updateUI(null);
-        }
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    const t = btn.getAttribute("data-tab");
+    if (t === tabId) btn.classList.add("active");
+    else btn.classList.remove("active");
+  });
+
+  // w mobile jak masz sidebar-btn
+  document.querySelectorAll(".sidebar-btn").forEach(btn => {
+    const t = btn.getAttribute("data-tab");
+    if (t === tabId) btn.classList.add("active");
+    else btn.classList.remove("active");
+  });
+}
+
+function setupTabSwitching() {
+  // desktop nav
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.getAttribute("data-tab");
+      if (tabId) switchTab(tabId);
     });
+  });
+
+  // mobile sidebar (jeśli masz)
+  document.querySelectorAll(".sidebar-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.getAttribute("data-tab");
+      if (tabId) switchTab(tabId);
+    });
+  });
+
+  // jeśli masz onclick="switchTab('...')" to i tak działa, ale to nic nie szkodzi
 }
 
-// Funkcja logowania przez Discorda
-async function loginWithDiscord() {
-    const supabase = getSupabase();
-    if (!supabase) {
-        alert("Błąd: Biblioteka Supabase nie jest gotowa.");
-        return;
-    }
+// --- UI LOGOWANIA ---
+function applyRoleVisibility(user) {
+  const adminIds = window.ADMIN_DISCORD_IDS || [];
+  const isAdmin = isUserInDiscordList(user, adminIds);
 
-    try {
-        // dynamiczne określenie adresu URL na Github Pages
-        const redirectUrl = window.location.origin + window.location.pathname;
-        console.log("Inicjalizacja logowania. Przekierowanie do: ", redirectUrl);
+  const navAdmin =
+    document.getElementById("nav-admin") ||
+    document.querySelector('[data-tab="admin"]');
 
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'discord',
-            options: {
-                redirectTo: redirectUrl
-            }
-        });
-        if (error) throw error;
-    } catch (err) {
-        console.error("Szczegóły błędu Discord:", err);
-        alert("Błąd podczas logowania przez Discord: " + err.message);
+  const tabAdmin =
+    document.getElementById("tab-admin") ||
+    document.getElementById("admin") ||
+    document.querySelector('#tab-admin, [data-tab="admin"]');
+
+  if (navAdmin) navAdmin.style.display = isAdmin ? "" : "none";
+  if (tabAdmin) {
+    if (!isAdmin) {
+      tabAdmin.classList.remove("active");
+      // powrót na stronę główną
+      const active = document.querySelector(".tab-content.active");
+      if (active && (active.id === "tab-admin" || active.getAttribute("data-tab") === "admin")) {
+        switchTab("home");
+      }
     }
+  }
 }
 
-// Aktualizacja UI (zalogowany / niezalogowany)
 function updateUI(user) {
-    const loginBtn = document.getElementById("btn-login");
-    const userInfoBox = document.getElementById("user-info");
+  const loginBtn = document.getElementById("btn-login");
+  const userInfo = document.getElementById("user-info");
+
+  if (!loginBtn || !userInfo) {
+    // Jeśli masz inne ID w index.html, daj znać jakie - dopasuję 1:1
+    return;
+  }
+
+  if (user) {
+    currentUser = user;
+    loginBtn.style.display = "none";
+    userInfo.style.display = "flex";
+
+    const meta = user.user_metadata || {};
+    const nickname =
+      meta.full_name ||
+      meta.name ||
+      meta.preferred_username ||
+      user.email ||
+      "Użytkownik";
+
+    const avatarUrl = meta.avatar_url || meta.picture || "";
+
     const userNameEl = document.getElementById("user-name");
     const userAvatarEl = document.getElementById("user-avatar");
-    const navAdmin = document.getElementById("nav-admin");
 
-    if (user) {
-        const metadata = user.user_metadata || {};
-        const nickname = metadata.full_name || metadata.name || metadata.preferred_username || user.email || "Użytkownik";
-        const avatarUrl = metadata.avatar_url || metadata.picture || "";
+    if (userNameEl) userNameEl.textContent = nickname;
+    if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
 
-        if (loginBtn) loginBtn.style.display = "none";
-        if (userInfoBox) userInfoBox.style.display = "flex";
-        if (userNameEl) userNameEl.textContent = nickname;
-        if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
-
-        // Pokaż panel admina każdemu zalogowanemu (możesz później ograniczyć dla wybranych ID)
-        if (navAdmin) navAdmin.style.display = "flex";
-    } else {
-        if (loginBtn) loginBtn.style.display = "flex";
-        if (userInfoBox) userInfoBox.style.display = "none";
-        if (navAdmin) navAdmin.style.display = "none";
-        switchTab('home'); // powrót na główną po wylogowaniu
-    }
+    applyRoleVisibility(user);
+  } else {
+    currentUser = null;
+    loginBtn.style.display = "flex";
+    userInfo.style.display = "none";
+    applyRoleVisibility(null);
+    switchTab("home");
+  }
 }
 
-// Wylogowanie
+async function loginWithDiscord() {
+  const supabase = getSupabase();
+  if (!supabase) return alert("Supabase nie jest gotowy.");
+
+  const redirectUrl = window.location.origin + window.location.pathname;
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "discord",
+    options: { redirectTo: redirectUrl }
+  });
+
+  if (error) {
+    console.error(error);
+    alert("Błąd logowania: " + error.message);
+  }
+}
+
 async function logout() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        window.location.href = window.location.origin + window.location.pathname;
-    } catch (err) {
-        console.error("Błąd wylogowania:", err.message);
-    }
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  const { error } = await supabase.auth.signOut();
+  if (error) console.error(error);
+
+  window.location.href = window.location.origin + window.location.pathname;
 }
 
-// OBSŁUGA ZAKŁADEK (TABS)
-function setupTabSwitching() {
-    const buttons = document.querySelectorAll(".nav-btn");
-    
-    buttons.forEach(button => {
-        button.addEventListener("click", () => {
-            const tabName = button.getAttribute("data-tab");
-            if (tabName) switchTab(tabName);
-        });
-    });
+// --- BAZA DANYCH ---
+const NEWS_TABLE = "news"; // jeśli masz inną nazwę tabeli, zmień tutaj
+
+function guessContainerByTag(tagNorm) {
+  // Dopasowujemy pod typowe tagi z Twojej strony
+  // home: domyślnie
+  const containers = {
+    home: document.getElementById("home-container"),
+    wiadomosci: document.getElementById("wiadomosci-container"),
+    artykuly: document.getElementById("artykuly-container"),
+    tiktoki: document.getElementById("tiktoki-container"),
+    cityhall: document.getElementById("cityhall-container")
+  };
+
+  if (!containers.home && !containers.wiadomosci && !containers.artykuly && !containers.tiktoki && !containers.cityhall) {
+    return null;
+  }
+
+  if (tagNorm === "STRONAGLOWNA") return containers.home;
+  if (tagNorm === "WIADOMOSCI") return containers.wiadomosci;
+  if (tagNorm === "ARTYKUŁY" || tagNorm === "ARTYKUY" || tagNorm === "ARTYKULY") return containers.artykuly;
+  if (tagNorm === "TIKTOKI") return containers.tiktoki;
+
+  // city hall / rządowe
+  if (tagNorm === "CITYHALL" || tagNorm === "CITYHALL(RZADOWE)" || tagNorm === "RZADOWE") return containers.cityhall;
+
+  return containers.home;
 }
 
-function switchTab(tabId) {
-    // Ukrywanie wszystkich sekcji
-    document.querySelectorAll(".tab-content").forEach(tab => {
-        tab.classList.remove("active");
-    });
-    
-    // Pokazywanie wybranej
-    const targetTab = document.getElementById(`tab-${tabId}`);
-    if (targetTab) targetTab.classList.add("active");
+function renderPostCard(post) {
+  const title = escapeHtml(post.title || "");
+  const tag = escapeHtml(post.tag || "");
+  const author = escapeHtml(post.author || "Admin");
+  const content = escapeHtml(post.content || "");
 
-    // Zmiana klasy "active" na przyciskach w menu
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-        if (btn.getAttribute("data-tab") === tabId) {
-            btn.classList.add("active");
-        } else {
-            btn.classList.remove("active");
-        }
-    });
+  const dateStr = post.created_at
+    ? new Date(post.created_at).toLocaleDateString("pl-PL")
+    : "";
+
+  const img = post.image_url ? escapeHtml(post.image_url) : "https://i.imgur.com/vHdfC1B.png";
+
+  return `
+    <div class="card">
+      <img class="card-media" src="${img}" alt="News image">
+      <div class="card-body">
+        <span class="card-tag">${tag}</span>
+        <h2 class="card-title">${title}</h2>
+        <div class="card-meta">Autor: ${author} | ${dateStr}</div>
+        <p class="card-text">${content}</p>
+      </div>
+    </div>
+  `;
 }
 
-// BAZA DANYCH: POBIERANIE WPISÓW
 async function fetchPosts() {
-    const supabase = getSupabase();
-    if (!supabase) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
 
-    try {
-        const { data: posts, error } = await supabase
-            .from('news')
-            .select('*')
-            .order('created_at', { ascending: false });
+  const cHome = document.getElementById("home-container");
+  const cW = document.getElementById("wiadomosci-container");
+  const cA = document.getElementById("artykuly-container");
+  const cT = document.getElementById("tiktoki-container");
+  const cC = document.getElementById("cityhall-container");
 
-        if (error) throw error;
+  [cHome, cW, cA, cT, cC].forEach(el => { if (el) el.innerHTML = ""; });
 
-        // Kontenery dla poszczególnych podstron
-        const containers = {
-            'STRONA GŁÓWNA': document.getElementById("home-container"),
-            'WIADOMOŚCI': document.getElementById("wiadomosci-container"),
-            'ARTYKUŁY': document.getElementById("artykuly-container"),
-            'TIKTOKI': document.getElementById("tiktoki-container"),
-            'CITY HALL': document.getElementById("cityhall-container")
-        };
+  const { data, error } = await supabase
+    .from(NEWS_TABLE)
+    .select("*")
+    .order("created_at", { ascending: false });
 
-        // Czyszczenie kontenerów
-        Object.values(containers).forEach(container => {
-            if (container) container.innerHTML = "";
-        });
+  if (error) {
+    console.error("fetchPosts error:", error);
+    return;
+  }
 
-        // Liczniki wpisów w poszczególnych zakładkach
-        const counts = { 'STRONA GŁÓWNA': 0, 'WIADOMOŚCI': 0, 'ARTYKUŁY': 0, 'TIKTOKI': 0, 'CITY HALL': 0 };
+  if (!data || data.length === 0) {
+    if (cHome) cHome.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
+    return;
+  }
 
-        if (posts && posts.length > 0) {
-            posts.forEach(post => {
-                const targetTag = post.tag ? post.tag.toUpperCase() : 'STRONA GŁÓWNA';
-                const container = containers[targetTag];
-
-                if (container) {
-                    container.innerHTML += `
-                        <div class="card">
-                            <img class="card-media" src="${post.image_url || 'https://i.imgur.com/vHdfC1B.png'}" alt="News Image">
-                            <div class="card-body">
-                                <span class="card-tag">${targetTag}</span>
-                                <h2 class="card-title">${post.title}</h2>
-                                <div class="card-meta">Autor: ${post.author} | ${new Date(post.created_at).toLocaleDateString('pl-PL')}</div>
-                                <p class="card-text">${post.content}</p>
-                            </div>
-                        </div>
-                    `;
-                    counts[targetTag]++;
-                }
-            });
-        }
-
-        // Pokaż informację o braku wpisów, jeśli dana zakładka jest pusta
-        Object.keys(containers).forEach(key => {
-            const container = containers[key];
-            if (container && counts[key] === 0) {
-                container.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów w kategorii: ${key.toLowerCase()}</p>`;
-            }
-        });
-
-    } catch (err) {
-        console.error("Błąd pobierania postów z bazy:", err.message);
-    }
+  for (const post of data) {
+    const tagNorm = normalizeTag(post.tag);
+    const container = guessContainerByTag(tagNorm) || cHome;
+    if (container) container.innerHTML += renderPostCard(post);
+  }
 }
 
-// BAZA DANYCH: DODAWANIE WPISU
+// --- ADMIN: dodawanie ---
 async function handleCreatePost(e) {
-    e.preventDefault();
-    const supabase = getSupabase();
-    if (!supabase) return;
+  e.preventDefault();
 
-    if (!currentUser) {
-        alert("Musisz być zalogowany, aby dodać artykuł!");
-        return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  if (!currentUser) return alert("Musisz być zalogowany.");
+
+  const adminIds = window.ADMIN_DISCORD_IDS || [];
+  if (!isUserInDiscordList(currentUser, adminIds)) {
+    return alert("Brak uprawnień do Panelu Admina.");
+  }
+
+  const title = document.getElementById("news-title")?.value || "";
+  const tag = document.getElementById("news-tag")?.value || "";
+  const imageUrl = document.getElementById("news-image")?.value || "";
+  const content = document.getElementById("news-content")?.value || "";
+
+  if (!title || !tag || !content) return alert("Uzupełnij wymagane pola.");
+
+  const meta = currentUser.user_metadata || {};
+  const authorName = meta.full_name || meta.name || "Admin";
+
+  const { error } = await supabase.from(NEWS_TABLE).insert([
+    {
+      title,
+      tag,
+      image_url: imageUrl,
+      content,
+      author: authorName,
+      created_at: new Date().toISOString()
     }
+  ]);
 
-    const title = document.getElementById("news-title").value;
-    const tag = document.getElementById("news-tag").value;
-    const imageUrl = document.getElementById("news-image").value;
-    const content = document.getElementById("news-content").value;
+  if (error) {
+    console.error(error);
+    alert("Błąd publikacji: " + error.message);
+    return;
+  }
 
-    const metadata = currentUser.user_metadata || {};
-    const authorName = metadata.full_name || metadata.name || "Naczelnik";
-
-    try {
-        const { error } = await supabase
-            .from('news')
-            .insert([
-                {
-                    title: title,
-                    tag: tag,
-                    image_url: imageUrl,
-                    content: content,
-                    author: authorName,
-                    created_at: new Date().toISOString()
-                }
-            ]);
-
-        if (error) throw error;
-
-        alert("Pomyślnie opublikowano wpis!");
-        document.getElementById("news-form").reset();
-        
-        await fetchPosts(); // Odśwież listę
-        
-        // Przejdź do zakładki, do której dodaliśmy wpis
-        const tabMapping = {
-            'STRONA GŁÓWNA': 'home',
-            'WIADOMOŚCI': 'wiadomosci',
-            'ARTYKUŁY': 'artykuly',
-            'TIKTOKI': 'tiktoki',
-            'CITY HALL': 'cityhall'
-        };
-        switchTab(tabMapping[tag] || 'home');
-
-    } catch (err) {
-        console.error("Błąd publikowania wpisu:", err.message);
-        alert("Błąd publikowania wpisu: " + err.message);
-    }
+  document.getElementById("news-form")?.reset();
+  await fetchPosts();
 }
+
+// --- START ---
+document.addEventListener("DOMContentLoaded", async () => {
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  setupTabSwitching();
+
+  const loginBtn = document.getElementById("btn-login");
+  const logoutBtn = document.getElementById("btn-logout");
+
+  if (loginBtn) loginBtn.addEventListener("click", loginWithDiscord);
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
+  const newsForm = document.getElementById("news-form");
+  if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
+
+  // on-load session
+  try {
+    const { data } = await supabase.auth.getSession();
+    const sessionUser = data?.session?.user || null;
+    updateUI(sessionUser);
+  } catch (err) {
+    console.error("getSession error:", err);
+  }
+
+  // live auth changes
+  supabase.auth.onAuthStateChange((_event, session) => {
+    const user = session?.user || null;
+    updateUI(user);
+  });
+
+  // load data
+  await fetchPosts();
+});
