@@ -3,298 +3,806 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Weazel News | Los Santos</title>
+
     <base href="/Weazel-News/">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
         :root {
-            --bg-body: #0b0d14;
-            --bg-header: #121520;
-            --bg-card: #181c2b;
-            --bg-input: #0f121d;
-            --accent-red: #dc2626;
-            --accent-gold: #f59e0b;
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #262c40;
+            --bg: #0b0d14;
+            --header: #121520;
+            --card: #181c2b;
+            --input: #0f121d;
+            --red: #dc2626;
+            --gold: #f59e0b;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --border: #262c40;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Inter, sans-serif;
+        }
 
-        html, body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
+        html,
+        body {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 100vw;
+            background: var(--bg);
+            color: var(--text);
             overflow-x: hidden;
         }
 
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
         header {
-            background-color: var(--bg-header);
-            border-bottom: 3px solid var(--accent-red);
-            padding: 12px 24px;
+            min-height: 60px;
+            padding: 10px 24px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 15px;
+            background: var(--header);
+            border-bottom: 3px solid var(--red);
             position: sticky;
             top: 0;
             z-index: 100;
-            width: 100%;
-            gap: 10px;
         }
 
-        .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            width: 40px; height: 40px; background: var(--bg-card);
-            border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; gap: 4px; flex-shrink: 0;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            white-space: nowrap;
         }
-        .mobile-menu-btn span { display: block; width: 20px; height: 2px; background-color: #fff; border-radius: 2px; }
 
-        .mobile-sidebar {
-            position: fixed; top: 0; left: -100%; width: 280px; height: 100%;
-            background: var(--bg-header); border-right: 2px solid var(--border-color);
-            z-index: 1000; display: flex; flex-direction: column; padding: 20px;
-            transition: left 0.3s ease; box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+        .brand-badge {
+            background: var(--red);
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: .75rem;
         }
-        .mobile-sidebar.active { left: 0; }
-        .sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-        .sidebar-close { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; line-height: 1; }
-        .sidebar-links { display: flex; flex-direction: column; gap: 8px; }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .brand-title span {
+            color: var(--red);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn,
         .sidebar-btn {
-            background: rgba(255,255,255,0.03); border: none; color: var(--text-muted);
-            padding: 12px 16px; text-align: left; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; text-transform: uppercase;
-            display: flex; align-items: center; gap: 8px;
+            border: 0;
+            border-radius: 7px;
+            padding: 9px 12px;
+            background: rgba(255,255,255,.04);
+            color: var(--muted);
+            cursor: pointer;
+            font-weight: 800;
+            font-size: .78rem;
+            text-transform: uppercase;
         }
-        .sidebar-btn.active { background: var(--border-color); color: #fff; }
-        .sidebar-btn.cityhall-sidebar { color: var(--accent-blue); }
-        .sidebar-btn.company-sidebar { color: var(--accent-green); }
-        .sidebar-btn.admin-sidebar { color: var(--accent-gold); display: none; }
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; }
-        .sidebar-overlay.active { display: block; }
 
-        .brand { display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 0; }
-        .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; flex-shrink: 0; }
-        .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .brand-title span { color: var(--accent-red); }
-
-        .nav-links { display: none; align-items: center; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
-        .nav-btn {
-            color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700;
-            font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: rgba(255,255,255,0.03); transition: 0.2s;
-            display: flex; align-items: center; gap: 6px;
+        .nav-btn:hover,
+        .nav-btn.active,
+        .sidebar-btn:hover,
+        .sidebar-btn.active {
+            background: var(--border);
+            color: white;
         }
-        .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
-        .nav-btn.cityhall-nav { color: var(--accent-blue); }
-        .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; }
-        .nav-btn.company-nav { color: var(--accent-green); }
-        .nav-btn.company-nav:hover, .nav-btn.company-nav.active { background-color: var(--accent-green); color: #000; }
-        .nav-btn.admin-link { color: var(--accent-gold); display: none; }
-        .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
-        .auth-box { display: flex; align-items: center; flex-shrink: 0; }
+        .cityhall-nav,
+        .cityhall-sidebar {
+            color: var(--blue);
+        }
+
+        .company-nav,
+        .company-sidebar {
+            color: var(--green);
+        }
+
+        .admin-link,
+        .admin-sidebar {
+            display: none;
+            color: var(--gold);
+        }
+
+        .auth-box {
+            display: flex;
+            align-items: center;
+        }
 
         .btn-discord {
-            background: #5865F2; color: #fff; border: none; border-radius: 8px;
-            font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            gap: 8px; padding: 10px 18px; font-size: 0.85rem; transition: background 0.2s; text-decoration: none;
-        }
-        .btn-discord:hover { background: #4752c4; }
-        .btn-discord svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
-
-        .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
-        .user-meta { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
-        .user-name { font-weight: 700; font-size: 0.85rem; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .user-role { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .role-boss { color: var(--accent-gold); }
-        .role-admin { color: #f87171; }
-        .role-cityhall { color: var(--accent-blue); }
-        .role-company { color: var(--accent-green); }
-        .role-default { color: var(--text-muted); }
-        .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
-
-        @media (min-width: 1000px) {
-            .nav-links { display: flex; }
-            .mobile-menu-btn { display: none !important; }
-        }
-        @media (max-width: 999px) {
-            header { padding: 10px 14px; }
-            .mobile-menu-btn { display: flex; }
-            .nav-links { display: none !important; }
-            .user-name { max-width: 90px; }
-        }
-
-        main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .page-header { margin-bottom: 1.5rem; border-left: 5px solid var(--accent-red); padding-left: 14px; }
-        .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
-        .page-header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
-
-        .live-ticker {
-            background: linear-gradient(90deg, #7f1010, var(--accent-red), #7f1010);
-            color: #fff;
+            border: 0;
             border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 22px;
-            box-shadow: 0 4px 14px rgba(220,38,38,0.25);
+            padding: 10px 15px;
+            background: #5865f2;
+            color: white;
+            cursor: pointer;
+            font-weight: 800;
         }
-        .ticker-track { overflow: hidden; white-space: nowrap; padding: 12px 0; }
-        .ticker-track-inner {
+
+        .btn-discord:hover {
+            background: #4752c4;
+        }
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 9px;
+            padding: 5px 10px;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            background: var(--card);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--red);
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .user-name {
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: .82rem;
+            font-weight: 800;
+        }
+
+        .user-role {
+            font-size: .65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .role-boss {
+            color: var(--gold);
+        }
+
+        .role-admin {
+            color: #f87171;
+        }
+
+        .role-cityhall {
+            color: var(--blue);
+        }
+
+        .role-company {
+            color: var(--green);
+        }
+
+        .role-default {
+            color: var(--muted);
+        }
+
+        .btn-logout {
+            border: 0;
+            background: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .page-header {
+            margin-bottom: 22px;
+            padding-left: 14px;
+            border-left: 5px solid var(--red);
+        }
+
+        .page-header h1 {
+            font-size: 1.7rem;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        .page-header p {
+            margin-top: 5px;
+            color: var(--muted);
+        }
+
+        .ticker {
+            margin-bottom: 22px;
+            padding: 12px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #7f1010, var(--red), #7f1010);
+            font-weight: 800;
+        }
+
+        .ticker-inner {
             display: inline-block;
             padding-left: 100%;
-            animation: tickerScroll 40s linear infinite;
-            font-weight: 700;
-            font-size: 0.9rem;
+            animation: moveTicker 38s linear infinite;
         }
-        .ticker-track-inner span { margin-right: 45px; }
-        .ticker-track-inner span::before { content: "●"; color: #fca5a5; margin-right: 10px; }
-        @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+        .ticker-inner span {
+            margin-right: 45px;
+        }
+
+        .ticker-inner span::before {
+            content: "●";
+            margin-right: 10px;
+            color: #fecaca;
+        }
+
+        @keyframes moveTicker {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        .about-box {
+            margin-bottom: 24px;
+            padding: 22px;
+            border-left: 5px solid var(--red);
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--card), var(--header));
+        }
+
+        .about-box h2 {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .about-box p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
 
         .hero-card {
             display: grid;
-            grid-template-columns: 1fr;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            grid-template-columns: 1.3fr 1fr;
+            margin-bottom: 25px;
             overflow: hidden;
-            margin-bottom: 28px;
-            transition: 0.2s;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card);
         }
-        .hero-card:hover { border-color: var(--accent-red); }
-        .hero-card.clickable { cursor: pointer; }
-        @media (min-width: 800px) { .hero-card { grid-template-columns: 1.3fr 1fr; } }
-        .hero-media { width: 100%; height: 260px; object-fit: cover; background: #000; border: 0; display: block; }
-        @media (min-width: 800px) { .hero-media { height: 100%; min-height: 340px; } }
-        .hero-body { padding: 28px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-        .hero-tag { background: var(--accent-red); color: #fff; padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; }
-        .hero-title { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1.2; }
-        .hero-meta { font-size: 0.85rem; color: var(--text-muted); }
-        .hero-text { color: #d1d5db; line-height: 1.55; font-size: 0.95rem; }
 
-        .home-info { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
-        @media (min-width: 750px) { .home-info { grid-template-columns: repeat(3, 1fr); } }
-        .info-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 22px; transition: 0.2s; }
-        .info-card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
-        .info-icon { font-size: 2rem; margin-bottom: 10px; }
-        .info-card h3 { color: #fff; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; font-size: 1rem; }
-        .info-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; }
+        .hero-card.clickable,
+        .card.clickable {
+            cursor: pointer;
+        }
 
-        .home-about { background: linear-gradient(135deg, var(--bg-card), var(--bg-header)); border: 1px solid var(--border-color); border-left: 5px solid var(--accent-red); border-radius: 10px; padding: 24px; margin-bottom: 28px; }
-        .home-about h2 { color: #fff; font-weight: 900; text-transform: uppercase; font-size: 1.2rem; margin-bottom: 10px; }
-        .home-about p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
+        .hero-media {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            object-fit: cover;
+            background: #000;
+        }
 
-        .cards-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
-        @media (min-width: 750px) { .cards-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; } }
+        .hero-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 11px;
+            padding: 25px;
+        }
 
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; transition: 0.2s; }
-        .card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
-        .card.clickable { cursor: pointer; }
-        .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; border: 0; display: block; }
-        .card-body { padding: 15px; display: flex; flex-direction: column; flex: 1; }
-        .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
-        .card-tag.tag-company { background: var(--accent-green); }
-        .card-tag.tag-cityhall { background: var(--accent-blue); }
-        .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
-        .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
-        .card-company { font-size: 0.8rem; color: var(--accent-green); font-weight: 800; margin-bottom: 6px; text-transform: uppercase; }
-        .card-text { font-size: 0.9rem; color: #d1d5db; line-height: 1.45; word-break: break-word; }
+        .hero-tag,
+        .card-tag {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 4px 9px;
+            border-radius: 5px;
+            background: var(--red);
+            color: white;
+            font-size: .68rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
 
-        .admin-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-        .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; width: 100%; }
-        .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
+        .hero-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
 
-        .form-row { margin-bottom: 12px; width: 100%; }
-        .form-row label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-        .form-field { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-size: 0.95rem; }
-        textarea.form-field { min-height: 100px; resize: vertical; }
-        .btn-submit { background: var(--accent-red); color: #fff; border: none; padding: 10px 20px; font-weight: 700; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        .btn-submit:hover { background: #b91c1c; }
-        .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .hero-meta,
+        .card-meta {
+            color: var(--muted);
+            font-size: .78rem;
+        }
 
-        .recruit-box { background: var(--bg-card); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
-        .recruit-box h2 { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
-        .recruit-box p { color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+        .hero-text,
+        .card-text {
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            transition: .2s;
+        }
+
+        .card:hover,
+        .hero-card:hover {
+            border-color: var(--red);
+            transform: translateY(-2px);
+        }
+
+        .card-media {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 15px;
+        }
+
+        .card-title {
+            margin: 7px 0;
+            font-size: 1.1rem;
+            font-weight: 900;
+        }
+
+        .card-company {
+            margin-bottom: 6px;
+            color: var(--green);
+            font-size: .8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .tag-company {
+            background: var(--green);
+            color: #000;
+        }
+
+        .tag-cityhall {
+            background: var(--blue);
+        }
+
+        .home-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 25px 0;
+        }
+
+        .info-card {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+        }
+
+        .info-card h3 {
+            margin: 8px 0;
+            font-size: .95rem;
+            text-transform: uppercase;
+        }
+
+        .info-card p {
+            color: var(--muted);
+            font-size: .88rem;
+            line-height: 1.5;
+        }
+
+        .admin-card,
+        .recruit-box {
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--header);
+        }
+
+        .admin-card h2 {
+            margin-bottom: 16px;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        .form-row {
+            margin-bottom: 14px;
+        }
+
+        .form-row label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: .78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .form-field {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            background: var(--input);
+            color: white;
+        }
+
+        textarea.form-field {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: .75rem;
+        }
+
+        .btn-submit {
+            padding: 11px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--red);
+            color: white;
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .btn-submit:hover {
+            background: #b91c1c;
+        }
+
+        .recruit-box {
+            text-align: center;
+        }
+
+        .recruit-box h2 {
+            margin-bottom: 10px;
+        }
+
+        .recruit-box p {
+            margin-bottom: 18px;
+            color: var(--muted);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card);
+            cursor: pointer;
+        }
+
+        .mobile-menu-btn span {
+            width: 20px;
+            height: 2px;
+            background: white;
+        }
+
+        .mobile-sidebar {
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: -290px;
+            width: 280px;
+            height: 100vh;
+            padding: 20px;
+            background: var(--header);
+            border-right: 2px solid var(--border);
+            transition: left .25s ease;
+        }
+
+        .mobile-sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--red);
+            font-weight: 900;
+        }
+
+        .sidebar-close {
+            border: 0;
+            background: none;
+            color: var(--muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        .sidebar-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-btn {
+            text-align: left;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            inset: 0;
+            background: rgba(0,0,0,.7);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 999px) {
+            header {
+                padding: 9px 12px;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .brand-title {
+                font-size: .95rem;
+            }
+
+            .user-name {
+                max-width: 75px;
+            }
+
+            main {
+                padding: 16px;
+            }
+
+            .hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-media {
+                min-height: 220px;
+            }
+
+            .home-info {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-logout {
+                font-size: .72rem;
+            }
+        }
     </style>
 </head>
-<body>
 
+<body>
     <header>
-        <div class="header-left">
-            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
-                <span></span><span></span><span></span>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button
+                id="mobile-menu-btn"
+                class="mobile-menu-btn"
+                aria-label="Otwórz menu">
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
-            <div class="brand" onclick="switchTab('home')">
+
+            <div
+                class="brand"
+                onclick="switchTab('home')">
                 <span class="brand-badge">LIVE</span>
-                <h1 class="brand-title">Weazel <span>News</span></h1>
+                <h1 class="brand-title">
+                    Weazel <span>News</span>
+                </h1>
             </div>
         </div>
 
         <nav class="nav-links">
-            <button class="nav-btn active" data-tab="home">🏡 Strona Główna</button>
-            <button class="nav-btn" data-tab="wiadomosci">📰 Wiadomości</button>
-            <button class="nav-btn" data-tab="artykuly">📄 Artykuły</button>
-            <button class="nav-btn" data-tab="tiktoki">📱 Tiktoki</button>
-            <button class="nav-btn cityhall-nav" data-tab="cityhall">🏛️ City Hall</button>
-            <button class="nav-btn company-nav" data-tab="ogloszenia">🏢 Ogłoszenia firm</button>
-            <button class="nav-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
-            <button class="nav-btn admin-link" id="nav-admin" data-tab="admin">⚙️ Panel Admina</button>
+            <button class="nav-btn active" data-tab="home">
+                🏠 Strona Główna
+            </button>
+
+            <button class="nav-btn" data-tab="wiadomosci">
+                📰 Wiadomości
+            </button>
+
+            <button class="nav-btn" data-tab="artykuly">
+                📄 Artykuły
+            </button>
+
+            <button class="nav-btn" data-tab="tiktoki">
+                📱 Tiktoki
+            </button>
+
+            <button class="nav-btn cityhall-nav" data-tab="cityhall">
+                🏛️ City Hall
+            </button>
+
+            <button class="nav-btn company-nav" data-tab="ogloszenia">
+                🏢 Ogłoszenia firm
+            </button>
+
+            <button class="nav-btn" data-tab="rekrutacja">
+                💼 Rekrutacja
+            </button>
+
+            <button
+                class="nav-btn admin-link"
+                id="nav-admin"
+                data-tab="admin">
+                ⚙️ Panel Admina
+            </button>
         </nav>
 
         <div class="auth-box">
             <button id="btn-login" class="btn-discord">
-                <svg viewBox="0 0 127.14 96.36">
-                    <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.5-5c.88-.65,1.72-1.34,2.51-2a75.58,75.58,0,0,0,73,0c.79.71,1.63,1.4,2.51,2a68.43,68.43,0,0,1-10.5,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31-18.83C129.87,48.42,123.72,25.49,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
-                </svg>
-                Zaloguj
+                Zaloguj przez Discord
             </button>
 
             <div id="user-info" class="user-info">
-                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                <img
+                    id="user-avatar"
+                    class="user-avatar"
+                    src=""
+                    alt="Avatar">
+
                 <div class="user-meta">
-                    <span id="user-name" class="user-name">Użytkownik</span>
-                    <span id="user-role" class="user-role role-default"></span>
+                    <span id="user-name" class="user-name">
+                        Użytkownik
+                    </span>
+
+                    <span
+                        id="user-role"
+                        class="user-role role-default">
+                    </span>
                 </div>
-                <button id="btn-logout" class="btn-logout">Wyloguj</button>
+
+                <button
+                    id="btn-logout"
+                    class="btn-logout">
+                    Wyloguj
+                </button>
             </div>
         </div>
     </header>
 
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-    <aside class="mobile-sidebar" id="mobile-sidebar">
+    <div
+        id="sidebar-overlay"
+        class="sidebar-overlay">
+    </div>
+
+    <aside
+        id="mobile-sidebar"
+        class="mobile-sidebar">
+
         <div class="sidebar-header">
-            <span style="font-weight:900; color:var(--accent-red); text-transform:uppercase;">Weazel Menu</span>
-            <button class="sidebar-close" id="sidebar-close" aria-label="Zamknij">&times;</button>
+            <span>WEAZEL MENU</span>
+
+            <button
+                id="sidebar-close"
+                class="sidebar-close">
+                ×
+            </button>
         </div>
+
         <div class="sidebar-links">
-            <button class="sidebar-btn active" data-tab="home">🏡 Strona Główna</button>
-            <button class="sidebar-btn" data-tab="wiadomosci">📰 Wiadomości</button>
-            <button class="sidebar-btn" data-tab="artykuly">📄 Artykuły</button>
-            <button class="sidebar-btn" data-tab="tiktoki">📱 Tiktoki</button>
-            <button class="sidebar-btn cityhall-sidebar" data-tab="cityhall">🏛️ City Hall</button>
-            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia">🏢 Ogłoszenia firm</button>
-            <button class="sidebar-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
-            <button class="sidebar-btn admin-sidebar" id="sidebar-admin" data-tab="admin">⚙️ Panel Admina</button>
+            <button class="sidebar-btn active" data-tab="home">
+                🏠 Strona Główna
+            </button>
+
+            <button class="sidebar-btn" data-tab="wiadomosci">
+                📰 Wiadomości
+            </button>
+
+            <button class="sidebar-btn" data-tab="artykuly">
+                📄 Artykuły
+            </button>
+
+            <button class="sidebar-btn" data-tab="tiktoki">
+                📱 Tiktoki
+            </button>
+
+            <button class="sidebar-btn cityhall-sidebar" data-tab="cityhall">
+                🏛️ City Hall
+            </button>
+
+            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia">
+                🏢 Ogłoszenia firm
+            </button>
+
+            <button class="sidebar-btn" data-tab="rekrutacja">
+                💼 Rekrutacja
+            </button>
+
+            <button
+                class="sidebar-btn admin-sidebar"
+                id="sidebar-admin"
+                data-tab="admin">
+                ⚙️ Panel Admina
+            </button>
         </div>
     </aside>
 
     <main>
         <section id="tab-home" class="tab-content active">
-            <div class="live-ticker">
-                <div class="ticker-track">
-                    <div class="ticker-track-inner" id="ticker-track">Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas. Bądź na bieżąco z wydarzeniami, które kształtują nasze miasto! Tylko u nas niezależne dziennikarstwo bez cenzury!</div>
+            <div class="ticker">
+                <div id="ticker-text" class="ticker-inner">
+                    <span>
+                        Witamy w Weazel News — najświeższe informacje z Los Santos.
+                    </span>
                 </div>
             </div>
 
@@ -303,96 +811,139 @@
                 <p>Najważniejsze wydarzenia z Los Santos</p>
             </div>
 
-            <div class="home-about">
+            <div class="about-box">
                 <h2>O Weazel News</h2>
-                <p>Jesteśmy największą niezależną redakcją w stanie San Andreas. Od lat relacjonujemy wszystko to, co władza chciałaby zamiatać pod dywan — od korupcji w City Hall, przez pościgi na autostradach, po największe afery kryminalne Los Santos. Nasz zespół reporterów pracuje 24/7, abyś zawsze wiedział, co naprawdę dzieje się w mieście.</p>
+                <p>
+                    Niezależna redakcja Los Santos. Informujemy o wydarzeniach,
+                    komunikatach City Hall, artykułach, materiałach wideo
+                    i najważniejszych wydarzeniach w mieście.
+                </p>
             </div>
 
             <div id="home-featured"></div>
 
             <div class="home-info">
                 <div class="info-card">
-                    <div class="info-icon">📡</div>
-                    <h3>Relacje na żywo</h3>
-                    <p>Nasi reporterzy są zawsze tam, gdzie dzieje się akcja. Od pościgów po konferencje prasowe — przekazujemy informacje prosto z ulic Los Santos, bez opóźnień.</p>
+                    <div style="font-size:2rem;">📡</div>
+                    <h3>Informacje z miasta</h3>
+                    <p>
+                        Najważniejsze wydarzenia i komunikaty
+                        w jednym miejscu.
+                    </p>
                 </div>
+
                 <div class="info-card">
-                    <div class="info-icon">🔍</div>
-                    <h3>Niezależne śledztwa</h3>
-                    <p>Nie boimy się zadawać trudnych pytań. Publikujemy głębokie analizy i reportaże, które odsłaniają prawdę o władzy, biznesie i półświatku San Andreas.</p>
+                    <div style="font-size:2rem;">🏛️</div>
+                    <h3>City Hall</h3>
+                    <p>
+                        Oficjalne ogłoszenia władz miasta
+                        są widoczne również na stronie głównej.
+                    </p>
                 </div>
+
                 <div class="info-card">
-                    <div class="info-icon">🎥</div>
+                    <div style="font-size:2rem;">🎥</div>
                     <h3>Materiały wideo</h3>
-                    <p>Oglądaj relacje, wywiady i krótkie formy wideo z życia miasta. Nasza sekcja Tiktoki to pulse miasta w pigułce — szybko, głośno i bez filtrów.</p>
+                    <p>
+                        Oglądaj filmy, relacje i materiały
+                        z życia Los Santos.
+                    </p>
                 </div>
             </div>
 
-            <div class="cards-grid" id="home-container"></div>
+            <div id="home-container" class="cards-grid"></div>
         </section>
 
         <section id="tab-wiadomosci" class="tab-content">
             <div class="page-header">
                 <h1>Wiadomości</h1>
-                <p>Bieżące doniesienia z ostatniej chwili</p>
+                <p>Bieżące informacje z miasta</p>
             </div>
-            <div class="cards-grid" id="wiadomosci-container">
-                <p style="color: var(--text-muted);">Brak wiadomości.</p>
+
+            <div
+                id="wiadomosci-container"
+                class="cards-grid">
             </div>
         </section>
 
         <section id="tab-artykuly" class="tab-content">
             <div class="page-header">
                 <h1>Artykuły</h1>
-                <p>Głębokie analizy, felietony i reportaże</p>
+                <p>Analizy, reportaże i felietony</p>
             </div>
-            <div class="cards-grid" id="artykuly-container">
-                <p style="color: var(--text-muted);">Brak artykułów.</p>
+
+            <div
+                id="artykuly-container"
+                class="cards-grid">
             </div>
         </section>
 
         <section id="tab-tiktoki" class="tab-content">
             <div class="page-header">
                 <h1>Tiktoki</h1>
-                <p>Krótkie materiały wideo z życia miasta</p>
+                <p>Krótkie materiały wideo</p>
             </div>
-            <div class="cards-grid" id="tiktoki-container">
-                <p style="color: var(--text-muted);">Brak wideo.</p>
+
+            <div
+                id="tiktoki-container"
+                class="cards-grid">
             </div>
         </section>
 
         <section id="tab-cityhall" class="tab-content">
             <div class="page-header">
-                <h1 style="color: var(--accent-blue);">City Hall</h1>
-                <p>Oficjalne komunikaty rządowe i zarządzenia</p>
+                <h1 style="color:var(--blue);">
+                    City Hall
+                </h1>
+
+                <p>
+                    Oficjalne komunikaty i ogłoszenia miasta
+                </p>
             </div>
-            <div class="cards-grid" id="cityhall-container">
-                <p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>
+
+            <div
+                id="cityhall-container"
+                class="cards-grid">
             </div>
         </section>
 
         <section id="tab-ogloszenia" class="tab-content">
             <div class="page-header">
-                <h1 style="color: var(--accent-green);">Ogłoszenia firm</h1>
-                <p>Reklamy i ogłoszenia od lokalnych przedsiębiorstw Los Santos</p>
+                <h1 style="color:var(--green);">
+                    Ogłoszenia firm
+                </h1>
+
+                <p>
+                    Ogłoszenia lokalnych przedsiębiorstw
+                </p>
             </div>
-            <div class="cards-grid" id="ogloszenia-container">
-                <p style="color: var(--text-muted);">Brak ogłoszeń firm.</p>
+
+            <div
+                id="ogloszenia-container"
+                class="cards-grid">
             </div>
         </section>
 
         <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header">
                 <h1>Rekrutacja</h1>
-                <p>Dołącz do zespołu Weazel News już dziś!</p>
+                <p>Dołącz do zespołu Weazel News</p>
             </div>
+
             <div class="recruit-box">
                 <h2>Chcesz zostać dziennikarzem?</h2>
-                <p>Szukamy ludzi z pasją do prawdy i szybkim piórem. Dołącz do naszego zespołu redakcyjnego i relacjonuj najważniejsze wydarzenia z Los Santos!</p>
-                <a id="recruit-discord-link" href="https://discord.gg/yQDZNv9heE" target="_blank" rel="noopener" class="btn-discord" style="display: inline-flex;">
-                    <svg viewBox="0 0 127.14 96.36">
-                        <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.5-5c.88-.65,1.72-1.34,2.51-2a75.58,75.58,0,0,0,73,0c.79.71,1.63,1.4,2.51,2a68.43,68.43,0,0,1-10.5,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31-18.83C129.87,48.42,123.72,25.49,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
-                    </svg>
+
+                <p>
+                    Dołącz do naszego Discorda i złóż podanie
+                    do redakcji Weazel News.
+                </p>
+
+                <a
+                    id="recruit-discord-link"
+                    class="btn-discord"
+                    href="https://discord.gg/yQDZNv9heE"
+                    target="_blank"
+                    rel="noopener">
                     Dołącz na Discord
                 </a>
             </div>
@@ -400,49 +951,110 @@
 
         <section id="tab-admin" class="tab-content">
             <div class="page-header">
-                <h1 style="color: var(--accent-gold);">Panel Admina</h1>
-                <p>Publikuj nowe treści na stronie</p>
+                <h1 style="color:var(--gold);">
+                    Panel Admina
+                </h1>
+
+                <p>
+                    Dodawanie wpisów do bazy danych
+                </p>
             </div>
 
-            <div class="admin-panel">
-                <div class="admin-card">
-                    <h2 class="admin-card-title">Stwórz nowy wpis</h2>
-                    <form id="news-form">
-                        <div class="form-row">
-                            <label for="news-title">Tytuł</label>
-                            <input type="text" id="news-title" class="form-field" required>
+            <div class="admin-card">
+                <h2>Nowy wpis</h2>
+
+                <form id="news-form">
+                    <div class="form-row">
+                        <label for="news-title">
+                            Tytuł
+                        </label>
+
+                        <input
+                            id="news-title"
+                            class="form-field"
+                            type="text"
+                            required>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="news-tag">
+                            Kategoria
+                        </label>
+
+                        <select
+                            id="news-tag"
+                            class="form-field"
+                            required>
+                        </select>
+                    </div>
+
+                    <div
+                        id="company-name-row"
+                        class="form-row"
+                        style="display:none;">
+
+                        <label for="news-company">
+                            Nazwa firmy
+                        </label>
+
+                        <input
+                            id="news-company"
+                            class="form-field"
+                            type="text"
+                            placeholder="np. Los Santos Customs">
+
+                        <div class="form-hint">
+                            Wymagane dla ogłoszeń firm.
                         </div>
-                        <div class="form-row">
-                            <label for="news-tag">Kategoria</label>
-                            <select id="news-tag" class="form-field"></select>
-                            <div class="form-hint">Dostępne kategorie zależą od Twojej rangi.</div>
-                        </div>
-                        <div class="form-row" id="company-name-row" style="display:none;">
-                            <label for="news-company">Nazwa firmy</label>
-                            <input type="text" id="news-company" class="form-field" placeholder="np. Ammu-Nation, Los Santos Customs">
-                            <div class="form-hint">Wymagane przy ogłoszeniach firm.</div>
-                        </div>
-                        <div class="form-row">
-                            <label for="news-image">Link do zdjęcia (URL)</label>
-                            <input type="url" id="news-image" class="form-field" placeholder="https://i.imgur.com/xyz.png">
-                        </div>
-                        <div class="form-row">
-                            <label for="news-video">Link do filmu (YouTube lub mp4) — opcjonalnie</label>
-                            <input type="url" id="news-video" class="form-field" placeholder="https://www.youtube.com/watch?v=... lub https://...mp4">
-                            <div class="form-hint">Jeśli podasz film, zostanie wyświetlony zamiast zdjęcia.</div>
-                        </div>
-                        <div class="form-row">
-                            <label for="news-content">Treść</label>
-                            <textarea id="news-content" class="form-field" required></textarea>
-                        </div>
-                        <button type="submit" class="btn-submit">Opublikuj wpis</button>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="news-image">
+                            Link do zdjęcia
+                        </label>
+
+                        <input
+                            id="news-image"
+                            class="form-field"
+                            type="url"
+                            placeholder="https://...">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="news-video">
+                            Link do filmu
+                        </label>
+
+                        <input
+                            id="news-video"
+                            class="form-field"
+                            type="url"
+                            placeholder="YouTube lub MP4">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="news-content">
+                            Treść
+                        </label>
+
+                        <textarea
+                            id="news-content"
+                            class="form-field"
+                            required>
+                        </textarea>
+                    </div>
+
+                    <button
+                        class="btn-submit"
+                        type="submit">
+                        Opublikuj
+                    </button>
+                </form>
             </div>
         </section>
     </main>
 
-    <script src="config.js"></script>
-   <script src="app.js?v=7"></script>
+    <script src="config.js?v=2"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>
