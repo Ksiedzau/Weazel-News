@@ -3,14 +3,14 @@
 const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
-// Inicjalizacja klienta Supabase z przepływem PKCE (wymaganym dla GitHub Pages)
+// Inicjalizacja klienta Supabase z przepływem PKCE dla GitHub Pages
 if (window.supabase && !window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
             flowType: 'pkce',
             persistSession: true,
             autoRefreshToken: true,
-            detectSessionInUrl: true // Kluczowe: automatycznie wykrywa token/kod w URL po powrocie z OAuth
+            detectSessionInUrl: true
         }
     });
 }
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         loginButton.addEventListener("click", loginWithDiscord);
     }
 
-    // Sprawdzamy sesję przy starcie (automatycznie obsłuży też powrót z Discorda dzięki detectSessionInUrl)
+    // Sprawdzenie sesji przy załadowaniu strony
     await checkUserSession();
 });
 
@@ -41,26 +41,30 @@ async function loginWithDiscord() {
             throw new Error("Obiekt Supabase auth jest niedostępny.");
         }
 
-        // Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages
+        // Dokładny adres powrotny na GitHub Pages (bazujący na aktualnym URL bez parametrów)
         const redirectUrl = window.location.origin + window.location.pathname;
 
         const { data, error } = await supabaseInstance.auth.signInWithOAuth({
             provider: 'discord',
             options: {
-                redirectTo: redirectUrl 
+                redirectTo: redirectUrl,
+                skipBrowserRedirect: false
             }
         });
 
         if (error) {
             console.error("Błąd podczas logowania przez Discorda:", error.message);
             alert("Nie udało się zalogować: " + error.message);
+        } else if (data && data.url) {
+            // Jawne wymuszenie przekierowania na panel logowania Discorda
+            window.location.href = data.url;
         }
     } catch (err) {
         console.error("Wystąpił nieoczekiwany błąd w loginWithDiscord:", err);
     }
 }
 
-// Funkcja sprawdzająca sesję i aktualizująca widok interfejsu
+// Funkcja sprawdzająca sesję i aktualizująca interfejs
 async function checkUserSession() {
     const supabaseInstance = window.supabaseClient || window.supabase;
     if (!supabaseInstance) return;
@@ -77,19 +81,14 @@ async function checkUserSession() {
         if (session && session.user) {
             console.log("Zalogowany użytkownik:", session.user);
 
-            // Wyciągamy dane z profilu Discorda (zależnie od struktury user_metadata)
             const metadata = session.user.user_metadata || {};
             const nickname = metadata.full_name || metadata.name || metadata.preferred_username || session.user.email || "Użytkownik";
             const avatarUrl = metadata.avatar_url || metadata.picture || "";
 
-            // Podmieniamy widok elementów na stronie
             if (loginBtn) loginBtn.style.display = "none";
             if (userInfoBox) userInfoBox.style.display = "flex";
             if (userNameEl) userNameEl.textContent = nickname;
             if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
-
-            // Opcjonalnie: odblokowanie paneli administracyjnych, jeśli użytkownik ma uprawnienia
-            // (Możesz tu dodać własną logikę sprawdzania roli)
 
         } else {
             console.log("Brak aktywnej sesji - użytkownik niezalogowany.");
