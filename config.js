@@ -1,5 +1,5 @@
 // =====================================================
-// KONFIGURACJA SUPABASE
+// KONFIGURACJA WEAZEL NEWS
 // =====================================================
 
 window.SUPABASE_URL =
@@ -34,13 +34,6 @@ window.ADMIN_DISCORD_IDS = [
 window.CITY_HALL_DISCORD_IDS = [
     "1007988667077369857"
 ];
-
-// =====================================================
-// FIRMY
-// Na czas testu puste
-// =====================================================
-
-window.COMPANY_DISCORD_IDS = [];
 
 // =====================================================
 // DISCORD REKRUTACYJNY
