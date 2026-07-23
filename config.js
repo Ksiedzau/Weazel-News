@@ -1,5 +1,5 @@
 // =====================================================
-// KONFIGURACJA SUPABASE
+// KONFIGURACJA
 // =====================================================
 
 window.SUPABASE_URL =
@@ -9,7 +9,7 @@ window.SUPABASE_KEY =
     "sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN";
 
 // =====================================================
-// SZEFOWIE
+// SZEF
 // =====================================================
 
 window.BOSS_DISCORD_IDS = [
@@ -17,7 +17,7 @@ window.BOSS_DISCORD_IDS = [
 ];
 
 // =====================================================
-// ADMINI
+// ADMIN
 // =====================================================
 
 window.ADMIN_DISCORD_IDS = [
@@ -35,8 +35,7 @@ window.CITY_HALL_DISCORD_IDS = [
 ];
 
 // =====================================================
-// FIRMY
-// Twoje ID przeniesione tutaj z listy Szefów
+// FIRMA
 // =====================================================
 
 window.COMPANY_DISCORD_IDS = [
@@ -44,7 +43,7 @@ window.COMPANY_DISCORD_IDS = [
 ];
 
 // =====================================================
-// DISCORD REKRUTACYJNY
+// REKRUTACJA
 // =====================================================
 
 window.RECRUIT_DISCORD_URL =
