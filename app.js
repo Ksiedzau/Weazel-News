@@ -1,475 +1,1324 @@
-// app.js - Weazel News
+// =====================================================
+// WEAZEL NEWS - APP.JS
+// Bez cooldownu dla firm.
+// Firma publikuje tylko w OGŁOSZENIA FIRMY.
+// Ogłoszenia firm nie trafiają na stronę główną.
+// =====================================================
 
-function normalizeTag(s) {
-  return String(s || "").trim().toUpperCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
+const NEWS_TABLE = "news";
 
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function extractYoutubeId(url) {
-  if (!url) return null;
-  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-
-let supabaseInstance = null;
+let supabaseClient = null;
 let currentUser = null;
 
+// =====================================================
+// POMOCNICZE
+// =====================================================
+
+function normalizeTag(value) {
+    return String(value || "")
+        .trim()
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "");
+}
+
+function isCompanyTag(value) {
+    return [
+        "OGLOSZENIAFIRMY",
+        "OGLOSZENIAFIRM",
+        "OGLOSZENIAFIRMOWE"
+    ].includes(normalizeTag(value));
+}
+
+function isCityHallTag(value) {
+    return [
+        "CITYHALL",
+        "RZADOWE",
+        "OGLOSZENIACITYHALL"
+    ].includes(normalizeTag(value));
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+// =====================================================
+// SUPABASE
+// =====================================================
+
 function getSupabase() {
-  if (supabaseInstance) return supabaseInstance;
-  const supabaseLib = window.supabase;
-  if (!supabaseLib) { console.error("Brak window.supabase (CDN)"); return null; }
-  const url = window.SUPABASE_URL;
-  const key = window.SUPABASE_KEY;
-  if (!url || !key) { console.error("Brak SUPABASE_URL/KEY w config.js"); return null; }
-  supabaseInstance = supabaseLib.createClient(url, key, {
-    auth: { flowType: "pkce", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
-  return supabaseInstance;
+    if (supabaseClient) {
+        return supabaseClient;
+    }
+
+    if (!window.supabase) {
+        console.error("Brak biblioteki Supabase.");
+        return null;
+    }
+
+    if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
+        console.error("Brak konfiguracji Supabase.");
+        return null;
+    }
+
+    supabaseClient = window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_KEY,
+        {
+            auth: {
+                flowType: "pkce",
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        }
+    );
+
+    return supabaseClient;
 }
 
-function getDiscordIdFromUser(user) {
-  if (!user) return null;
-  const identities = user.identities || [];
-  const d = identities.find(i => i.provider === "discord");
-  if (d && d.id) return String(d.id);
-  return user.id ? String(user.id) : null;
+// =====================================================
+// ROLE
+// =====================================================
+
+function getDiscordId(user) {
+    if (!user) {
+        return null;
+    }
+
+    const identity = (user.identities || []).find(
+        item => item.provider === "discord"
+    );
+
+    if (identity?.identity_data?.id) {
+        return String(identity.identity_data.id);
+    }
+
+    if (identity?.identity_data?.sub) {
+        return String(identity.identity_data.sub);
+    }
+
+    if (identity?.id) {
+        return String(identity.id);
+    }
+
+    return String(user.id || "");
 }
 
-function isUserInList(user, list) {
-  const ids = Array.isArray(list) ? list.map(String) : [];
-  const did = getDiscordIdFromUser(user);
-  return !!did && ids.includes(did);
+function hasRole(user, ids) {
+    const discordId = getDiscordId(user);
+
+    return Boolean(
+        discordId &&
+        Array.isArray(ids) &&
+        ids.map(String).includes(discordId)
+    );
 }
 
-function getUserRole(user) {
-  if (!user) return { label: "", cls: "role-default" };
-  if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
-  if (isUserInList(user, window.ADMIN_DISCORD_IDS || [])) return { label: "Admin", cls: "role-admin" };
-  if (isUserInList(user, window.CITY_HALL_DISCORD_IDS || [])) return { label: "City Hall", cls: "role-cityhall" };
-  if (isUserInList(user, window.COMPANY_DISCORD_IDS || [])) return { label: "Firma", cls: "role-company" };
-  return { label: "Obywatel", cls: "role-default" };
+function isBoss(user) {
+    return hasRole(
+        user,
+        window.BOSS_DISCORD_IDS || []
+    );
+}
+
+function isAdmin(user) {
+    return hasRole(
+        user,
+        window.ADMIN_DISCORD_IDS || []
+    );
+}
+
+function isCityHall(user) {
+    return hasRole(
+        user,
+        window.CITY_HALL_DISCORD_IDS || []
+    );
+}
+
+function isCompany(user) {
+    return hasRole(
+        user,
+        window.COMPANY_DISCORD_IDS || []
+    );
 }
 
 function isBossOrAdmin(user) {
-  return isUserInList(user, window.BOSS_DISCORD_IDS || []) || isUserInList(user, window.ADMIN_DISCORD_IDS || []);
-}
-function isCityHall(user) { return isUserInList(user, window.CITY_HALL_DISCORD_IDS || []); }
-function isCompany(user) { return isUserInList(user, window.COMPANY_DISCORD_IDS || []); }
-function canAccessPanel(user) {
-  return isBossOrAdmin(user) || isCityHall(user) || isCompany(user);
+    return isBoss(user) || isAdmin(user);
 }
 
-// --- ZAKŁADKI ---
+function canUsePanel(user) {
+    return (
+        isBossOrAdmin(user) ||
+        isCityHall(user) ||
+        isCompany(user)
+    );
+}
+
+function getRole(user) {
+    if (isBoss(user)) {
+        return ["Szef", "role-boss"];
+    }
+
+    if (isAdmin(user)) {
+        return ["Admin", "role-admin"];
+    }
+
+    if (isCityHall(user)) {
+        return ["City Hall", "role-cityhall"];
+    }
+
+    if (isCompany(user)) {
+        return ["Firma", "role-company"];
+    }
+
+    return ["Obywatel", "role-default"];
+}
+
+// =====================================================
+// ZAKŁADKI I MENU
+// =====================================================
+
 function switchTab(tabId) {
-  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-  const target = document.getElementById(`tab-${tabId}`) || document.getElementById(tabId);
-  if (target) target.classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
-  });
-  document.querySelectorAll(".sidebar-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
-  });
+    document
+        .querySelectorAll(".tab-content")
+        .forEach(section => {
+            section.classList.remove("active");
+        });
+
+    const target =
+        document.getElementById(`tab-${tabId}`);
+
+    if (target) {
+        target.classList.add("active");
+    }
+
+    document
+        .querySelectorAll(".nav-btn, .sidebar-btn")
+        .forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.tab === tabId
+            );
+        });
+
+    closeMobileMenu();
 }
 
-function setupTabSwitching() {
-  document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const t = btn.getAttribute("data-tab");
-      if (t) { switchTab(t); closeMobileMenu(); }
-    });
-  });
-}
+window.switchTab = switchTab;
 
-// --- MENU MOBILNE ---
 function openMobileMenu() {
-  document.getElementById("mobile-sidebar")?.classList.add("active");
-  document.getElementById("sidebar-overlay")?.classList.add("active");
+    document
+        .getElementById("mobile-sidebar")
+        ?.classList.add("active");
+
+    document
+        .getElementById("sidebar-overlay")
+        ?.classList.add("active");
 }
+
 function closeMobileMenu() {
-  document.getElementById("mobile-sidebar")?.classList.remove("active");
-  document.getElementById("sidebar-overlay")?.classList.remove("active");
-}
-function setupMobileMenu() {
-  document.getElementById("mobile-menu-btn")?.addEventListener("click", openMobileMenu);
-  document.getElementById("sidebar-close")?.addEventListener("click", closeMobileMenu);
-  document.getElementById("sidebar-overlay")?.addEventListener("click", closeMobileMenu);
+    document
+        .getElementById("mobile-sidebar")
+        ?.classList.remove("active");
+
+    document
+        .getElementById("sidebar-overlay")
+        ?.classList.remove("active");
 }
 
-// --- UPRAWNIENIA / UI ---
-const ALL_TAGS = [
-  { value: "STRONA GŁÓWNA", label: "Strona Główna", needBoss: true },
-  { value: "WIADOMOŚCI", label: "Wiadomości", needBoss: true },
-  { value: "ARTYKUŁY", label: "Artykuły", needBoss: true },
-  { value: "TIKTOKI", label: "Tiktoki", needBoss: true },
-  { value: "CITY HALL", label: "City Hall (tylko rząd)", needCityHall: true },
-  { value: "OGŁOSZENIA FIRMY", label: "Ogłoszenia firmy", needCompany: true }
-];
+function setupMenus() {
+    document
+        .querySelectorAll(".nav-btn, .sidebar-btn")
+        .forEach(button => {
+            button.addEventListener("click", () => {
+                switchTab(button.dataset.tab);
+            });
+        });
 
-function applyFormPermissions(user) {
-  const sel = document.getElementById("news-tag");
-  if (!sel) return;
-  const boss = isBossOrAdmin(user);
-  const city = isCityHall(user);
-  const comp = isCompany(user);
-  const current = sel.value;
-  sel.innerHTML = "";
-  ALL_TAGS.forEach(t => {
-    const allowed = boss || (t.needCityHall && city) || (t.needCompany && comp);
-    if (!allowed) return;
-    const o = document.createElement("option");
-    o.value = t.value;
-    o.textContent = t.label;
-    sel.appendChild(o);
-  });
-  if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
-  toggleCompanyNameField();
+    document
+        .getElementById("mobile-menu-btn")
+        ?.addEventListener(
+            "click",
+            openMobileMenu
+        );
+
+    document
+        .getElementById("sidebar-close")
+        ?.addEventListener(
+            "click",
+            closeMobileMenu
+        );
+
+    document
+        .getElementById("sidebar-overlay")
+        ?.addEventListener(
+            "click",
+            closeMobileMenu
+        );
 }
 
-function toggleCompanyNameField() {
-  const sel = document.getElementById("news-tag");
-  const row = document.getElementById("company-name-row");
-  if (!sel || !row) return;
-  row.style.display = normalizeTag(sel.value) === "OGLOSZENIAFIRMY" ? "" : "none";
+// =====================================================
+// FORMULARZ I KATEGORIE
+// =====================================================
+
+function updateCompanyField() {
+    const select =
+        document.getElementById("news-tag");
+
+    const row =
+        document.getElementById(
+            "company-name-row"
+        );
+
+    const input =
+        document.getElementById(
+            "news-company"
+        );
+
+    if (!select || !row) {
+        return;
+    }
+
+    const visible =
+        isCompanyTag(select.value);
+
+    row.style.display =
+        visible ? "block" : "none";
+
+    if (input) {
+        input.required = visible;
+    }
 }
 
-function applyRoleVisibility(user) {
-  const hasPanel = canAccessPanel(user);
-  const navAdmin = document.getElementById("nav-admin");
-  const sidebarAdmin = document.getElementById("sidebar-admin");
-  if (navAdmin) navAdmin.style.display = hasPanel ? "flex" : "none";
-  if (sidebarAdmin) sidebarAdmin.style.display = hasPanel ? "flex" : "none";
-  if (!hasPanel) {
-    const active = document.querySelector(".tab-content.active");
-    if (active && active.id === "tab-admin") switchTab("home");
-  }
-  applyFormPermissions(user);
+function updateCategoryOptions(user) {
+    const select =
+        document.getElementById("news-tag");
+
+    if (!select) {
+        return;
+    }
+
+    const options = [];
+    const oldValue = select.value;
+
+    if (isBossOrAdmin(user)) {
+        options.push(
+            ["STRONA GŁÓWNA", "Strona Główna"],
+            ["WIADOMOŚCI", "Wiadomości"],
+            ["ARTYKUŁY", "Artykuły"],
+            ["TIKTOKI", "Tiktoki"]
+        );
+    }
+
+    if (
+        isBossOrAdmin(user) ||
+        isCityHall(user)
+    ) {
+        options.push(
+            ["CITY HALL", "City Hall"]
+        );
+    }
+
+    if (
+        isBossOrAdmin(user) ||
+        isCompany(user)
+    ) {
+        options.push(
+            [
+                "OGŁOSZENIA FIRMY",
+                "Ogłoszenia firmy"
+            ]
+        );
+    }
+
+    select.innerHTML = "";
+
+    options.forEach(([value, label]) => {
+        const option =
+            document.createElement("option");
+
+        option.value = value;
+        option.textContent = label;
+
+        select.appendChild(option);
+    });
+
+    if (
+        [...select.options].some(
+            option =>
+                option.value === oldValue
+        )
+    ) {
+        select.value = oldValue;
+    }
+
+    updateCompanyField();
 }
+
+// =====================================================
+// UI
+// =====================================================
 
 function updateUI(user) {
-  const loginBtn = document.getElementById("btn-login");
-  const userInfo = document.getElementById("user-info");
-  if (!loginBtn || !userInfo) return;
+    currentUser = user || null;
 
-  if (user) {
-    currentUser = user;
-    loginBtn.style.display = "none";
-    userInfo.style.display = "flex";
-    const meta = user.user_metadata || {};
-    const nickname = meta.full_name || meta.name || meta.preferred_username || user.email || "Użytkownik";
-    const avatarUrl = meta.avatar_url || meta.picture || "";
-    const userNameEl = document.getElementById("user-name");
-    const userAvatarEl = document.getElementById("user-avatar");
-    const userRoleEl = document.getElementById("user-role");
-    if (userNameEl) userNameEl.textContent = nickname;
-    if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
-    if (userRoleEl) {
-      const role = getUserRole(user);
-      userRoleEl.textContent = role.label;
-      userRoleEl.className = "user-role " + role.cls;
+    const loginButton =
+        document.getElementById("btn-login");
+
+    const userInfo =
+        document.getElementById("user-info");
+
+    const roleElement =
+        document.getElementById("user-role");
+
+    const adminButton =
+        document.getElementById("nav-admin");
+
+    const mobileAdminButton =
+        document.getElementById("sidebar-admin");
+
+    const panelVisible =
+        canUsePanel(user);
+
+    if (loginButton) {
+        loginButton.style.display =
+            user ? "none" : "block";
     }
-  } else {
-    currentUser = null;
-    loginBtn.style.display = "flex";
-    userInfo.style.display = "none";
-    const userRoleEl = document.getElementById("user-role");
-    if (userRoleEl) userRoleEl.textContent = "";
-  }
-  applyRoleVisibility(user);
-  fetchPosts();
+
+    if (userInfo) {
+        userInfo.style.display =
+            user ? "flex" : "none";
+    }
+
+    if (adminButton) {
+        adminButton.style.display =
+            panelVisible ? "flex" : "none";
+    }
+
+    if (mobileAdminButton) {
+        mobileAdminButton.style.display =
+            panelVisible ? "flex" : "none";
+    }
+
+    if (!user) {
+        if (roleElement) {
+            roleElement.textContent = "";
+        }
+
+        updateCategoryOptions(null);
+        return;
+    }
+
+    const metadata =
+        user.user_metadata || {};
+
+    const username =
+        metadata.full_name ||
+        metadata.name ||
+        metadata.preferred_username ||
+        user.email ||
+        "Użytkownik";
+
+    const avatar =
+        metadata.avatar_url ||
+        metadata.picture ||
+        "";
+
+    const nameElement =
+        document.getElementById("user-name");
+
+    const avatarElement =
+        document.getElementById("user-avatar");
+
+    if (nameElement) {
+        nameElement.textContent =
+            username;
+    }
+
+    if (avatarElement && avatar) {
+        avatarElement.src =
+            avatar;
+    }
+
+    const [roleName, roleClass] =
+        getRole(user);
+
+    if (roleElement) {
+        roleElement.textContent =
+            roleName;
+
+        roleElement.className =
+            `user-role ${roleClass}`;
+    }
+
+    updateCategoryOptions(user);
 }
 
+// =====================================================
+// LOGOWANIE
+// =====================================================
+
 async function loginWithDiscord() {
-  const supabase = getSupabase();
-  if (!supabase) return alert("Supabase nie jest gotowy.");
-  const redirectUrl = window.location.origin + window.location.pathname;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "discord",
-    options: { redirectTo: redirectUrl }
-  });
-  if (error) { console.error(error); alert("Błąd logowania: " + error.message); }
+    const supabase =
+        getSupabase();
+
+    if (!supabase) {
+        alert("Supabase nie jest gotowy.");
+        return;
+    }
+
+    const redirectTo =
+        window.location.origin +
+        window.location.pathname;
+
+    const { error } =
+        await supabase.auth.signInWithOAuth({
+            provider: "discord",
+            options: {
+                redirectTo
+            }
+        });
+
+    if (error) {
+        alert(
+            "Błąd logowania: " +
+            error.message
+        );
+    }
 }
 
 async function logout() {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  const { error } = await supabase.auth.signOut();
-  if (error) console.error(error);
-  window.location.href = window.location.origin + window.location.pathname;
+    const supabase =
+        getSupabase();
+
+    if (!supabase) {
+        return;
+    }
+
+    await supabase.auth.signOut();
+
+    window.location.href =
+        window.location.origin +
+        window.location.pathname;
 }
 
-// --- BAZA ---
-const NEWS_TABLE = "news";
+// =====================================================
+// RENDEROWANIE
+// =====================================================
 
-const DELETE_BTN_STYLE = "margin-top:10px;align-self:flex-start;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;cursor:pointer;transition:0.2s;";
+function getYoutubeId(url) {
+    const match =
+        String(url || "").match(
+            /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+        );
 
-function deleteButtonHtml(postId) {
-  if (!isBossOrAdmin(currentUser)) return "";
-  return `<button class="btn-delete" data-id="${postId}" style="${DELETE_BTN_STYLE}" onmouseover="this.style.background='#ef4444';this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.12)';this.style.color='#ef4444';">🗑️ Usuń artykuł</button>`;
+    return match ? match[1] : null;
 }
 
-function getPostClickUrl(post) {
-  if (post.video_url && String(post.video_url).trim()) return String(post.video_url).trim();
-  if (post.image_url && String(post.image_url).trim()) return String(post.image_url).trim();
-  return "";
+function renderMedia(post, hero = false) {
+    const className =
+        hero ? "hero-media" : "card-media";
+
+    const video =
+        post.video_url || "";
+
+    const youtubeId =
+        getYoutubeId(video);
+
+    if (youtubeId) {
+        return `
+            <iframe
+                class="${className}"
+                src="https://www.youtube.com/embed/${youtubeId}"
+                frameborder="0"
+                allowfullscreen>
+            </iframe>
+        `;
+    }
+
+    if (
+        /\.(mp4|webm|ogg)(\?|$)/i.test(video)
+    ) {
+        return `
+            <video
+                class="${className}"
+                src="${escapeHtml(video)}"
+                controls>
+            </video>
+        `;
+    }
+
+    return `
+        <img
+            class="${className}"
+            src="${escapeHtml(
+                post.image_url ||
+                "https://i.imgur.com/vHdfC1B.png"
+            )}"
+            alt="Materiał artykułu">
+    `;
 }
 
-function tagClass(tagNorm) {
-  if (tagNorm === "OGLOSZENIAFIRMY") return "tag-company";
-  if (tagNorm === "CITYHALL") return "tag-cityhall";
-  return "";
+function getPostUrl(post) {
+    if (post.video_url?.trim()) {
+        return post.video_url.trim();
+    }
+
+    if (post.image_url?.trim()) {
+        return post.image_url.trim();
+    }
+
+    return "";
 }
 
-function renderMedia(post, isHero) {
-  const cls = isHero ? "hero-media" : "card-media";
-  const video = post.video_url || "";
-  const yt = extractYoutubeId(video);
-  if (yt) {
-    return `<iframe class="${cls}" src="https://www.youtube.com/embed/${yt}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-  }
-  if (/\.(mp4|webm|ogg)(\?|$)/i.test(video)) {
-    return `<video class="${cls}" src="${escapeHtml(video)}" controls></video>`;
-  }
-  const img = post.image_url ? escapeHtml(post.image_url) : "https://i.imgur.com/vHdfC1B.png";
-  return `<img class="${cls}" src="${img}" alt="">`;
+function renderDeleteButton(postId) {
+    if (!isBossOrAdmin(currentUser)) {
+        return "";
+    }
+
+    return `
+        <button
+            type="button"
+            class="delete-button"
+            data-id="${escapeHtml(postId)}"
+            style="
+                margin-top:10px;
+                align-self:flex-start;
+                padding:6px 10px;
+                border:1px solid #ef4444;
+                border-radius:6px;
+                background:rgba(239,68,68,.12);
+                color:#ef4444;
+                cursor:pointer;
+                font-weight:800;
+            ">
+            🗑️ Usuń
+        </button>
+    `;
 }
 
 function renderCard(post) {
-  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
-  const clickUrl = getPostClickUrl(post);
-  const clickableClass = clickUrl ? " clickable" : "";
-  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
-  const tn = normalizeTag(post.tag);
-  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
-  return `
-    <div class="card${clickableClass}"${dataUrl}>
-      ${renderMedia(post, false)}
-      <div class="card-body">
-        <span class="card-tag ${tagClass(tn)}">${escapeHtml(post.tag || "")}</span>
-        <h2 class="card-title">${escapeHtml(post.title)}</h2>
-        ${companyLine}
-        <div class="card-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
-        <p class="card-text">${escapeHtml(post.content)}</p>
-        ${deleteButtonHtml(post.id)}
-      </div>
-    </div>`;
+    const url =
+        getPostUrl(post);
+
+    const date =
+        post.created_at
+            ? new Date(
+                post.created_at
+            ).toLocaleDateString("pl-PL")
+            : "";
+
+    const tagClass =
+        isCompanyTag(post.tag)
+            ? "tag-company"
+            : isCityHallTag(post.tag)
+                ? "tag-cityhall"
+                : "";
+
+    const companyName =
+        post.company_name
+            ? `
+                <div class="card-company">
+                    🏢 ${escapeHtml(
+                        post.company_name
+                    )}
+                </div>
+            `
+            : "";
+
+    return `
+        <div
+            class="card ${url ? "clickable" : ""}"
+            ${
+                url
+                    ? `data-url="${escapeHtml(url)}"`
+                    : ""
+            }>
+
+            ${renderMedia(post)}
+
+            <div class="card-body">
+                <span
+                    class="card-tag ${tagClass}">
+                    ${escapeHtml(
+                        post.tag || ""
+                    )}
+                </span>
+
+                <h2 class="card-title">
+                    ${escapeHtml(
+                        post.title || ""
+                    )}
+                </h2>
+
+                ${companyName}
+
+                <div class="card-meta">
+                    Autor:
+                    ${escapeHtml(
+                        post.author || "Admin"
+                    )}
+                    |
+                    ${escapeHtml(date)}
+                </div>
+
+                <p class="card-text">
+                    ${escapeHtml(
+                        post.content || ""
+                    )}
+                </p>
+
+                ${renderDeleteButton(post.id)}
+            </div>
+        </div>
+    `;
 }
 
 function renderHero(post) {
-  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
-  const clickUrl = getPostClickUrl(post);
-  const clickableClass = clickUrl ? " clickable" : "";
-  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
-  const tn = normalizeTag(post.tag);
-  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
-  return `
-    <div class="hero-card${clickableClass}"${dataUrl}>
-      ${renderMedia(post, true)}
-      <div class="hero-body">
-        <span class="hero-tag">${escapeHtml(post.tag || "WYRÓŻNIONE")}</span>
-        <h2 class="hero-title">${escapeHtml(post.title)}</h2>
-        ${companyLine}
-        <div class="hero-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
-        <p class="hero-text">${escapeHtml(post.content)}</p>
-        ${deleteButtonHtml(post.id)}
-      </div>
-    </div>`;
+    const url =
+        getPostUrl(post);
+
+    const date =
+        post.created_at
+            ? new Date(
+                post.created_at
+            ).toLocaleDateString("pl-PL")
+            : "";
+
+    return `
+        <div
+            class="hero-card ${url ? "clickable" : ""}"
+            ${
+                url
+                    ? `data-url="${escapeHtml(url)}"`
+                    : ""
+            }>
+
+            ${renderMedia(post, true)}
+
+            <div class="hero-body">
+                <span class="hero-tag">
+                    ${escapeHtml(
+                        post.tag || ""
+                    )}
+                </span>
+
+                <h2 class="hero-title">
+                    ${escapeHtml(
+                        post.title || ""
+                    )}
+                </h2>
+
+                <div class="hero-meta">
+                    Autor:
+                    ${escapeHtml(
+                        post.author || "Admin"
+                    )}
+                    |
+                    ${escapeHtml(date)}
+                </div>
+
+                <p class="hero-text">
+                    ${escapeHtml(
+                        post.content || ""
+                    )}
+                </p>
+
+                ${renderDeleteButton(post.id)}
+            </div>
+        </div>
+    `;
 }
 
-function renderTicker(posts) {
-  const track = document.getElementById("ticker-track");
-  if (!track) return;
-  const slogan = "Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas. Tylko u nas niezależne dziennikarstwo bez cenzury!";
-  let items = `<span>${escapeHtml(slogan)}</span>`;
-  if (posts && posts.length) {
-    items += posts.slice(0, 10).map(p => `<span>${escapeHtml(p.title)}</span>`).join("");
-  }
-  track.innerHTML = items + items;
+function setEmpty(element, text) {
+    if (element) {
+        element.innerHTML = `
+            <p style="color:var(--muted);">
+                ${text}
+            </p>
+        `;
+    }
 }
+
+// =====================================================
+// BAZA - WYŚWIETLANIE
+// =====================================================
 
 async function fetchPosts() {
-  const supabase = getSupabase();
-  if (!supabase) return;
+    const supabase =
+        getSupabase();
 
-  const homeFeatured = document.getElementById("home-featured");
-  const homeGrid = document.getElementById("home-container");
-  const cW = document.getElementById("wiadomosci-container");
-  const cA = document.getElementById("artykuly-container");
-  const cT = document.getElementById("tiktoki-container");
-  const cC = document.getElementById("cityhall-container");
-  const cO = document.getElementById("ogloszenia-container");
-
-  [homeFeatured, homeGrid, cW, cA, cT, cC, cO].forEach(el => { if (el) el.innerHTML = ""; });
-
-  const { data, error } = await supabase
-    .from(NEWS_TABLE)
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("fetchPosts error:", error);
-    if (homeGrid) homeGrid.innerHTML = `<p style="color:#ef4444;">Błąd bazy danych: ${escapeHtml(error.message)}</p>`;
-    return;
-  }
-
-  renderTicker(data || []);
-
-  if (!data || data.length === 0) {
-    if (homeGrid) homeGrid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów. Zaglądaj później!</p>`;
-    return;
-  }
-
-  if (homeFeatured) homeFeatured.innerHTML = renderHero(data[0]);
-  if (homeGrid && data.length > 1) {
-    homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
-  }
-
-  const byTag = {
-    "WIADOMOSCI": cW,
-    "ARTYKULY": cA,
-    "TIKTOKI": cT,
-    "CITYHALL": cC,
-    "OGLOSZENIAFIRMY": cO
-  };
-  const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0, OGLOSZENIAFIRMY: 0 };
-
-  for (const post of data) {
-    const key = normalizeTag(post.tag);
-    if (byTag[key]) {
-      byTag[key].innerHTML += renderCard(post);
-      counters[key]++;
+    if (!supabase) {
+        return;
     }
-  }
 
-  if (counters.WIADOMOSCI === 0 && cW) cW.innerHTML = `<p style="color: var(--text-muted);">Brak wiadomości.</p>`;
-  if (counters.ARTYKULY === 0 && cA) cA.innerHTML = `<p style="color: var(--text-muted);">Brak artykułów.</p>`;
-  if (counters.TIKTOKI === 0 && cT) cT.innerHTML = `<p style="color: var(--text-muted);">Brak wideo.</p>`;
-  if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
-  if (counters.OGLOSZENIAFIRMY === 0 && cO) cO.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń firm.</p>`;
-}
+    const homeFeatured =
+        document.getElementById(
+            "home-featured"
+        );
 
-// --- USUWANIE ---
-async function handleDelete(postId) {
-  if (!postId) return;
-  if (!isBossOrAdmin(currentUser)) { alert("Brak uprawnień do usuwania artykułów."); return; }
-  if (!confirm("Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć.")) return;
-  const supabase = getSupabase();
-  if (!supabase) return;
-  const { error } = await supabase.from(NEWS_TABLE).delete().eq("id", postId);
-  if (error) { console.error("Błąd usuwania:", error); alert("Błąd usuwania: " + error.message); return; }
-  await fetchPosts();
-}
+    const homeContainer =
+        document.getElementById(
+            "home-container"
+        );
 
-document.addEventListener("click", (e) => {
-  const delBtn = e.target.closest(".btn-delete");
-  if (delBtn) { e.preventDefault(); e.stopPropagation(); handleDelete(delBtn.getAttribute("data-id")); return; }
-  const clickable = e.target.closest(".card.clickable, .hero-card.clickable");
-  if (clickable) {
-    const url = clickable.getAttribute("data-url");
-    if (url) window.open(url, "_blank", "noopener");
-  }
-});
+    const newsContainer =
+        document.getElementById(
+            "wiadomosci-container"
+        );
 
-// --- ADMIN: dodawanie ---
-async function handleCreatePost(e) {
-  e.preventDefault();
-  const supabase = getSupabase();
-  if (!supabase) return;
-  if (!currentUser) return alert("Musisz być zalogowany.");
-  if (!canAccessPanel(currentUser)) return alert("Brak uprawnień do Panelu Admina.");
+    const articlesContainer =
+        document.getElementById(
+            "artykuly-container"
+        );
 
-  const title = document.getElementById("news-title")?.value.trim() || "";
-  const tag = document.getElementById("news-tag")?.value || "";
-  const companyName = document.getElementById("news-company")?.value.trim() || "";
-  const imageUrl = document.getElementById("news-image")?.value.trim() || "";
-  const videoUrl = document.getElementById("news-video")?.value.trim() || "";
-  const content = document.getElementById("news-content")?.value.trim() || "";
+    const tiktoksContainer =
+        document.getElementById(
+            "tiktoki-container"
+        );
 
-  if (!title || !tag || !content) return alert("Uzupełnij tytuł, kategorię i treść.");
+    const cityHallContainer =
+        document.getElementById(
+            "cityhall-container"
+        );
 
-  const tn = normalizeTag(tag);
+    const companyContainer =
+        document.getElementById(
+            "ogloszenia-container"
+        );
 
-  if (tn === "CITYHALL" && !isCityHall(currentUser) && !isBossOrAdmin(currentUser)) {
-    return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
-  }
-  if (tn === "OGLOSZENIAFIRMY") {
-    if (!isCompany(currentUser) && !isBossOrAdmin(currentUser)) {
-      return alert("Nie masz uprawnień do publikacji ogłoszeń firm.");
+    const {
+        data: posts,
+        error
+    } = await supabase
+        .from(NEWS_TABLE)
+        .select("*")
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
+
+    if (error) {
+        console.error(
+            "Błąd pobierania newsów:",
+            error
+        );
+
+        setEmpty(
+            homeContainer,
+            "Błąd połączenia z bazą danych."
+        );
+
+        return;
     }
-    if (!companyName) return alert("Podaj nazwę firmy dla ogłoszenia.");
-  }
 
-  const meta = currentUser.user_metadata || {};
-  const authorName = meta.full_name || meta.name || "Admin";
+    const allPosts =
+        posts || [];
 
-  const { error } = await supabase.from(NEWS_TABLE).insert([{
-    title, tag,
-    company_name: companyName || null,
-    image_url: imageUrl,
-    video_url: videoUrl,
-    content,
-    author: authorName,
-    created_at: new Date().toISOString()
-  }]);
+    /*
+     * NAJWAŻNIEJSZE:
+     *
+     * City Hall jest w homePosts.
+     * Firma jest całkowicie usuwana z homePosts.
+     */
 
-  if (error) { console.error(error); alert("Błąd publikacji: " + error.message); return; }
+    const homePosts =
+        allPosts.filter(
+            post =>
+                !isCompanyTag(
+                    post.tag
+                )
+        );
 
-  document.getElementById("news-form")?.reset();
-  applyFormPermissions(currentUser);
-  await fetchPosts();
+    const companyPosts =
+        allPosts.filter(
+            post =>
+                isCompanyTag(
+                    post.tag
+                )
+        );
 
-  const tagToTab = {
-    "STRONA GŁÓWNA": "home",
-    "WIADOMOŚCI": "wiadomosci",
-    "ARTYKUŁY": "artykuly",
-    "TIKTOKI": "tiktoki",
-    "CITY HALL": "cityhall",
-    "OGŁOSZENIA FIRMY": "ogloszenia"
-  };
-  switchTab(tagToTab[tag] || "home");
-  alert("Wpis opublikowany!");
+    if (homePosts.length > 0) {
+        if (homeFeatured) {
+            homeFeatured.innerHTML =
+                renderHero(
+                    homePosts[0]
+                );
+        }
+
+        if (homeContainer) {
+            homeContainer.innerHTML =
+                homePosts
+                    .slice(1)
+                    .map(renderCard)
+                    .join("");
+        }
+    } else {
+        setEmpty(
+            homeContainer,
+            "Brak wpisów."
+        );
+    }
+
+    // Firmy wyłącznie w tej zakładce
+    if (
+        companyContainer &&
+        companyPosts.length > 0
+    ) {
+        companyContainer.innerHTML =
+            companyPosts
+                .map(renderCard)
+                .join("");
+    } else {
+        setEmpty(
+            companyContainer,
+            "Brak ogłoszeń firm."
+        );
+    }
+
+    const newsPosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "WIADOMOSCI"
+        );
+
+    const articlePosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "ARTYKULY"
+        );
+
+    const tiktokPosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "TIKTOKI"
+        );
+
+    const cityHallPosts =
+        allPosts.filter(
+            post =>
+                isCityHallTag(
+                    post.tag
+                )
+        );
+
+    if (newsContainer) {
+        newsContainer.innerHTML =
+            newsPosts.length
+                ? newsPosts.map(renderCard).join("")
+                : `<p>Brak wiadomości.</p>`;
+    }
+
+    if (articlesContainer) {
+        articlesContainer.innerHTML =
+            articlePosts.length
+                ? articlePosts.map(renderCard).join("")
+                : `<p>Brak artykułów.</p>`;
+    }
+
+    if (tiktoksContainer) {
+        tiktoksContainer.innerHTML =
+            tiktokPosts.length
+                ? tiktokPosts.map(renderCard).join("")
+                : `<p>Brak filmów.</p>`;
+    }
+
+    if (cityHallContainer) {
+        cityHallContainer.innerHTML =
+            cityHallPosts.length
+                ? cityHallPosts.map(renderCard).join("")
+                : `<p>Brak ogłoszeń City Hall.</p>`;
+    }
+
+    const ticker =
+        document.getElementById(
+            "ticker-text"
+        );
+
+    if (ticker) {
+        ticker.innerHTML =
+            homePosts
+                .slice(0, 8)
+                .map(
+                    post =>
+                        `<span>${escapeHtml(
+                            post.title
+                        )}</span>`
+                )
+                .join("");
+    }
 }
 
-// --- START ---
-document.addEventListener("DOMContentLoaded", async () => {
-  const recruitLink = document.getElementById("recruit-discord-link");
-  if (recruitLink && window.RECRUIT_DISCORD_URL) recruitLink.href = window.RECRUIT_DISCORD_URL;
+// =====================================================
+// BAZA - DODAWANIE
+// =====================================================
 
-  const supabase = getSupabase();
-  if (!supabase) return;
+async function createPost(event) {
+    event.preventDefault();
 
-  setupTabSwitching();
-  setupMobileMenu();
+    const supabase =
+        getSupabase();
 
-  document.getElementById("btn-login")?.addEventListener("click", loginWithDiscord);
-  document.getElementById("btn-logout")?.addEventListener("click", logout);
+    if (!currentUser) {
+        alert(
+            "Musisz być zalogowany."
+        );
+        return;
+    }
 
-  const newsForm = document.getElementById("news-form");
-  if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
+    if (!canUsePanel(currentUser)) {
+        alert(
+            "Brak uprawnień do panelu."
+        );
+        return;
+    }
 
-  document.getElementById("news-tag")?.addEventListener("change", toggleCompanyNameField);
+    const title =
+        document.getElementById(
+            "news-title"
+        )?.value.trim() || "";
 
-  applyFormPermissions(null);
+    let tag =
+        document.getElementById(
+            "news-tag"
+        )?.value || "";
 
-  try {
-    const { data } = await supabase.auth.getSession();
-    const sessionUser = data?.session?.user || null;
-    currentUser = sessionUser;
-    updateUI(sessionUser);
-  } catch (err) { console.error("getSession error:", err); }
+    const companyName =
+        document.getElementById(
+            "news-company"
+        )?.value.trim() || "";
 
-  supabase.auth.onAuthStateChange((_event, session) => {
-    updateUI(session?.user || null);
-  });
+    const imageUrl =
+        document.getElementById(
+            "news-image"
+        )?.value.trim() || "";
 
-  await fetchPosts();
-});
+    const videoUrl =
+        document.getElementById(
+            "news-video"
+        )?.value.trim() || "";
+
+    const content =
+        document.getElementById(
+            "news-content"
+        )?.value.trim() || "";
+
+    if (!title || !tag || !content) {
+        alert(
+            "Uzupełnij tytuł, kategorię i treść."
+        );
+        return;
+    }
+
+    // Firma tylko w swojej kategorii
+    if (
+        isCompany(currentUser) &&
+        !isBossOrAdmin(currentUser)
+    ) {
+        if (!isCompanyTag(tag)) {
+            alert(
+                "Firma może dodawać tylko ogłoszenia firm."
+            );
+            return;
+        }
+
+        if (!companyName) {
+            alert(
+                "Podaj nazwę firmy."
+            );
+            return;
+        }
+
+        tag = "OGŁOSZENIA FIRMY";
+    }
+
+    // City Hall tylko w swojej kategorii, bez cooldownu
+    if (
+        isCityHall(currentUser) &&
+        !isBossOrAdmin(currentUser)
+    ) {
+        if (!isCityHallTag(tag)) {
+            alert(
+                "City Hall może dodawać tylko ogłoszenia City Hall."
+            );
+            return;
+        }
+
+        tag = "CITY HALL";
+    }
+
+    // Szef/Admin mogą publikować wszystkie kategorie
+    if (isCompanyTag(tag)) {
+        if (!companyName) {
+            alert(
+                "Podaj nazwę firmy."
+            );
+            return;
+        }
+
+        tag = "OGŁOSZENIA FIRMY";
+    }
+
+    if (isCityHallTag(tag)) {
+        tag = "CITY HALL";
+    }
+
+    const metadata =
+        currentUser.user_metadata || {};
+
+    const author =
+        metadata.full_name ||
+        metadata.name ||
+        metadata.preferred_username ||
+        "Admin";
+
+    const authorDiscordId =
+        getDiscordId(currentUser);
+
+    const { error } =
+        await supabase
+            .from(NEWS_TABLE)
+            .insert({
+                title,
+                tag,
+                company_name:
+                    tag === "OGŁOSZENIA FIRMY"
+                        ? companyName
+                        : null,
+                image_url:
+                    imageUrl || null,
+                video_url:
+                    videoUrl || null,
+                content,
+                author,
+                author_discord_id:
+                    authorDiscordId,
+                created_at:
+                    new Date().toISOString()
+            });
+
+    if (error) {
+        console.error(
+            "Błąd publikowania:",
+            error
+        );
+
+        alert(
+            "Błąd publikacji: " +
+            error.message
+        );
+
+        return;
+    }
+
+    document
+        .getElementById(
+            "news-form"
+        )
+        ?.reset();
+
+    updateCategoryOptions(
+        currentUser
+    );
+
+    await fetchPosts();
+
+    if (tag === "OGŁOSZENIA FIRMY") {
+        switchTab(
+            "ogloszenia"
+        );
+    } else if (tag === "CITY HALL") {
+        switchTab(
+            "cityhall"
+        );
+    } else {
+        switchTab(
+            "home"
+        );
+    }
+
+    alert(
+        "Wpis został opublikowany."
+    );
+}
+
+// =====================================================
+// USUWANIE
+// =====================================================
+
+async function deletePost(postId) {
+    if (!isBossOrAdmin(currentUser)) {
+        alert(
+            "Tylko Szef/Admin może usuwać wpisy."
+        );
+        return;
+    }
+
+    if (
+        !confirm(
+            "Czy na pewno usunąć ten wpis?"
+        )
+    ) {
+        return;
+    }
+
+    const supabase =
+        getSupabase();
+
+    const { error } =
+        await supabase
+            .from(NEWS_TABLE)
+            .delete()
+            .eq("id", postId);
+
+    if (error) {
+        alert(
+            "Błąd usuwania: " +
+            error.message
+        );
+
+        return;
+    }
+
+    await fetchPosts();
+}
+
+// =====================================================
+// KLIKALNE KARTY
+// =====================================================
+
+document.addEventListener(
+    "click",
+    event => {
+        const deleteButton =
+            event.target.closest(
+                ".delete-button"
+            );
+
+        if (deleteButton) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            deletePost(
+                deleteButton.dataset.id
+            );
+
+            return;
+        }
+
+        const card =
+            event.target.closest(
+                ".card.clickable, .hero-card.clickable"
+            );
+
+        if (
+            card &&
+            card.dataset.url
+        ) {
+            window.open(
+                card.dataset.url,
+                "_blank",
+                "noopener,noreferrer"
+            );
+        }
+    }
+);
+
+// =====================================================
+// START
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+        const supabase =
+            getSupabase();
+
+        if (!supabase) {
+            return;
+        }
+
+        setupMenus();
+
+        document
+            .getElementById(
+                "btn-login"
+            )
+            ?.addEventListener(
+                "click",
+                loginWithDiscord
+            );
+
+        document
+            .getElementById(
+                "btn-logout"
+            )
+            ?.addEventListener(
+                "click",
+                logout
+            );
+
+        document
+            .getElementById(
+                "news-form"
+            )
+            ?.addEventListener(
+                "submit",
+                createPost
+            );
+
+        document
+            .getElementById(
+                "news-tag"
+            )
+            ?.addEventListener(
+                "change",
+                updateCompanyField
+            );
+
+        const recruitmentLink =
+            document.getElementById(
+                "recruit-discord-link"
+            );
+
+        if (
+            recruitmentLink &&
+            window.RECRUIT_DISCORD_URL
+        ) {
+            recruitmentLink.href =
+                window.RECRUIT_DISCORD_URL;
+        }
+
+        const {
+            data
+        } = await supabase.auth.getSession();
+
+        updateUI(
+            data?.session?.user || null
+        );
+
+        supabase.auth.onAuthStateChange(
+            (_event, session) => {
+                updateUI(
+                    session?.user || null
+                );
+
+                fetchPosts();
+            }
+        );
+
+        await fetchPosts();
+    }
+);
