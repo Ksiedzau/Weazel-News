@@ -1,26 +1,12 @@
 // app.js - Weazel News
-// Logowanie, zakładki, baza danych, firmy, City Hall, wideo, usuwanie i menu mobilne
 
-let supabaseInstance = null;
-let currentUser = null;
-
-const NEWS_TABLE = "news";
-
-// =========================
-// POMOCNICZE
-// =========================
-
-function normalizeTag(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "");
+function normalizeTag(s) {
+  return String(s || "").trim().toUpperCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
+function escapeHtml(s) {
+  return String(s ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -30,939 +16,418 @@ function escapeHtml(value) {
 
 function extractYoutubeId(url) {
   if (!url) return null;
-
-  const match = String(url).match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
-  );
-
-  return match ? match[1] : null;
+  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
 
-// =========================
-// SUPABASE
-// =========================
+let supabaseInstance = null;
+let currentUser = null;
 
 function getSupabase() {
   if (supabaseInstance) return supabaseInstance;
-
-  if (!window.supabase) {
-    console.error("Brak biblioteki Supabase.");
-    return null;
-  }
-
-  if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
-    console.error("Brak SUPABASE_URL lub SUPABASE_KEY w config.js.");
-    return null;
-  }
-
-  supabaseInstance = window.supabase.createClient(
-    window.SUPABASE_URL,
-    window.SUPABASE_KEY,
-    {
-      auth: {
-        flowType: "pkce",
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    }
-  );
-
+  const supabaseLib = window.supabase;
+  if (!supabaseLib) { console.error("Brak window.supabase (CDN)"); return null; }
+  const url = window.SUPABASE_URL;
+  const key = window.SUPABASE_KEY;
+  if (!url || !key) { console.error("Brak SUPABASE_URL/KEY w config.js"); return null; }
+  supabaseInstance = supabaseLib.createClient(url, key, {
+    auth: { flowType: "pkce", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
   return supabaseInstance;
 }
 
-// =========================
-// ROLE
-// =========================
-
 function getDiscordIdFromUser(user) {
   if (!user) return null;
-
-  const discordIdentity = (user.identities || []).find(
-    identity => identity.provider === "discord"
-  );
-
-  if (discordIdentity?.id) {
-    return String(discordIdentity.id);
-  }
-
+  const identities = user.identities || [];
+  const d = identities.find(i => i.provider === "discord");
+  if (d && d.id) return String(d.id);
   return user.id ? String(user.id) : null;
 }
 
 function isUserInList(user, list) {
-  if (!user || !Array.isArray(list)) return false;
-
-  const discordId = getDiscordIdFromUser(user);
-  return discordId && list.map(String).includes(discordId);
+  const ids = Array.isArray(list) ? list.map(String) : [];
+  const did = getDiscordIdFromUser(user);
+  return !!did && ids.includes(did);
 }
 
-function isBoss(user) {
-  return isUserInList(user, window.BOSS_DISCORD_IDS || []);
-}
-
-function isAdmin(user) {
-  return isUserInList(user, window.ADMIN_DISCORD_IDS || []);
-}
-
-function isCityHall(user) {
-  return isUserInList(user, window.CITY_HALL_DISCORD_IDS || []);
-}
-
-function isCompany(user) {
-  return isUserInList(user, window.COMPANY_DISCORD_IDS || []);
+function getUserRole(user) {
+  if (!user) return { label: "", cls: "role-default" };
+  if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
+  if (isUserInList(user, window.ADMIN_DISCORD_IDS || [])) return { label: "Admin", cls: "role-admin" };
+  if (isUserInList(user, window.CITY_HALL_DISCORD_IDS || [])) return { label: "City Hall", cls: "role-cityhall" };
+  if (isUserInList(user, window.COMPANY_DISCORD_IDS || [])) return { label: "Firma", cls: "role-company" };
+  return { label: "Obywatel", cls: "role-default" };
 }
 
 function isBossOrAdmin(user) {
-  return isBoss(user) || isAdmin(user);
+  return isUserInList(user, window.BOSS_DISCORD_IDS || []) || isUserInList(user, window.ADMIN_DISCORD_IDS || []);
 }
-
+function isCityHall(user) { return isUserInList(user, window.CITY_HALL_DISCORD_IDS || []); }
+function isCompany(user) { return isUserInList(user, window.COMPANY_DISCORD_IDS || []); }
 function canAccessPanel(user) {
   return isBossOrAdmin(user) || isCityHall(user) || isCompany(user);
 }
 
-function getUserRole(user) {
-  if (!user) {
-    return {
-      label: "",
-      className: "role-default"
-    };
-  }
-
-  if (isBoss(user)) {
-    return {
-      label: "Szef",
-      className: "role-boss"
-    };
-  }
-
-  if (isAdmin(user)) {
-    return {
-      label: "Admin",
-      className: "role-admin"
-    };
-  }
-
-  if (isCityHall(user)) {
-    return {
-      label: "City Hall",
-      className: "role-cityhall"
-    };
-  }
-
-  if (isCompany(user)) {
-    return {
-      label: "Firma",
-      className: "role-company"
-    };
-  }
-
-  return {
-    label: "Obywatel",
-    className: "role-default"
-  };
-}
-
-// =========================
-// ZAKŁADKI
-// =========================
-
+// --- ZAKŁADKI ---
 function switchTab(tabId) {
-  document.querySelectorAll(".tab-content").forEach(section => {
-    section.classList.remove("active");
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  const target = document.getElementById(`tab-${tabId}`) || document.getElementById(tabId);
+  if (target) target.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
   });
-
-  const target =
-    document.getElementById(`tab-${tabId}`) ||
-    document.getElementById(tabId);
-
-  if (target) {
-    target.classList.add("active");
-  }
-
-  document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.getAttribute("data-tab") === tabId
-    );
+  document.querySelectorAll(".sidebar-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
   });
 }
 
 function setupTabSwitching() {
-  document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      const tabId = button.getAttribute("data-tab");
-
-      if (tabId) {
-        switchTab(tabId);
-        closeMobileMenu();
-      }
+  document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const t = btn.getAttribute("data-tab");
+      if (t) { switchTab(t); closeMobileMenu(); }
     });
   });
 }
 
-// =========================
-// MENU MOBILNE
-// =========================
-
+// --- MENU MOBILNE ---
 function openMobileMenu() {
   document.getElementById("mobile-sidebar")?.classList.add("active");
   document.getElementById("sidebar-overlay")?.classList.add("active");
 }
-
 function closeMobileMenu() {
   document.getElementById("mobile-sidebar")?.classList.remove("active");
   document.getElementById("sidebar-overlay")?.classList.remove("active");
 }
-
 function setupMobileMenu() {
-  document
-    .getElementById("mobile-menu-btn")
-    ?.addEventListener("click", openMobileMenu);
-
-  document
-    .getElementById("sidebar-close")
-    ?.addEventListener("click", closeMobileMenu);
-
-  document
-    .getElementById("sidebar-overlay")
-    ?.addEventListener("click", closeMobileMenu);
+  document.getElementById("mobile-menu-btn")?.addEventListener("click", openMobileMenu);
+  document.getElementById("sidebar-close")?.addEventListener("click", closeMobileMenu);
+  document.getElementById("sidebar-overlay")?.addEventListener("click", closeMobileMenu);
 }
 
-// =========================
-// FORMULARZ I UPRAWNIENIA
-// =========================
-
+// --- UPRAWNIENIA / UI ---
 const ALL_TAGS = [
-  {
-    value: "STRONA GŁÓWNA",
-    label: "Strona Główna",
-    needBoss: true
-  },
-  {
-    value: "WIADOMOŚCI",
-    label: "Wiadomości",
-    needBoss: true
-  },
-  {
-    value: "ARTYKUŁY",
-    label: "Artykuły",
-    needBoss: true
-  },
-  {
-    value: "TIKTOKI",
-    label: "Tiktoki",
-    needBoss: true
-  },
-  {
-    value: "CITY HALL",
-    label: "City Hall",
-    needCityHall: true
-  },
-  {
-    value: "OGŁOSZENIA FIRMY",
-    label: "Ogłoszenia firmy",
-    needCompany: true
-  }
+  { value: "STRONA GŁÓWNA", label: "Strona Główna", needBoss: true },
+  { value: "WIADOMOŚCI", label: "Wiadomości", needBoss: true },
+  { value: "ARTYKUŁY", label: "Artykuły", needBoss: true },
+  { value: "TIKTOKI", label: "Tiktoki", needBoss: true },
+  { value: "CITY HALL", label: "City Hall (tylko rząd)", needCityHall: true },
+  { value: "OGŁOSZENIA FIRMY", label: "Ogłoszenia firmy", needCompany: true }
 ];
 
-function toggleCompanyNameField() {
-  const select = document.getElementById("news-tag");
-  const companyRow = document.getElementById("company-name-row");
-  const companyInput = document.getElementById("news-company");
-
-  if (!select || !companyRow) return;
-
-  const isCompanyCategory =
-    normalizeTag(select.value) === "OGLOSZENIAFIRMY";
-
-  companyRow.style.display = isCompanyCategory ? "" : "none";
-
-  if (companyInput) {
-    companyInput.required = isCompanyCategory;
-  }
-}
-
 function applyFormPermissions(user) {
-  const select = document.getElementById("news-tag");
-
-  if (!select) return;
-
-  const bossOrAdmin = isBossOrAdmin(user);
-  const cityHall = isCityHall(user);
-  const company = isCompany(user);
-  const previousValue = select.value;
-
-  select.innerHTML = "";
-
-  ALL_TAGS.forEach(category => {
-    let allowed = false;
-
-    if (bossOrAdmin) {
-      allowed = true;
-    } else if (category.needCityHall && cityHall) {
-      allowed = true;
-    } else if (category.needCompany && company) {
-      allowed = true;
-    }
-
+  const sel = document.getElementById("news-tag");
+  if (!sel) return;
+  const boss = isBossOrAdmin(user);
+  const city = isCityHall(user);
+  const comp = isCompany(user);
+  const current = sel.value;
+  sel.innerHTML = "";
+  ALL_TAGS.forEach(t => {
+    const allowed = boss || (t.needCityHall && city) || (t.needCompany && comp);
     if (!allowed) return;
-
-    const option = document.createElement("option");
-    option.value = category.value;
-    option.textContent = category.label;
-    select.appendChild(option);
+    const o = document.createElement("option");
+    o.value = t.value;
+    o.textContent = t.label;
+    sel.appendChild(o);
   });
-
-  const stillExists = [...select.options].some(
-    option => option.value === previousValue
-  );
-
-  if (stillExists) {
-    select.value = previousValue;
-  }
-
+  if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
   toggleCompanyNameField();
 }
 
+function toggleCompanyNameField() {
+  const sel = document.getElementById("news-tag");
+  const row = document.getElementById("company-name-row");
+  if (!sel || !row) return;
+  row.style.display = normalizeTag(sel.value) === "OGLOSZENIAFIRMY" ? "" : "none";
+}
+
 function applyRoleVisibility(user) {
-  const panelAvailable = canAccessPanel(user);
-
-  const desktopAdminButton = document.getElementById("nav-admin");
-  const mobileAdminButton = document.getElementById("sidebar-admin");
-
-  if (desktopAdminButton) {
-    desktopAdminButton.style.display = panelAvailable ? "flex" : "none";
+  const hasPanel = canAccessPanel(user);
+  const navAdmin = document.getElementById("nav-admin");
+  const sidebarAdmin = document.getElementById("sidebar-admin");
+  if (navAdmin) navAdmin.style.display = hasPanel ? "flex" : "none";
+  if (sidebarAdmin) sidebarAdmin.style.display = hasPanel ? "flex" : "none";
+  if (!hasPanel) {
+    const active = document.querySelector(".tab-content.active");
+    if (active && active.id === "tab-admin") switchTab("home");
   }
-
-  if (mobileAdminButton) {
-    mobileAdminButton.style.display = panelAvailable ? "flex" : "none";
-  }
-
-  if (!panelAvailable) {
-    const activeTab = document.querySelector(".tab-content.active");
-
-    if (activeTab?.id === "tab-admin") {
-      switchTab("home");
-    }
-  }
-
   applyFormPermissions(user);
 }
 
 function updateUI(user) {
-  const loginButton = document.getElementById("btn-login");
+  const loginBtn = document.getElementById("btn-login");
   const userInfo = document.getElementById("user-info");
-
-  if (!loginButton || !userInfo) {
-    console.error("Brak #btn-login lub #user-info w index.html.");
-    return;
-  }
+  if (!loginBtn || !userInfo) return;
 
   if (user) {
     currentUser = user;
-
-    loginButton.style.display = "none";
+    loginBtn.style.display = "none";
     userInfo.style.display = "flex";
-
-    const metadata = user.user_metadata || {};
-
-    const nickname =
-      metadata.full_name ||
-      metadata.name ||
-      metadata.preferred_username ||
-      user.email ||
-      "Użytkownik";
-
-    const avatarUrl =
-      metadata.avatar_url ||
-      metadata.picture ||
-      "";
-
-    const nameElement = document.getElementById("user-name");
-    const avatarElement = document.getElementById("user-avatar");
-    const roleElement = document.getElementById("user-role");
-
-    if (nameElement) {
-      nameElement.textContent = nickname;
-    }
-
-    if (avatarElement && avatarUrl) {
-      avatarElement.src = avatarUrl;
-    }
-
-    if (roleElement) {
+    const meta = user.user_metadata || {};
+    const nickname = meta.full_name || meta.name || meta.preferred_username || user.email || "Użytkownik";
+    const avatarUrl = meta.avatar_url || meta.picture || "";
+    const userNameEl = document.getElementById("user-name");
+    const userAvatarEl = document.getElementById("user-avatar");
+    const userRoleEl = document.getElementById("user-role");
+    if (userNameEl) userNameEl.textContent = nickname;
+    if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
+    if (userRoleEl) {
       const role = getUserRole(user);
-
-      roleElement.textContent = role.label;
-      roleElement.className = `user-role ${role.className}`;
+      userRoleEl.textContent = role.label;
+      userRoleEl.className = "user-role " + role.cls;
     }
   } else {
     currentUser = null;
-
-    loginButton.style.display = "flex";
+    loginBtn.style.display = "flex";
     userInfo.style.display = "none";
-
-    const roleElement = document.getElementById("user-role");
-
-    if (roleElement) {
-      roleElement.textContent = "";
-    }
+    const userRoleEl = document.getElementById("user-role");
+    if (userRoleEl) userRoleEl.textContent = "";
   }
-
   applyRoleVisibility(user);
+  fetchPosts();
 }
-
-// =========================
-// LOGOWANIE
-// =========================
 
 async function loginWithDiscord() {
   const supabase = getSupabase();
-
-  if (!supabase) {
-    alert("Supabase nie jest gotowy.");
-    return;
-  }
-
-  const redirectUrl =
-    window.location.origin + window.location.pathname;
-
+  if (!supabase) return alert("Supabase nie jest gotowy.");
+  const redirectUrl = window.location.origin + window.location.pathname;
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "discord",
-    options: {
-      redirectTo: redirectUrl
-    }
+    options: { redirectTo: redirectUrl }
   });
-
-  if (error) {
-    console.error("Błąd logowania:", error);
-    alert("Błąd logowania: " + error.message);
-  }
+  if (error) { console.error(error); alert("Błąd logowania: " + error.message); }
 }
 
 async function logout() {
   const supabase = getSupabase();
-
   if (!supabase) return;
-
   const { error } = await supabase.auth.signOut();
-
-  if (error) {
-    console.error("Błąd wylogowania:", error);
-  }
-
-  window.location.href =
-    window.location.origin + window.location.pathname;
+  if (error) console.error(error);
+  window.location.href = window.location.origin + window.location.pathname;
 }
 
-// =========================
-// RENDEROWANIE MEDIÓW
-// =========================
+// --- BAZA ---
+const NEWS_TABLE = "news";
 
-function renderMedia(post, isHero = false) {
-  const className = isHero ? "hero-media" : "card-media";
-  const videoUrl = post.video_url || "";
-  const youtubeId = extractYoutubeId(videoUrl);
+const DELETE_BTN_STYLE = "margin-top:10px;align-self:flex-start;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;cursor:pointer;transition:0.2s;";
 
-  if (youtubeId) {
-    return `
-      <iframe
-        class="${className}"
-        src="https://www.youtube.com/embed/${youtubeId}"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen>
-      </iframe>
-    `;
-  }
-
-  if (/\.(mp4|webm|ogg)(\?|$)/i.test(videoUrl)) {
-    return `
-      <video
-        class="${className}"
-        src="${escapeHtml(videoUrl)}"
-        controls>
-      </video>
-    `;
-  }
-
-  const imageUrl =
-    post.image_url ||
-    "https://i.imgur.com/vHdfC1B.png";
-
-  return `
-    <img
-      class="${className}"
-      src="${escapeHtml(imageUrl)}"
-      alt="Materiał artykułu">
-  `;
+function deleteButtonHtml(postId) {
+  if (!isBossOrAdmin(currentUser)) return "";
+  return `<button class="btn-delete" data-id="${postId}" style="${DELETE_BTN_STYLE}" onmouseover="this.style.background='#ef4444';this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.12)';this.style.color='#ef4444';">🗑️ Usuń artykuł</button>`;
 }
 
 function getPostClickUrl(post) {
-  if (post.video_url && String(post.video_url).trim()) {
-    return String(post.video_url).trim();
-  }
-
-  if (post.image_url && String(post.image_url).trim()) {
-    return String(post.image_url).trim();
-  }
-
+  if (post.video_url && String(post.video_url).trim()) return String(post.video_url).trim();
+  if (post.image_url && String(post.image_url).trim()) return String(post.image_url).trim();
   return "";
 }
 
-function getTagClass(post) {
-  const tag = normalizeTag(post.tag);
-
-  if (tag === "OGLOSZENIAFIRMY") {
-    return "tag-company";
-  }
-
-  if (tag === "CITYHALL") {
-    return "tag-cityhall";
-  }
-
+function tagClass(tagNorm) {
+  if (tagNorm === "OGLOSZENIAFIRMY") return "tag-company";
+  if (tagNorm === "CITYHALL") return "tag-cityhall";
   return "";
 }
 
-function deleteButtonHtml(postId) {
-  if (!isBossOrAdmin(currentUser)) {
-    return "";
+function renderMedia(post, isHero) {
+  const cls = isHero ? "hero-media" : "card-media";
+  const video = post.video_url || "";
+  const yt = extractYoutubeId(video);
+  if (yt) {
+    return `<iframe class="${cls}" src="https://www.youtube.com/embed/${yt}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
-
-  return `
-    <button
-      class="btn-delete"
-      data-id="${escapeHtml(postId)}"
-      type="button"
-      style="
-        margin-top:10px;
-        align-self:flex-start;
-        background:rgba(239,68,68,0.12);
-        color:#ef4444;
-        border:1px solid rgba(239,68,68,0.4);
-        padding:5px 10px;
-        border-radius:6px;
-        font-size:0.75rem;
-        font-weight:800;
-        text-transform:uppercase;
-        cursor:pointer;
-      ">
-      🗑️ Usuń artykuł
-    </button>
-  `;
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(video)) {
+    return `<video class="${cls}" src="${escapeHtml(video)}" controls></video>`;
+  }
+  const img = post.image_url ? escapeHtml(post.image_url) : "https://i.imgur.com/vHdfC1B.png";
+  return `<img class="${cls}" src="${img}" alt="">`;
 }
 
 function renderCard(post) {
-  const date = post.created_at
-    ? new Date(post.created_at).toLocaleDateString("pl-PL")
-    : "";
-
-  const url = getPostClickUrl(post);
-  const clickableClass = url ? " clickable" : "";
-  const dataUrl = url
-    ? `data-url="${escapeHtml(url)}"`
-    : "";
-
-  const companyName = post.company_name
-    ? `
-      <div class="card-company">
-        🏢 ${escapeHtml(post.company_name)}
-      </div>
-    `
-    : "";
-
+  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
+  const clickUrl = getPostClickUrl(post);
+  const clickableClass = clickUrl ? " clickable" : "";
+  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
+  const tn = normalizeTag(post.tag);
+  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
   return `
-    <div class="card${clickableClass}" ${dataUrl}>
-      ${renderMedia(post)}
-
+    <div class="card${clickableClass}"${dataUrl}>
+      ${renderMedia(post, false)}
       <div class="card-body">
-        <span class="card-tag ${getTagClass(post)}">
-          ${escapeHtml(post.tag || "")}
-        </span>
-
-        <h2 class="card-title">
-          ${escapeHtml(post.title || "")}
-        </h2>
-
-        ${companyName}
-
-        <div class="card-meta">
-          Autor: ${escapeHtml(post.author || "Admin")} |
-          ${escapeHtml(date)}
-        </div>
-
-        <p class="card-text">
-          ${escapeHtml(post.content || "")}
-        </p>
-
+        <span class="card-tag ${tagClass(tn)}">${escapeHtml(post.tag || "")}</span>
+        <h2 class="card-title">${escapeHtml(post.title)}</h2>
+        ${companyLine}
+        <div class="card-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
+        <p class="card-text">${escapeHtml(post.content)}</p>
         ${deleteButtonHtml(post.id)}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderHero(post) {
-  const date = post.created_at
-    ? new Date(post.created_at).toLocaleDateString("pl-PL")
-    : "";
-
-  const url = getPostClickUrl(post);
-  const clickableClass = url ? " clickable" : "";
-  const dataUrl = url
-    ? `data-url="${escapeHtml(url)}"`
-    : "";
-
-  const companyName = post.company_name
-    ? `
-      <div class="card-company">
-        🏢 ${escapeHtml(post.company_name)}
-      </div>
-    `
-    : "";
-
+  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
+  const clickUrl = getPostClickUrl(post);
+  const clickableClass = clickUrl ? " clickable" : "";
+  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
+  const tn = normalizeTag(post.tag);
+  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
   return `
-    <div class="hero-card${clickableClass}" ${dataUrl}>
+    <div class="hero-card${clickableClass}"${dataUrl}>
       ${renderMedia(post, true)}
-
       <div class="hero-body">
-        <span class="hero-tag">
-          ${escapeHtml(post.tag || "WYRÓŻNIONE")}
-        </span>
-
-        <h2 class="hero-title">
-          ${escapeHtml(post.title || "")}
-        </h2>
-
-        ${companyName}
-
-        <div class="hero-meta">
-          Autor: ${escapeHtml(post.author || "Admin")} |
-          ${escapeHtml(date)}
-        </div>
-
-        <p class="hero-text">
-          ${escapeHtml(post.content || "")}
-        </p>
-
+        <span class="hero-tag">${escapeHtml(post.tag || "WYRÓŻNIONE")}</span>
+        <h2 class="hero-title">${escapeHtml(post.title)}</h2>
+        ${companyLine}
+        <div class="hero-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
+        <p class="hero-text">${escapeHtml(post.content)}</p>
         ${deleteButtonHtml(post.id)}
       </div>
-    </div>
-  `;
+    </div>`;
 }
-
-// =========================
-// TICKER
-// =========================
 
 function renderTicker(posts) {
-  const ticker = document.getElementById("ticker-track");
-
-  if (!ticker) return;
-
-  const slogan =
-    "Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas! ";
-
-  const titles = (posts || [])
-    .slice(0, 10)
-    .map(post => `<span>${escapeHtml(post.title || "")}</span>`)
-    .join("");
-
-  ticker.innerHTML =
-    `<span>${escapeHtml(slogan)}</span>${titles}`.repeat(2);
+  const track = document.getElementById("ticker-track");
+  if (!track) return;
+  const slogan = "Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas. Tylko u nas niezależne dziennikarstwo bez cenzury!";
+  let items = `<span>${escapeHtml(slogan)}</span>`;
+  if (posts && posts.length) {
+    items += posts.slice(0, 10).map(p => `<span>${escapeHtml(p.title)}</span>`).join("");
+  }
+  track.innerHTML = items + items;
 }
-
-// =========================
-// POBIERANIE ARTYKUŁÓW
-// =========================
 
 async function fetchPosts() {
   const supabase = getSupabase();
-
   if (!supabase) return;
 
   const homeFeatured = document.getElementById("home-featured");
-  const homeContainer = document.getElementById("home-container");
-  const newsContainer = document.getElementById("wiadomosci-container");
-  const articlesContainer = document.getElementById("artykuly-container");
-  const tiktoksContainer = document.getElementById("tiktoki-container");
-  const cityHallContainer = document.getElementById("cityhall-container");
-  const companyContainer = document.getElementById("ogloszenia-container");
+  const homeGrid = document.getElementById("home-container");
+  const cW = document.getElementById("wiadomosci-container");
+  const cA = document.getElementById("artykuly-container");
+  const cT = document.getElementById("tiktoki-container");
+  const cC = document.getElementById("cityhall-container");
+  const cO = document.getElementById("ogloszenia-container");
 
-  [
-    homeFeatured,
-    homeContainer,
-    newsContainer,
-    articlesContainer,
-    tiktoksContainer,
-    cityHallContainer,
-    companyContainer
-  ].forEach(element => {
-    if (element) element.innerHTML = "";
-  });
+  [homeFeatured, homeGrid, cW, cA, cT, cC, cO].forEach(el => { if (el) el.innerHTML = ""; });
 
-  const { data: posts, error } = await supabase
+  const { data, error } = await supabase
     .from(NEWS_TABLE)
     .select("*")
-    .order("created_at", {
-      ascending: false
-    });
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Błąd pobierania danych:", error);
-
-    if (homeContainer) {
-      homeContainer.innerHTML = `
-        <p style="color:#ef4444;">
-          Błąd bazy danych: ${escapeHtml(error.message)}
-        </p>
-      `;
-    }
-
+    console.error("fetchPosts error:", error);
+    if (homeGrid) homeGrid.innerHTML = `<p style="color:#ef4444;">Błąd bazy danych: ${escapeHtml(error.message)}</p>`;
     return;
   }
 
-  renderTicker(posts || []);
+  renderTicker(data || []);
 
-  if (!posts || posts.length === 0) {
-    if (homeContainer) {
-      homeContainer.innerHTML = `
-        <p style="color:var(--text-muted);">
-          Brak wpisów. Zaglądaj później!
-        </p>
-      `;
-    }
-
-    if (companyContainer) {
-      companyContainer.innerHTML = `
-        <p style="color:var(--text-muted);">
-          Brak ogłoszeń firm.
-        </p>
-      `;
-    }
-
+  if (!data || data.length === 0) {
+    if (homeGrid) homeGrid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów. Zaglądaj później!</p>`;
     return;
   }
 
-  // Strona główna
-  if (homeFeatured) {
-    homeFeatured.innerHTML = renderHero(posts[0]);
+  if (homeFeatured) homeFeatured.innerHTML = renderHero(data[0]);
+  if (homeGrid && data.length > 1) {
+    homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
   }
 
-  if (homeContainer && posts.length > 1) {
-    homeContainer.innerHTML = posts
-      .slice(1)
-      .map(renderCard)
-      .join("");
-  }
-
-  const containers = {
-    WIADOMOSCI: newsContainer,
-    ARTYKULY: articlesContainer,
-    TIKTOKI: tiktoksContainer,
-    CITYHALL: cityHallContainer,
-    OGLOSZENIAFIRMY: companyContainer
+  const byTag = {
+    "WIADOMOSCI": cW,
+    "ARTYKULY": cA,
+    "TIKTOKI": cT,
+    "CITYHALL": cC,
+    "OGLOSZENIAFIRMY": cO
   };
+  const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0, OGLOSZENIAFIRMY: 0 };
 
-  const counters = {
-    WIADOMOSCI: 0,
-    ARTYKULY: 0,
-    TIKTOKI: 0,
-    CITYHALL: 0,
-    OGLOSZENIAFIRMY: 0
-  };
-
-  posts.forEach(post => {
-    const tag = normalizeTag(post.tag);
-    const container = containers[tag];
-
-    if (!container) return;
-
-    container.innerHTML += renderCard(post);
-    counters[tag]++;
-  });
-
-  if (newsContainer && counters.WIADOMOSCI === 0) {
-    newsContainer.innerHTML =
-      `<p style="color:var(--text-muted);">Brak wiadomości.</p>`;
+  for (const post of data) {
+    const key = normalizeTag(post.tag);
+    if (byTag[key]) {
+      byTag[key].innerHTML += renderCard(post);
+      counters[key]++;
+    }
   }
 
-  if (articlesContainer && counters.ARTYKULY === 0) {
-    articlesContainer.innerHTML =
-      `<p style="color:var(--text-muted);">Brak artykułów.</p>`;
-  }
-
-  if (tiktoksContainer && counters.TIKTOKI === 0) {
-    tiktoksContainer.innerHTML =
-      `<p style="color:var(--text-muted);">Brak wideo.</p>`;
-  }
-
-  if (cityHallContainer && counters.CITYHALL === 0) {
-    cityHallContainer.innerHTML =
-      `<p style="color:var(--text-muted);">Brak ogłoszeń City Hall.</p>`;
-  }
-
-  if (companyContainer && counters.OGLOSZENIAFIRMY === 0) {
-    companyContainer.innerHTML =
-      `<p style="color:var(--text-muted);">Brak ogłoszeń firm.</p>`;
-  }
+  if (counters.WIADOMOSCI === 0 && cW) cW.innerHTML = `<p style="color: var(--text-muted);">Brak wiadomości.</p>`;
+  if (counters.ARTYKULY === 0 && cA) cA.innerHTML = `<p style="color: var(--text-muted);">Brak artykułów.</p>`;
+  if (counters.TIKTOKI === 0 && cT) cT.innerHTML = `<p style="color: var(--text-muted);">Brak wideo.</p>`;
+  if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
+  if (counters.OGLOSZENIAFIRMY === 0 && cO) cO.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń firm.</p>`;
 }
 
-// =========================
-// USUWANIE
-// =========================
-
+// --- USUWANIE ---
 async function handleDelete(postId) {
   if (!postId) return;
-
-  if (!isBossOrAdmin(currentUser)) {
-    alert("Nie masz uprawnień do usuwania artykułów.");
-    return;
-  }
-
-  const confirmed = confirm(
-    "Czy na pewno chcesz usunąć ten artykuł?"
-  );
-
-  if (!confirmed) return;
-
+  if (!isBossOrAdmin(currentUser)) { alert("Brak uprawnień do usuwania artykułów."); return; }
+  if (!confirm("Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć.")) return;
   const supabase = getSupabase();
-
   if (!supabase) return;
-
-  const { error } = await supabase
-    .from(NEWS_TABLE)
-    .delete()
-    .eq("id", postId);
-
-  if (error) {
-    console.error("Błąd usuwania:", error);
-    alert("Błąd usuwania: " + error.message);
-    return;
-  }
-
+  const { error } = await supabase.from(NEWS_TABLE).delete().eq("id", postId);
+  if (error) { console.error("Błąd usuwania:", error); alert("Błąd usuwania: " + error.message); return; }
   await fetchPosts();
 }
 
-// =========================
-// DODAWANIE ARTYKUŁU
-// =========================
+document.addEventListener("click", (e) => {
+  const delBtn = e.target.closest(".btn-delete");
+  if (delBtn) { e.preventDefault(); e.stopPropagation(); handleDelete(delBtn.getAttribute("data-id")); return; }
+  const clickable = e.target.closest(".card.clickable, .hero-card.clickable");
+  if (clickable) {
+    const url = clickable.getAttribute("data-url");
+    if (url) window.open(url, "_blank", "noopener");
+  }
+});
 
-async function handleCreatePost(event) {
-  event.preventDefault();
-
+// --- ADMIN: dodawanie ---
+async function handleCreatePost(e) {
+  e.preventDefault();
   const supabase = getSupabase();
-
   if (!supabase) return;
+  if (!currentUser) return alert("Musisz być zalogowany.");
+  if (!canAccessPanel(currentUser)) return alert("Brak uprawnień do Panelu Admina.");
 
-  if (!currentUser) {
-    alert("Musisz być zalogowany.");
-    return;
+  const title = document.getElementById("news-title")?.value.trim() || "";
+  const tag = document.getElementById("news-tag")?.value || "";
+  const companyName = document.getElementById("news-company")?.value.trim() || "";
+  const imageUrl = document.getElementById("news-image")?.value.trim() || "";
+  const videoUrl = document.getElementById("news-video")?.value.trim() || "";
+  const content = document.getElementById("news-content")?.value.trim() || "";
+
+  if (!title || !tag || !content) return alert("Uzupełnij tytuł, kategorię i treść.");
+
+  const tn = normalizeTag(tag);
+
+  if (tn === "CITYHALL" && !isCityHall(currentUser) && !isBossOrAdmin(currentUser)) {
+    return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
   }
-
-  if (!canAccessPanel(currentUser)) {
-    alert("Brak uprawnień do Panelu Admina.");
-    return;
-  }
-
-  const title =
-    document.getElementById("news-title")?.value.trim() || "";
-
-  const tag =
-    document.getElementById("news-tag")?.value || "";
-
-  const companyName =
-    document.getElementById("news-company")?.value.trim() || "";
-
-  const imageUrl =
-    document.getElementById("news-image")?.value.trim() || "";
-
-  const videoUrl =
-    document.getElementById("news-video")?.value.trim() || "";
-
-  const content =
-    document.getElementById("news-content")?.value.trim() || "";
-
-  if (!title || !tag || !content) {
-    alert("Uzupełnij tytuł, kategorię i treść.");
-    return;
-  }
-
-  const normalizedTag = normalizeTag(tag);
-
-  // City Hall może dodawać tylko ogłoszenia City Hall
-  if (
-    isCityHall(currentUser) &&
-    !isBossOrAdmin(currentUser) &&
-    normalizedTag !== "CITYHALL"
-  ) {
-    alert("City Hall może dodawać tylko ogłoszenia City Hall.");
-    return;
-  }
-
-  // Firma może dodawać tylko ogłoszenia firmy
-  if (
-    isCompany(currentUser) &&
-    !isBossOrAdmin(currentUser) &&
-    normalizedTag !== "OGLOSZENIAFIRMY"
-  ) {
-    alert("Firma może dodawać tylko ogłoszenia firm.");
-    return;
-  }
-
-  if (normalizedTag === "CITYHALL") {
-    if (!isCityHall(currentUser) && !isBossOrAdmin(currentUser)) {
-      alert("Nie masz uprawnień do publikacji w City Hall.");
-      return;
-    }
-  }
-
-  if (normalizedTag === "OGLOSZENIAFIRMY") {
+  if (tn === "OGLOSZENIAFIRMY") {
     if (!isCompany(currentUser) && !isBossOrAdmin(currentUser)) {
-      alert("Nie masz uprawnień do publikacji ogłoszeń firm.");
-      return;
+      return alert("Nie masz uprawnień do publikacji ogłoszeń firm.");
     }
-
-    if (!companyName) {
-      alert("Podaj nazwę firmy.");
-      return;
-    }
+    if (!companyName) return alert("Podaj nazwę firmy dla ogłoszenia.");
   }
 
-  const metadata = currentUser.user_metadata || {};
+  const meta = currentUser.user_metadata || {};
+  const authorName = meta.full_name || meta.name || "Admin";
 
-  const author =
-    metadata.full_name ||
-    metadata.name ||
-    metadata.preferred_username ||
-    "Admin";
+  const { error } = await supabase.from(NEWS_TABLE).insert([{
+    title, tag,
+    company_name: companyName || null,
+    image_url: imageUrl,
+    video_url: videoUrl,
+    content,
+    author: authorName,
+    created_at: new Date().toISOString()
+  }]);
 
-  const { error } = await supabase
-    .from(NEWS_TABLE)
-    .insert([
-      {
-        title,
-        tag,
-        company_name: companyName || null,
-        image_url: imageUrl || null,
-        video_url: videoUrl || null,
-        content,
-        author,
-        created_at: new Date().toISOString()
-      }
-    ]);
-
-  if (error) {
-    console.error("Błąd dodawania wpisu:", error);
-    alert("Błąd publikacji: " + error.message);
-    return;
-  }
+  if (error) { console.error(error); alert("Błąd publikacji: " + error.message); return; }
 
   document.getElementById("news-form")?.reset();
-
   applyFormPermissions(currentUser);
   await fetchPosts();
 
-  const destination = {
+  const tagToTab = {
     "STRONA GŁÓWNA": "home",
     "WIADOMOŚCI": "wiadomosci",
     "ARTYKUŁY": "artykuly",
@@ -970,81 +435,37 @@ async function handleCreatePost(event) {
     "CITY HALL": "cityhall",
     "OGŁOSZENIA FIRMY": "ogloszenia"
   };
-
-  switchTab(destination[tag] || "home");
-
-  alert("Wpis został opublikowany.");
+  switchTab(tagToTab[tag] || "home");
+  alert("Wpis opublikowany!");
 }
 
-// =========================
-// KLIKNIĘCIA W KARTY I PRZYCISKI
-// =========================
-
-document.addEventListener("click", event => {
-  const deleteButton = event.target.closest(".btn-delete");
-
-  if (deleteButton) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    handleDelete(deleteButton.dataset.id);
-    return;
-  }
-
-  const clickableCard = event.target.closest(
-    ".card.clickable, .hero-card.clickable"
-  );
-
-  if (clickableCard) {
-    const url = clickableCard.dataset.url;
-
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }
-});
-
-// =========================
-// START APLIKACJI
-// =========================
-
+// --- START ---
 document.addEventListener("DOMContentLoaded", async () => {
-  const supabase = getSupabase();
+  const recruitLink = document.getElementById("recruit-discord-link");
+  if (recruitLink && window.RECRUIT_DISCORD_URL) recruitLink.href = window.RECRUIT_DISCORD_URL;
 
+  const supabase = getSupabase();
   if (!supabase) return;
 
   setupTabSwitching();
   setupMobileMenu();
 
-  document
-    .getElementById("btn-login")
-    ?.addEventListener("click", loginWithDiscord);
+  document.getElementById("btn-login")?.addEventListener("click", loginWithDiscord);
+  document.getElementById("btn-logout")?.addEventListener("click", logout);
 
-  document
-    .getElementById("btn-logout")
-    ?.addEventListener("click", logout);
+  const newsForm = document.getElementById("news-form");
+  if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
 
-  document
-    .getElementById("news-form")
-    ?.addEventListener("submit", handleCreatePost);
+  document.getElementById("news-tag")?.addEventListener("change", toggleCompanyNameField);
 
-  document
-    .getElementById("news-tag")
-    ?.addEventListener("change", toggleCompanyNameField);
-
-  const recruitLink =
-    document.getElementById("recruit-discord-link");
-
-  if (recruitLink && window.RECRUIT_DISCORD_URL) {
-    recruitLink.href = window.RECRUIT_DISCORD_URL;
-  }
+  applyFormPermissions(null);
 
   try {
     const { data } = await supabase.auth.getSession();
-    updateUI(data?.session?.user || null);
-  } catch (error) {
-    console.error("Błąd pobierania sesji:", error);
-  }
+    const sessionUser = data?.session?.user || null;
+    currentUser = sessionUser;
+    updateUI(sessionUser);
+  } catch (err) { console.error("getSession error:", err); }
 
   supabase.auth.onAuthStateChange((_event, session) => {
     updateUI(session?.user || null);
