@@ -55,7 +55,7 @@ function getUserRole(user) {
   if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
   if (isUserInList(user, window.ADMIN_DISCORD_IDS || [])) return { label: "Admin", cls: "role-admin" };
   if (isUserInList(user, window.CITY_HALL_DISCORD_IDS || [])) return { label: "City Hall", cls: "role-cityhall" };
-  return { label: "Redaktor", cls: "role-default" };
+  return { label: "Obywatel", cls: "role-default" };
 }
 
 function isBossOrAdmin(user) {
@@ -81,7 +81,7 @@ function setupTabSwitching() {
       const t = btn.getAttribute("data-tab");
       if (t) {
         switchTab(t);
-        closeMobileMenu(); // zamknij sidebar po wyborze
+        closeMobileMenu();
       }
     });
   });
@@ -209,7 +209,6 @@ function deleteButtonHtml(postId) {
   return `<button class="btn-delete" data-id="${postId}" style="${DELETE_BTN_STYLE}" onmouseover="this.style.background='#ef4444';this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.12)';this.style.color='#ef4444';">🗑️ Usuń artykuł</button>`;
 }
 
-// Zwraca URL, na który ma prowadzić kliknięcie karty (priorytet: film > zdjęcie)
 function getPostClickUrl(post) {
   if (post.video_url && String(post.video_url).trim()) return String(post.video_url).trim();
   if (post.image_url && String(post.image_url).trim()) return String(post.image_url).trim();
@@ -351,9 +350,8 @@ async function handleDelete(postId) {
   await fetchPosts();
 }
 
-// --- DELEGOWANIE KLIKNIĘĆ: usuń + klikalna karta ---
+// --- DELEGOWANIE KLIKNIĘĆ ---
 document.addEventListener("click", (e) => {
-  // 1) przycisk usuń - priorytet
   const delBtn = e.target.closest(".btn-delete");
   if (delBtn) {
     e.preventDefault();
@@ -361,7 +359,6 @@ document.addEventListener("click", (e) => {
     handleDelete(delBtn.getAttribute("data-id"));
     return;
   }
-  // 2) klikalna karta / hero - otwórz URL w nowej karcie
   const clickable = e.target.closest(".card.clickable, .hero-card.clickable");
   if (clickable) {
     const url = clickable.getAttribute("data-url");
