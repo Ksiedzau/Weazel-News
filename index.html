@@ -18,6 +18,7 @@
             --accent-red: #dc2626;
             --accent-gold: #f59e0b;
             --accent-blue: #3b82f6;
+            --accent-green: #10b981;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --border-color: #262c40;
@@ -52,7 +53,6 @@
 
         .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 
-        /* HAMBURGER (widoczny tylko na mobile) */
         .mobile-menu-btn {
             display: none;
             flex-direction: column; justify-content: center; align-items: center;
@@ -61,7 +61,6 @@
         }
         .mobile-menu-btn span { display: block; width: 20px; height: 2px; background-color: #fff; border-radius: 2px; }
 
-        /* SIDEBAR MOBILNY */
         .mobile-sidebar {
             position: fixed; top: 0; left: -100%; width: 280px; height: 100%;
             background: var(--bg-header); border-right: 2px solid var(--border-color);
@@ -79,6 +78,7 @@
         }
         .sidebar-btn.active { background: var(--border-color); color: #fff; }
         .sidebar-btn.cityhall-sidebar { color: var(--accent-blue); }
+        .sidebar-btn.company-sidebar { color: var(--accent-green); }
         .sidebar-btn.admin-sidebar { color: var(--accent-gold); display: none; }
         .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; }
         .sidebar-overlay.active { display: block; }
@@ -88,7 +88,6 @@
         .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-title span { color: var(--accent-red); }
 
-        /* Menu desktop: domyślnie ukryte (mobile-first) */
         .nav-links { display: none; align-items: center; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
         .nav-btn {
             color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700;
@@ -98,6 +97,8 @@
         .nav-btn:hover, .nav-btn.active { background-color: var(--border-color); color: #fff; }
         .nav-btn.cityhall-nav { color: var(--accent-blue); }
         .nav-btn.cityhall-nav:hover, .nav-btn.cityhall-nav.active { background-color: var(--accent-blue); color: #fff; }
+        .nav-btn.company-nav { color: var(--accent-green); }
+        .nav-btn.company-nav:hover, .nav-btn.company-nav.active { background-color: var(--accent-green); color: #000; }
         .nav-btn.admin-link { color: var(--accent-gold); display: none; }
         .nav-btn.admin-link:hover, .nav-btn.admin-link.active { background-color: var(--accent-gold); color: #000; }
 
@@ -119,15 +120,14 @@
         .role-boss { color: var(--accent-gold); }
         .role-admin { color: #f87171; }
         .role-cityhall { color: var(--accent-blue); }
+        .role-company { color: var(--accent-green); }
         .role-default { color: var(--text-muted); }
         .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
 
-        /* DESKTOP: pokaż nav-links, ukryj hamburger */
         @media (min-width: 1000px) {
             .nav-links { display: flex; }
             .mobile-menu-btn { display: none !important; }
         }
-        /* MOBILE: pokaż hamburger */
         @media (max-width: 999px) {
             header { padding: 10px 14px; }
             .mobile-menu-btn { display: flex; }
@@ -205,8 +205,11 @@
         .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; border: 0; display: block; }
         .card-body { padding: 15px; display: flex; flex-direction: column; flex: 1; }
         .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
+        .card-tag.tag-company { background: var(--accent-green); }
+        .card-tag.tag-cityhall { background: var(--accent-blue); }
         .card-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
         .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        .card-company { font-size: 0.8rem; color: var(--accent-green); font-weight: 800; margin-bottom: 6px; text-transform: uppercase; }
         .card-text { font-size: 0.9rem; color: #d1d5db; line-height: 1.45; word-break: break-word; }
 
         .admin-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; }
@@ -245,6 +248,7 @@
             <button class="nav-btn" data-tab="artykuly">📄 Artykuły</button>
             <button class="nav-btn" data-tab="tiktoki">📱 Tiktoki</button>
             <button class="nav-btn cityhall-nav" data-tab="cityhall">🏛️ City Hall</button>
+            <button class="nav-btn company-nav" data-tab="ogloszenia">🏢 Ogłoszenia firm</button>
             <button class="nav-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
             <button class="nav-btn admin-link" id="nav-admin" data-tab="admin">⚙️ Panel Admina</button>
         </nav>
@@ -268,7 +272,6 @@
         </div>
     </header>
 
-    <!-- SIDEBAR MOBILNY -->
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <aside class="mobile-sidebar" id="mobile-sidebar">
         <div class="sidebar-header">
@@ -281,6 +284,7 @@
             <button class="sidebar-btn" data-tab="artykuly">📄 Artykuły</button>
             <button class="sidebar-btn" data-tab="tiktoki">📱 Tiktoki</button>
             <button class="sidebar-btn cityhall-sidebar" data-tab="cityhall">🏛️ City Hall</button>
+            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia">🏢 Ogłoszenia firm</button>
             <button class="sidebar-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
             <button class="sidebar-btn admin-sidebar" id="sidebar-admin" data-tab="admin">⚙️ Panel Admina</button>
         </div>
@@ -367,6 +371,16 @@
             </div>
         </section>
 
+        <section id="tab-ogloszenia" class="tab-content">
+            <div class="page-header">
+                <h1 style="color: var(--accent-green);">Ogłoszenia firm</h1>
+                <p>Reklamy i ogłoszenia od lokalnych przedsiębiorstw Los Santos</p>
+            </div>
+            <div class="cards-grid" id="ogloszenia-container">
+                <p style="color: var(--text-muted);">Brak ogłoszeń firm.</p>
+            </div>
+        </section>
+
         <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header">
                 <h1>Rekrutacja</h1>
@@ -401,7 +415,12 @@
                         <div class="form-row">
                             <label for="news-tag">Kategoria</label>
                             <select id="news-tag" class="form-field"></select>
-                            <div class="form-hint">Kategoria „City Hall" jest dostępna tylko dla osób z odpowiednią rangą.</div>
+                            <div class="form-hint">Dostępne kategorie zależą od Twojej rangi.</div>
+                        </div>
+                        <div class="form-row" id="company-name-row" style="display:none;">
+                            <label for="news-company">Nazwa firmy</label>
+                            <input type="text" id="news-company" class="form-field" placeholder="np. Ammu-Nation, Los Santos Customs">
+                            <div class="form-hint">Wymagane przy ogłoszeniach firm.</div>
                         </div>
                         <div class="form-row">
                             <label for="news-image">Link do zdjęcia (URL)</label>
