@@ -1,4 +1,4 @@
-// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker, usuwanie
+// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker, usuwanie, klikalne karty, menu mobilne
 
 function normalizeTag(s) {
   return String(s || "").trim().toUpperCase()
@@ -50,7 +50,6 @@ function isUserInList(user, list) {
   return !!did && ids.includes(did);
 }
 
-// --- RANGI ---
 function getUserRole(user) {
   if (!user) return { label: "", cls: "role-default" };
   if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
@@ -71,15 +70,43 @@ function switchTab(tabId) {
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
   });
+  document.querySelectorAll(".sidebar-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
+  });
 }
 
 function setupTabSwitching() {
-  document.querySelectorAll(".nav-btn").forEach(btn => {
+  document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = btn.getAttribute("data-tab");
-      if (t) switchTab(t);
+      if (t) {
+        switchTab(t);
+        closeMobileMenu(); // zamknij sidebar po wyborze
+      }
     });
   });
+}
+
+// --- MENU MOBILNE ---
+function openMobileMenu() {
+  const sb = document.getElementById("mobile-sidebar");
+  const ov = document.getElementById("sidebar-overlay");
+  if (sb) sb.classList.add("active");
+  if (ov) ov.classList.add("active");
+}
+function closeMobileMenu() {
+  const sb = document.getElementById("mobile-sidebar");
+  const ov = document.getElementById("sidebar-overlay");
+  if (sb) sb.classList.remove("active");
+  if (ov) ov.classList.remove("active");
+}
+function setupMobileMenu() {
+  const btn = document.getElementById("mobile-menu-btn");
+  const close = document.getElementById("sidebar-close");
+  const ov = document.getElementById("sidebar-overlay");
+  if (btn) btn.addEventListener("click", openMobileMenu);
+  if (close) close.addEventListener("click", closeMobileMenu);
+  if (ov) ov.addEventListener("click", closeMobileMenu);
 }
 
 // --- UPRAWNIENIA / UI ---
@@ -110,7 +137,9 @@ function applyFormPermissions(user) {
 function applyRoleVisibility(user) {
   const isAdmin = isBossOrAdmin(user);
   const navAdmin = document.getElementById("nav-admin");
+  const sidebarAdmin = document.getElementById("sidebar-admin");
   if (navAdmin) navAdmin.style.display = isAdmin ? "flex" : "none";
+  if (sidebarAdmin) sidebarAdmin.style.display = isAdmin ? "flex" : "none";
   if (!isAdmin) {
     const active = document.querySelector(".tab-content.active");
     if (active && active.id === "tab-admin") switchTab("home");
@@ -148,8 +177,6 @@ function updateUI(user) {
     if (userRoleEl) userRoleEl.textContent = "";
   }
   applyRoleVisibility(user);
-
-  // Odśwież widok, żeby przyciski "Usuń" pojawiły się / zniknęły
   fetchPosts();
 }
 
@@ -175,12 +202,18 @@ async function logout() {
 // --- BAZA ---
 const NEWS_TABLE = "news";
 
-// Styl przycisku usuwania (inline, żeby nie ruszać index.html)
 const DELETE_BTN_STYLE = "margin-top:10px;align-self:flex-start;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;cursor:pointer;transition:0.2s;";
 
 function deleteButtonHtml(postId) {
   if (!isBossOrAdmin(currentUser)) return "";
   return `<button class="btn-delete" data-id="${postId}" style="${DELETE_BTN_STYLE}" onmouseover="this.style.background='#ef4444';this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.12)';this.style.color='#ef4444';">🗑️ Usuń artykuł</button>`;
+}
+
+// Zwraca URL, na który ma prowadzić kliknięcie karty (priorytet: film > zdjęcie)
+function getPostClickUrl(post) {
+  if (post.video_url && String(post.video_url).trim()) return String(post.video_url).trim();
+  if (post.image_url && String(post.image_url).trim()) return String(post.image_url).trim();
+  return "";
 }
 
 function renderMedia(post, isHero) {
@@ -199,8 +232,11 @@ function renderMedia(post, isHero) {
 
 function renderCard(post) {
   const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
+  const clickUrl = getPostClickUrl(post);
+  const clickableClass = clickUrl ? " clickable" : "";
+  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
   return `
-    <div class="card">
+    <div class="card${clickableClass}"${dataUrl}>
       ${renderMedia(post, false)}
       <div class="card-body">
         <span class="card-tag">${escapeHtml(post.tag || "")}</span>
@@ -214,8 +250,11 @@ function renderCard(post) {
 
 function renderHero(post) {
   const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
+  const clickUrl = getPostClickUrl(post);
+  const clickableClass = clickUrl ? " clickable" : "";
+  const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
   return `
-    <div class="hero-card">
+    <div class="hero-card${clickableClass}"${dataUrl}>
       ${renderMedia(post, true)}
       <div class="hero-body">
         <span class="hero-tag">${escapeHtml(post.tag || "WYRÓŻNIONE")}</span>
@@ -291,7 +330,7 @@ async function fetchPosts() {
   if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
 }
 
-// --- USUWANIE ARTYKUŁU ---
+// --- USUWANIE ---
 async function handleDelete(postId) {
   if (!postId) return;
   if (!isBossOrAdmin(currentUser)) {
@@ -312,14 +351,22 @@ async function handleDelete(postId) {
   await fetchPosts();
 }
 
-// Delegowanie kliknięć przycisków "Usuń" (karty są tworzone dynamicznie)
+// --- DELEGOWANIE KLIKNIĘĆ: usuń + klikalna karta ---
 document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".btn-delete");
-  if (!btn) return;
-  e.preventDefault();
-  e.stopPropagation();
-  const id = btn.getAttribute("data-id");
-  handleDelete(id);
+  // 1) przycisk usuń - priorytet
+  const delBtn = e.target.closest(".btn-delete");
+  if (delBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    handleDelete(delBtn.getAttribute("data-id"));
+    return;
+  }
+  // 2) klikalna karta / hero - otwórz URL w nowej karcie
+  const clickable = e.target.closest(".card.clickable, .hero-card.clickable");
+  if (clickable) {
+    const url = clickable.getAttribute("data-url");
+    if (url) window.open(url, "_blank", "noopener");
+  }
 });
 
 // --- ADMIN: dodawanie ---
@@ -383,6 +430,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!supabase) return;
 
   setupTabSwitching();
+  setupMobileMenu();
 
   const loginBtn = document.getElementById("btn-login");
   const logoutBtn = document.getElementById("btn-logout");
