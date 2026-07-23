@@ -1,24 +1,22 @@
 // =====================================================
-// WEAZEL NEWS - STABILNA WERSJA
-// Firma: tylko ogłoszenia firmowe, bez cooldownu
-// City Hall: tylko City Hall, bez cooldownu
-// Ogłoszenia firm nie trafiają na stronę główną
+// WEAZEL NEWS - APP.JS
+// Szef/Admin mogą publikować wszystko.
+// City Hall publikuje tylko City Hall.
+// Ogłoszenia firm są wyłącznie w swojej zakładce.
 // =====================================================
 
 (() => {
-    // Zabezpieczenie przed podwójnym uruchomieniem app.js
-    if (window.__WEAZEL_APP_STARTED__) {
-        console.warn("app.js został załadowany ponownie — pomijam drugi start.");
+    if (window.__WEAZEL_APP_LOADED__) {
+        console.warn("Weazel app.js załadowany drugi raz.");
         return;
     }
 
-    window.__WEAZEL_APP_STARTED__ = true;
+    window.__WEAZEL_APP_LOADED__ = true;
 
     const NEWS_TABLE = "news";
 
     let supabaseClient = null;
     let currentUser = null;
-    let formListenerAdded = false;
 
     // =================================================
     // POMOCNICZE
@@ -58,7 +56,6 @@
             .replaceAll("'", "&#039;");
     }
 
-    // Udostępniamy testy w konsoli
     window.normalizeTag = normalizeTag;
     window.isCompanyTag = isCompanyTag;
 
@@ -72,7 +69,7 @@
         }
 
         if (!window.supabase) {
-            console.error("Nie znaleziono biblioteki Supabase.");
+            console.error("Nie załadowano biblioteki Supabase.");
             return null;
         }
 
@@ -98,7 +95,7 @@
     }
 
     // =================================================
-    // ROLE
+    // ROLE DISCORD
     // =================================================
 
     function getDiscordId(user) {
@@ -110,11 +107,11 @@
             item => item.provider === "discord"
         );
 
-        const identityData = identity?.identity_data || {};
+        const data = identity?.identity_data || {};
 
         return String(
-            identityData.id ||
-            identityData.sub ||
+            data.id ||
+            data.sub ||
             identity?.id ||
             user.id ||
             ""
@@ -223,6 +220,20 @@
 
     window.switchTab = switchTab;
 
+    // =================================================
+    // MENU MOBILNE
+    // =================================================
+
+    function openMobileMenu() {
+        document
+            .getElementById("mobile-sidebar")
+            ?.classList.add("active");
+
+        document
+            .getElementById("sidebar-overlay")
+            ?.classList.add("active");
+    }
+
     function closeMobileMenu() {
         document
             .getElementById("mobile-sidebar")
@@ -238,25 +249,15 @@
             .querySelectorAll(".nav-btn, .sidebar-btn")
             .forEach(button => {
                 button.addEventListener("click", () => {
-                    const tabId = button.dataset.tab;
-
-                    if (tabId) {
-                        switchTab(tabId);
+                    if (button.dataset.tab) {
+                        switchTab(button.dataset.tab);
                     }
                 });
             });
 
         document
             .getElementById("mobile-menu-btn")
-            ?.addEventListener("click", () => {
-                document
-                    .getElementById("mobile-sidebar")
-                    ?.classList.add("active");
-
-                document
-                    .getElementById("sidebar-overlay")
-                    ?.classList.add("active");
-            });
+            ?.addEventListener("click", openMobileMenu);
 
         document
             .getElementById("sidebar-close")
@@ -285,14 +286,14 @@
             return;
         }
 
-        const companySelected =
+        const selectedCompany =
             isCompanyTag(select.value);
 
         row.style.display =
-            companySelected ? "block" : "none";
+            selectedCompany ? "block" : "none";
 
         if (input) {
-            input.required = companySelected;
+            input.required = selectedCompany;
         }
     }
 
@@ -304,10 +305,13 @@
             return;
         }
 
-        const oldValue = select.value;
         const options = [];
+        const oldValue = select.value;
 
-        // Szef/Admin widzi wszystkie kategorie
+        /*
+         * Szef/Admin mogą wybrać każdą kategorię.
+         * Dzięki temu możesz publikować ogłoszenia firmowe za firmy.
+         */
         if (isBossOrAdmin(user)) {
             options.push(
                 ["STRONA GŁÓWNA", "Strona Główna"],
@@ -318,12 +322,10 @@
                 ["OGŁOSZENIA FIRMY", "Ogłoszenia firmy"]
             );
         } else if (isCityHall(user)) {
-            // City Hall widzi wyłącznie swoją kategorię
             options.push(
                 ["CITY HALL", "City Hall"]
             );
         } else if (isCompany(user)) {
-            // Firma widzi wyłącznie swoją kategorię
             options.push(
                 ["OGŁOSZENIA FIRMY", "Ogłoszenia firmy"]
             );
@@ -409,7 +411,7 @@
         const metadata =
             user.user_metadata || {};
 
-        const username =
+        const nickname =
             metadata.full_name ||
             metadata.name ||
             metadata.preferred_username ||
@@ -428,7 +430,7 @@
             document.getElementById("user-avatar");
 
         if (nameElement) {
-            nameElement.textContent = username;
+            nameElement.textContent = nickname;
         }
 
         if (avatarElement && avatar) {
@@ -496,7 +498,7 @@
     }
 
     // =================================================
-    // MEDIA I KARTY
+    // MEDIA
     // =================================================
 
     function getYoutubeId(url) {
@@ -573,7 +575,18 @@
             <button
                 type="button"
                 class="delete-button"
-                data-id="${escapeHtml(postId)}">
+                data-id="${escapeHtml(postId)}"
+                style="
+                    margin-top:10px;
+                    align-self:flex-start;
+                    padding:6px 10px;
+                    border:1px solid #ef4444;
+                    border-radius:6px;
+                    background:rgba(239,68,68,.12);
+                    color:#ef4444;
+                    cursor:pointer;
+                    font-weight:800;
+                ">
                 🗑️ Usuń
             </button>
         `;
@@ -713,7 +726,7 @@
     }
 
     // =================================================
-    // POBIERANIE WPISÓW
+    // POBIERANIE I FILTROWANIE WPISÓW
     // =================================================
 
     async function fetchPosts() {
@@ -779,11 +792,16 @@
             return;
         }
 
-        const posts = data || [];
+        const posts =
+            data || [];
 
-        // KLUCZOWE:
-        // Firma jest usunięta z głównej.
-        // City Hall zostaje na głównej.
+        /*
+         * KLUCZOWE:
+         * companyPosts trafiają tylko do companyContainer.
+         * homePosts nie zawiera żadnego ogłoszenia firmy.
+         * City Hall pozostaje w homePosts.
+         */
+
         const homePosts =
             posts.filter(
                 post =>
@@ -800,7 +818,7 @@
                     )
             );
 
-        // Główna: City Hall + zwykłe wpisy
+        // Główna: zwykłe wpisy + City Hall
         if (homeFeatured) {
             homeFeatured.innerHTML =
                 homePosts.length
@@ -828,6 +846,7 @@
                     : "<p>Brak ogłoszeń firm.</p>";
         }
 
+        // Pozostałe kategorie
         const newsPosts =
             posts.filter(
                 post =>
@@ -913,7 +932,7 @@
     }
 
     // =================================================
-    // DODAWANIE WPISU
+    // PUBLIKOWANIE
     // =================================================
 
     async function createPost(event) {
@@ -969,53 +988,64 @@
             return;
         }
 
-        // Firma tylko ogłoszenia firmowe
+        /*
+         * Szef/Admin może publikować za firmy.
+         * Jeśli wybierzesz OGŁOSZENIA FIRMY,
+         * zapisujemy zawsze dokładnie taki tag.
+         */
+
+        if (isCompanyTag(tag)) {
+            if (!companyName) {
+                alert(
+                    "Podaj nazwę firmy."
+                );
+                return;
+            }
+
+            tag = "OGŁOSZENIA FIRMY";
+        }
+
+        /*
+         * Firma może publikować tylko w swojej kategorii.
+         */
+
         if (
             isCompany(currentUser) &&
             !isBossOrAdmin(currentUser)
         ) {
-            if (!isCompanyTag(tag)) {
+            if (tag !== "OGŁOSZENIA FIRMY") {
                 alert(
-                    "Wybierz kategorię Ogłoszenia firmy."
+                    "Firma może dodawać tylko ogłoszenia firm."
                 );
                 return;
             }
 
             if (!companyName) {
-                alert("Podaj nazwę firmy.");
+                alert(
+                    "Podaj nazwę firmy."
+                );
                 return;
             }
-
-            tag = "OGŁOSZENIA FIRMY";
         }
 
-        // City Hall tylko City Hall
+        /*
+         * City Hall może publikować tylko w swojej kategorii.
+         */
+
+        if (isCityHallTag(tag)) {
+            tag = "CITY HALL";
+        }
+
         if (
             isCityHall(currentUser) &&
             !isBossOrAdmin(currentUser)
         ) {
-            if (!isCityHallTag(tag)) {
+            if (tag !== "CITY HALL") {
                 alert(
-                    "Wybierz kategorię City Hall."
+                    "City Hall może dodawać tylko ogłoszenia City Hall."
                 );
                 return;
             }
-
-            tag = "CITY HALL";
-        }
-
-        // Szef/Admin mogą wybrać kategorię firmową
-        if (isCompanyTag(tag)) {
-            if (!companyName) {
-                alert("Podaj nazwę firmy.");
-                return;
-            }
-
-            tag = "OGŁOSZENIA FIRMY";
-        }
-
-        if (isCityHallTag(tag)) {
-            tag = "CITY HALL";
         }
 
         const metadata =
@@ -1086,7 +1116,9 @@
                     : "home"
         );
 
-        alert("Wpis został opublikowany.");
+        alert(
+            "Wpis został opublikowany."
+        );
     }
 
     // =================================================
@@ -1131,43 +1163,46 @@
     }
 
     // =================================================
-    // KLIKNIĘCIA
+    // KLIKNIĘCIA W KARTY
     // =================================================
 
-    function setupDocumentClicks() {
-        document.addEventListener("click", event => {
-            const deleteButton =
-                event.target.closest(
-                    ".delete-button"
-                );
+    function setupClicks() {
+        document.addEventListener(
+            "click",
+            event => {
+                const deleteButton =
+                    event.target.closest(
+                        ".delete-button"
+                    );
 
-            if (deleteButton) {
-                event.preventDefault();
-                event.stopPropagation();
+                if (deleteButton) {
+                    event.preventDefault();
+                    event.stopPropagation();
 
-                deletePost(
-                    deleteButton.dataset.id
-                );
+                    deletePost(
+                        deleteButton.dataset.id
+                    );
 
-                return;
+                    return;
+                }
+
+                const card =
+                    event.target.closest(
+                        ".card.clickable, .hero-card.clickable"
+                    );
+
+                if (
+                    card &&
+                    card.dataset.url
+                ) {
+                    window.open(
+                        card.dataset.url,
+                        "_blank",
+                        "noopener,noreferrer"
+                    );
+                }
             }
-
-            const card =
-                event.target.closest(
-                    ".card.clickable, .hero-card.clickable"
-                );
-
-            if (
-                card &&
-                card.dataset.url
-            ) {
-                window.open(
-                    card.dataset.url,
-                    "_blank",
-                    "noopener,noreferrer"
-                );
-            }
-        });
+        );
     }
 
     // =================================================
@@ -1185,7 +1220,7 @@
             }
 
             setupMenu();
-            setupDocumentClicks();
+            setupClicks();
 
             document
                 .getElementById("btn-login")
@@ -1206,13 +1241,11 @@
                     "news-form"
                 );
 
-            if (form && !formListenerAdded) {
+            if (form) {
                 form.addEventListener(
                     "submit",
                     createPost
                 );
-
-                formListenerAdded = true;
             }
 
             document
