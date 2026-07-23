@@ -1,6 +1,8 @@
 // =====================================================
-// WEAZEL NEWS - APP.JS
-// Bez zakładki i bez obsługi firm.
+// WEAZEL NEWS
+// Ogłoszenia firm jako zwykła kategoria.
+// Bez specjalnej roli Firma.
+// Ogłoszenia firm nie trafiają na stronę główną.
 // =====================================================
 
 (() => {
@@ -28,6 +30,14 @@
             .replace(/\s+/g, "");
     }
 
+    function isCompanyTag(value) {
+        return [
+            "OGLOSZENIAFIRM",
+            "OGLOSZENIAFIRMY",
+            "OGLOSZENIAFIRMOWE"
+        ].includes(normalizeTag(value));
+    }
+
     function isCityHallTag(value) {
         return [
             "CITYHALL",
@@ -45,6 +55,9 @@
             .replaceAll("'", "&#039;");
     }
 
+    window.normalizeTag = normalizeTag;
+    window.isCompanyTag = isCompanyTag;
+
     // =================================================
     // SUPABASE
     // =================================================
@@ -55,34 +68,33 @@
         }
 
         if (!window.supabase) {
-            console.error("Brak biblioteki Supabase.");
+            console.error("Biblioteka Supabase nie została załadowana.");
             return null;
         }
 
         if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
-            console.error("Brak konfiguracji Supabase.");
+            console.error("Brak SUPABASE_URL lub SUPABASE_KEY.");
             return null;
         }
 
-        supabaseClient =
-            window.supabase.createClient(
-                window.SUPABASE_URL,
-                window.SUPABASE_KEY,
-                {
-                    auth: {
-                        flowType: "pkce",
-                        persistSession: true,
-                        autoRefreshToken: true,
-                        detectSessionInUrl: true
-                    }
+        supabaseClient = window.supabase.createClient(
+            window.SUPABASE_URL,
+            window.SUPABASE_KEY,
+            {
+                auth: {
+                    flowType: "pkce",
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
                 }
-            );
+            }
+        );
 
         return supabaseClient;
     }
 
     // =================================================
-    // ROLE
+    // ROLE — TYLKO SZEF, ADMIN, CITY HALL
     // =================================================
 
     function getDiscordId(user) {
@@ -90,13 +102,11 @@
             return "";
         }
 
-        const identity =
-            (user.identities || []).find(
-                item => item.provider === "discord"
-            );
+        const identity = (user.identities || []).find(
+            item => item.provider === "discord"
+        );
 
-        const data =
-            identity?.identity_data || {};
+        const data = identity?.identity_data || {};
 
         return String(
             data.id ||
@@ -108,8 +118,7 @@
     }
 
     function hasRole(user, ids) {
-        const discordId =
-            getDiscordId(user);
+        const discordId = getDiscordId(user);
 
         return Boolean(
             discordId &&
@@ -178,18 +187,14 @@
             });
 
         const target =
-            document.getElementById(
-                `tab-${tabId}`
-            );
+            document.getElementById(`tab-${tabId}`);
 
         if (target) {
             target.classList.add("active");
         }
 
         document
-            .querySelectorAll(
-                ".nav-btn, .sidebar-btn"
-            )
+            .querySelectorAll(".nav-btn, .sidebar-btn")
             .forEach(button => {
                 button.classList.toggle(
                     "active",
@@ -202,25 +207,128 @@
 
     window.switchTab = switchTab;
 
-    // =================================================
-    // MENU MOBILNE
-    // =================================================
+    function addCompanyCategoryTab() {
+        const desktopNav =
+            document.querySelector(".nav-links");
 
-    function closeMobileMenu() {
-        document
-            .getElementById("mobile-sidebar")
-            ?.classList.remove("active");
+        const mobileNav =
+            document.querySelector(".sidebar-links");
 
-        document
-            .getElementById("sidebar-overlay")
-            ?.classList.remove("active");
+        if (
+            desktopNav &&
+            !desktopNav.querySelector(
+                '[data-tab="ogloszenia-firm"]'
+            )
+        ) {
+            const button =
+                document.createElement("button");
+
+            button.className =
+                "nav-btn company-category-nav";
+
+            button.dataset.tab =
+                "ogloszenia-firm";
+
+            button.textContent =
+                "🏢 Ogłoszenia firm";
+
+            desktopNav.appendChild(button);
+        }
+
+        if (
+            mobileNav &&
+            !mobileNav.querySelector(
+                '[data-tab="ogloszenia-firm"]'
+            )
+        ) {
+            const button =
+                document.createElement("button");
+
+            button.className =
+                "sidebar-btn company-category-sidebar";
+
+            button.dataset.tab =
+                "ogloszenia-firm";
+
+            button.textContent =
+                "🏢 Ogłoszenia firm";
+
+            mobileNav.appendChild(button);
+        }
+
+        if (
+            !document.getElementById(
+                "tab-ogloszenia-firm"
+            )
+        ) {
+            const section =
+                document.createElement("section");
+
+            section.id =
+                "tab-ogloszenia-firm";
+
+            section.className =
+                "tab-content";
+
+            section.innerHTML = `
+                <div class="page-header">
+                    <h1 style="color:#10b981;">
+                        Ogłoszenia firm
+                    </h1>
+
+                    <p>
+                        Ogłoszenia lokalnych przedsiębiorstw Los Santos
+                    </p>
+                </div>
+
+                <div
+                    id="ogloszenia-firm-container"
+                    class="cards-grid">
+                </div>
+            `;
+
+            document
+                .querySelector("main")
+                ?.appendChild(section);
+        }
+
+        if (
+            !document.getElementById(
+                "company-category-style"
+            )
+        ) {
+            const style =
+                document.createElement("style");
+
+            style.id =
+                "company-category-style";
+
+            style.textContent = `
+                .company-category-nav,
+                .company-category-sidebar {
+                    color: #10b981 !important;
+                }
+
+                .company-category-nav:hover,
+                .company-category-nav.active,
+                .company-category-sidebar.active {
+                    background: #10b981 !important;
+                    color: #000 !important;
+                }
+
+                .company-category-tag {
+                    background: #10b981 !important;
+                    color: #000 !important;
+                }
+            `;
+
+            document.head.appendChild(style);
+        }
     }
 
-    function setupMenu() {
+    function setupTabs() {
         document
-            .querySelectorAll(
-                ".nav-btn, .sidebar-btn"
-            )
+            .querySelectorAll(".nav-btn, .sidebar-btn")
             .forEach(button => {
                 button.addEventListener(
                     "click",
@@ -233,24 +341,38 @@
                     }
                 );
             });
+    }
 
+    // =================================================
+    // MENU MOBILNE
+    // =================================================
+
+    function openMobileMenu() {
+        document
+            .getElementById("mobile-sidebar")
+            ?.classList.add("active");
+
+        document
+            .getElementById("sidebar-overlay")
+            ?.classList.add("active");
+    }
+
+    function closeMobileMenu() {
+        document
+            .getElementById("mobile-sidebar")
+            ?.classList.remove("active");
+
+        document
+            .getElementById("sidebar-overlay")
+            ?.classList.remove("active");
+    }
+
+    function setupMobileMenu() {
         document
             .getElementById("mobile-menu-btn")
             ?.addEventListener(
                 "click",
-                () => {
-                    document
-                        .getElementById(
-                            "mobile-sidebar"
-                        )
-                        ?.classList.add("active");
-
-                    document
-                        .getElementById(
-                            "sidebar-overlay"
-                        )
-                        ?.classList.add("active");
-                }
+                openMobileMenu
             );
 
         document
@@ -269,7 +391,7 @@
     }
 
     // =================================================
-    // KATEGORIE
+    // KATEGORIE W PANELU
     // =================================================
 
     function updateCategoryOptions(user) {
@@ -287,17 +409,29 @@
 
         const options = [];
 
+        // Szef/Admin mogą publikować wszystkie kategorie
         if (isBossOrAdmin(user)) {
             options.push(
                 ["STRONA GŁÓWNA", "Strona Główna"],
                 ["WIADOMOŚCI", "Wiadomości"],
                 ["ARTYKUŁY", "Artykuły"],
                 ["TIKTOKI", "Tiktoki"],
-                ["CITY HALL", "City Hall"]
+                ["CITY HALL", "City Hall"],
+                [
+                    "OGŁOSZENIA FIRM",
+                    "Ogłoszenia firm"
+                ]
             );
-        } else if (isCityHall(user)) {
+        }
+
+        // City Hall może publikować w City Hall
+        else if (isCityHall(user)) {
             options.push(
-                ["CITY HALL", "City Hall"]
+                ["CITY HALL", "City Hall"],
+                [
+                    "OGŁOSZENIA FIRM",
+                    "Ogłoszenia firm"
+                ]
             );
         }
 
@@ -394,9 +528,7 @@
                     : "none";
         }
 
-        updateCategoryOptions(
-            user
-        );
+        updateCategoryOptions(user);
 
         if (!user) {
             if (roleElement) {
@@ -580,7 +712,7 @@
         return "";
     }
 
-    function deleteButton(postId) {
+    function renderDeleteButton(postId) {
         if (!isBossOrAdmin(currentUser)) {
             return "";
         }
@@ -609,9 +741,11 @@
                 : "";
 
         const tagClass =
-            isCityHallTag(post.tag)
-                ? "tag-cityhall"
-                : "";
+            isCompanyTag(post.tag)
+                ? "company-category-tag"
+                : isCityHallTag(post.tag)
+                    ? "tag-cityhall"
+                    : "";
 
         return `
             <div
@@ -654,7 +788,7 @@
                         )}
                     </p>
 
-                    ${deleteButton(post.id)}
+                    ${renderDeleteButton(post.id)}
                 </div>
             </div>
         `;
@@ -713,7 +847,7 @@
                         )}
                     </p>
 
-                    ${deleteButton(post.id)}
+                    ${renderDeleteButton(post.id)}
                 </div>
             </div>
         `;
@@ -761,6 +895,11 @@
                 "cityhall-container"
             );
 
+        const companyContainer =
+            document.getElementById(
+                "ogloszenia-firm-container"
+            );
+
         const {
             data,
             error
@@ -776,55 +915,73 @@
 
         if (error) {
             console.error(
-                "Błąd pobierania newsów:",
+                "Błąd pobierania danych:",
                 error
             );
 
             return;
         }
 
+        const allPosts =
+            data || [];
+
         /*
-         * Ponieważ starych wpisów firmowych nie chcemy
-         * już wyświetlać, filtrujemy je po tagu.
-         * City Hall zostaje na stronie głównej.
+         * STRONA GŁÓWNA:
+         * City Hall zostaje.
+         * Ogłoszenia firm są wykluczane.
          */
 
-        const posts =
-            (data || []).filter(
+        const homePosts =
+            allPosts.filter(
                 post =>
-                    ![
-                        "OGLOSZENIAFIRMY",
-                        "OGLOSZENIAFIRM",
-                        "OGLOSZENIAFIRMOWE"
-                    ].includes(
-                        normalizeTag(post.tag)
+                    !isCompanyTag(
+                        post.tag
                     )
             );
 
-        if (posts.length > 0) {
-            if (homeFeatured) {
-                homeFeatured.innerHTML =
-                    renderHero(
-                        posts[0]
-                    );
-            }
+        const companyPosts =
+            allPosts.filter(
+                post =>
+                    isCompanyTag(
+                        post.tag
+                    )
+            );
 
-            if (homeContainer) {
-                homeContainer.innerHTML =
-                    posts
+        if (homeFeatured) {
+            homeFeatured.innerHTML =
+                homePosts.length
+                    ? renderHero(
+                        homePosts[0]
+                    )
+                    : "";
+        }
+
+        if (homeContainer) {
+            homeContainer.innerHTML =
+                homePosts.length > 1
+                    ? homePosts
                         .slice(1)
                         .map(renderCard)
-                        .join("");
-            }
-        } else {
-            if (homeContainer) {
-                homeContainer.innerHTML =
-                    "<p>Brak wpisów.</p>";
-            }
+                        .join("")
+                    : "<p>Brak wpisów.</p>";
+        }
+
+        /*
+         * OGŁOSZENIA FIRM:
+         * renderowane tylko tutaj.
+         */
+
+        if (companyContainer) {
+            companyContainer.innerHTML =
+                companyPosts.length
+                    ? companyPosts
+                        .map(renderCard)
+                        .join("")
+                    : "<p>Brak ogłoszeń firm.</p>";
         }
 
         const newsPosts =
-            posts.filter(
+            allPosts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -832,7 +989,7 @@
             );
 
         const articlePosts =
-            posts.filter(
+            allPosts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -840,7 +997,7 @@
             );
 
         const tiktokPosts =
-            posts.filter(
+            allPosts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -848,7 +1005,7 @@
             );
 
         const cityHallPosts =
-            posts.filter(
+            allPosts.filter(
                 post =>
                     isCityHallTag(
                         post.tag
@@ -898,7 +1055,7 @@
 
         if (ticker) {
             ticker.innerHTML =
-                posts
+                homePosts
                     .slice(0, 8)
                     .map(
                         post =>
@@ -927,9 +1084,9 @@
             return;
         }
 
-        if (!canUsePanel(currentUser)) {
+        if (!isBossOrAdmin(currentUser)) {
             alert(
-                "Brak uprawnień do panelu."
+                "Tylko Szef/Admin może publikować wpisy."
             );
             return;
         }
@@ -966,22 +1123,12 @@
             return;
         }
 
-        if (
-            isCityHall(currentUser) &&
-            !isBossOrAdmin(currentUser)
-        ) {
-            if (!isCityHallTag(tag)) {
-                alert(
-                    "City Hall może dodawać tylko ogłoszenia City Hall."
-                );
-                return;
-            }
-
+        if (isCityHallTag(tag)) {
             tag = "CITY HALL";
         }
 
-        if (isCityHallTag(tag)) {
-            tag = "CITY HALL";
+        if (isCompanyTag(tag)) {
+            tag = "OGŁOSZENIA FIRM";
         }
 
         const metadata =
@@ -1011,7 +1158,7 @@
 
         if (error) {
             console.error(
-                "Błąd publikowania:",
+                "Błąd publikacji:",
                 error
             );
 
@@ -1036,9 +1183,11 @@
         await fetchPosts();
 
         switchTab(
-            tag === "CITY HALL"
-                ? "cityhall"
-                : "home"
+            tag === "OGŁOSZENIA FIRM"
+                ? "ogloszenia-firm"
+                : tag === "CITY HALL"
+                    ? "cityhall"
+                    : "home"
         );
 
         alert(
@@ -1144,7 +1293,9 @@
                 return;
             }
 
-            setupMenu();
+            addCompanyCategoryTab();
+            setupTabs();
+            setupMobileMenu();
             setupClicks();
 
             document
