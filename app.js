@@ -1,7 +1,7 @@
 // =====================================================
 // WEAZEL NEWS
-// Logowanie, role, baza danych, City Hall, firmy,
-// cooldown firm 48h, filmy, usuwanie i klikalne artykuły
+// Logowanie, role, baza, City Hall, firmy, cooldown 48h,
+// filmy, usuwanie, klikalne artykuły i zakładki
 // =====================================================
 
 const NEWS_TABLE = "news";
@@ -20,6 +20,30 @@ function normalizeTag(value) {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/\s+/g, "");
+}
+
+/*
+ * Rozpoznaje wszystkie możliwe stare/n owe nazwy kategorii firmowej.
+ * Dzięki temu ogłoszenia firm nie trafią na stronę główną.
+ */
+function isCompanyTag(value) {
+    const tag = normalizeTag(value);
+
+    return (
+        tag === "OGLOSZENIAFIRMY" ||
+        tag === "OGLOSZENIAFIRM" ||
+        tag === "OGLOSZENIAFIRMOWE"
+    );
+}
+
+function isCityHallTag(value) {
+    const tag = normalizeTag(value);
+
+    return (
+        tag === "CITYHALL" ||
+        tag === "RZADOWE" ||
+        tag === "OGLOSZENIACITYHALL"
+    );
 }
 
 function escapeHtml(value) {
@@ -69,9 +93,7 @@ function getSupabase() {
 // =====================================================
 
 function getDiscordId(user) {
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     const discordIdentity = (user.identities || []).find(
         identity => identity.provider === "discord"
@@ -204,11 +226,17 @@ function addCompanyTab() {
             '[data-tab="ogloszenia"]'
         )
     ) {
-        const button = document.createElement("button");
+        const button =
+            document.createElement("button");
 
-        button.className = "nav-btn company-nav";
-        button.dataset.tab = "ogloszenia";
-        button.textContent = "🏢 Ogłoszenia firm";
+        button.className =
+            "nav-btn company-nav";
+
+        button.dataset.tab =
+            "ogloszenia";
+
+        button.textContent =
+            "🏢 Ogłoszenia firm";
 
         desktopNav.appendChild(button);
     }
@@ -219,13 +247,17 @@ function addCompanyTab() {
             '[data-tab="ogloszenia"]'
         )
     ) {
-        const button = document.createElement("button");
+        const button =
+            document.createElement("button");
 
         button.className =
             "sidebar-btn company-sidebar";
 
-        button.dataset.tab = "ogloszenia";
-        button.textContent = "🏢 Ogłoszenia firm";
+        button.dataset.tab =
+            "ogloszenia";
+
+        button.textContent =
+            "🏢 Ogłoszenia firm";
 
         mobileNav.appendChild(button);
     }
@@ -234,8 +266,11 @@ function addCompanyTab() {
         const section =
             document.createElement("section");
 
-        section.id = "tab-ogloszenia";
-        section.className = "tab-content";
+        section.id =
+            "tab-ogloszenia";
+
+        section.className =
+            "tab-content";
 
         section.innerHTML = `
             <div class="page-header">
@@ -265,7 +300,8 @@ function addCompanyTab() {
         const style =
             document.createElement("style");
 
-        style.id = "company-styles";
+        style.id =
+            "company-styles";
 
         style.textContent = `
             .company-nav,
@@ -334,7 +370,8 @@ function setupTabs() {
         .querySelectorAll(".nav-btn, .sidebar-btn")
         .forEach(button => {
             button.addEventListener("click", () => {
-                const tab = button.dataset.tab;
+                const tab =
+                    button.dataset.tab;
 
                 if (tab) {
                     switchTab(tab);
@@ -410,9 +447,14 @@ function addCompanyField() {
     const row =
         document.createElement("div");
 
-    row.id = "company-name-row";
-    row.className = "form-row";
-    row.style.display = "none";
+    row.id =
+        "company-name-row";
+
+    row.className =
+        "form-row";
+
+    row.style.display =
+        "none";
 
     row.innerHTML = `
         <label for="news-company">
@@ -431,7 +473,9 @@ function addCompanyField() {
     `;
 
     const imageField =
-        document.getElementById("news-image");
+        document.getElementById(
+            "news-image"
+        );
 
     if (imageField?.parentElement) {
         imageField.parentElement.before(row);
@@ -442,7 +486,9 @@ function addCompanyField() {
 
 function updateCompanyField() {
     const select =
-        document.getElementById("news-tag");
+        document.getElementById(
+            "news-tag"
+        );
 
     const row =
         document.getElementById(
@@ -458,24 +504,25 @@ function updateCompanyField() {
         return;
     }
 
-    const isCompanyCategory =
-        normalizeTag(select.value) ===
-        "OGLOSZENIAFIRMY";
+    const companyCategory =
+        isCompanyTag(select.value);
 
     row.style.display =
-        isCompanyCategory
+        companyCategory
             ? "block"
             : "none";
 
     if (input) {
         input.required =
-            isCompanyCategory;
+            companyCategory;
     }
 }
 
 function updateCategoryOptions(user) {
     const select =
-        document.getElementById("news-tag");
+        document.getElementById(
+            "news-tag"
+        );
 
     if (!select) {
         return;
@@ -495,24 +542,36 @@ function updateCategoryOptions(user) {
 
     const categories = [];
 
-    // Szef i Admin mogą dodawać zwykłe wpisy
     if (bossOrAdmin) {
         categories.push(
-            ["STRONA GŁÓWNA", "Strona Główna"],
-            ["WIADOMOŚCI", "Wiadomości"],
-            ["ARTYKUŁY", "Artykuły"],
-            ["TIKTOKI", "Tiktoki"]
+            [
+                "STRONA GŁÓWNA",
+                "Strona Główna"
+            ],
+            [
+                "WIADOMOŚCI",
+                "Wiadomości"
+            ],
+            [
+                "ARTYKUŁY",
+                "Artykuły"
+            ],
+            [
+                "TIKTOKI",
+                "Tiktoki"
+            ]
         );
     }
 
-    // City Hall tylko City Hall
     if (bossOrAdmin || cityHall) {
         categories.push(
-            ["CITY HALL", "City Hall"]
+            [
+                "CITY HALL",
+                "City Hall"
+            ]
         );
     }
 
-    // Firma tylko ogłoszenia firm
     if (bossOrAdmin || company) {
         categories.push(
             [
@@ -527,10 +586,15 @@ function updateCategoryOptions(user) {
     categories.forEach(
         ([value, label]) => {
             const option =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
-            option.value = value;
-            option.textContent = label;
+            option.value =
+                value;
+
+            option.textContent =
+                label;
 
             select.appendChild(option);
         }
@@ -543,22 +607,27 @@ function updateCategoryOptions(user) {
                 option.value === oldValue
         )
     ) {
-        select.value = oldValue;
+        select.value =
+            oldValue;
     }
 
     updateCompanyField();
 }
 
 // =====================================================
-// UI I ROLE
+// UI LOGOWANIA
 // =====================================================
 
 function updateRoleVisibility(user) {
     const desktopPanel =
-        document.getElementById("nav-admin");
+        document.getElementById(
+            "nav-admin"
+        );
 
     const mobilePanel =
-        document.getElementById("sidebar-admin");
+        document.getElementById(
+            "sidebar-admin"
+        );
 
     const panelVisible =
         canUsePanel(user);
@@ -581,7 +650,9 @@ function updateRoleVisibility(user) {
         getRole(user);
 
     const roleElement =
-        document.getElementById("user-role");
+        document.getElementById(
+            "user-role"
+        );
 
     if (roleElement) {
         roleElement.textContent =
@@ -609,10 +680,14 @@ function updateRoleVisibility(user) {
 
 function updateUserUI(user) {
     const loginButton =
-        document.getElementById("btn-login");
+        document.getElementById(
+            "btn-login"
+        );
 
     const userInfo =
-        document.getElementById("user-info");
+        document.getElementById(
+            "user-info"
+        );
 
     if (!loginButton || !userInfo) {
         console.error(
@@ -622,7 +697,8 @@ function updateUserUI(user) {
     }
 
     if (!user) {
-        currentUser = null;
+        currentUser =
+            null;
 
         loginButton.style.display =
             "flex";
@@ -630,11 +706,15 @@ function updateUserUI(user) {
         userInfo.style.display =
             "none";
 
-        updateRoleVisibility(null);
+        updateRoleVisibility(
+            null
+        );
+
         return;
     }
 
-    currentUser = user;
+    currentUser =
+        user;
 
     loginButton.style.display =
         "none";
@@ -658,10 +738,14 @@ function updateUserUI(user) {
         "";
 
     const nameElement =
-        document.getElementById("user-name");
+        document.getElementById(
+            "user-name"
+        );
 
     const avatarElement =
-        document.getElementById("user-avatar");
+        document.getElementById(
+            "user-avatar"
+        );
 
     if (nameElement) {
         nameElement.textContent =
@@ -673,7 +757,9 @@ function updateUserUI(user) {
             avatar;
     }
 
-    updateRoleVisibility(user);
+    updateRoleVisibility(
+        user
+    );
 }
 
 // =====================================================
@@ -685,7 +771,9 @@ async function loginWithDiscord() {
         getSupabase();
 
     if (!supabase) {
-        alert("Supabase nie jest gotowy.");
+        alert(
+            "Supabase nie jest gotowy."
+        );
         return;
     }
 
@@ -697,12 +785,14 @@ async function loginWithDiscord() {
         await supabase.auth.signInWithOAuth({
             provider: "discord",
             options: {
-                redirectTo: redirectUrl
+                redirectTo:
+                    redirectUrl
             }
         });
 
     if (error) {
         console.error(error);
+
         alert(
             "Błąd logowania: " +
             error.message
@@ -820,14 +910,11 @@ function getPostUrl(post) {
 }
 
 function getTagClass(post) {
-    const tag =
-        normalizeTag(post.tag);
-
-    if (tag === "OGLOSZENIAFIRMY") {
+    if (isCompanyTag(post.tag)) {
         return "tag-company";
     }
 
-    if (tag === "CITYHALL") {
+    if (isCityHallTag(post.tag)) {
         return "tag-cityhall";
     }
 
@@ -835,7 +922,7 @@ function getTagClass(post) {
 }
 
 // =====================================================
-// KARTY I USUWANIE
+// KARTY
 // =====================================================
 
 function deleteButton(postId) {
@@ -868,7 +955,9 @@ function renderCard(post) {
         getPostUrl(post);
 
     const clickable =
-        url ? " clickable" : "";
+        url
+            ? " clickable"
+            : "";
 
     const dataUrl =
         url
@@ -942,7 +1031,9 @@ function renderHero(post) {
         getPostUrl(post);
 
     const clickable =
-        url ? " clickable" : "";
+        url
+            ? " clickable"
+            : "";
 
     const dataUrl =
         url
@@ -1012,7 +1103,7 @@ function renderHero(post) {
 }
 
 // =====================================================
-// POBIERANIE WPISÓW Z BAZY
+// POBIERANIE Z BAZY
 // =====================================================
 
 async function fetchPosts() {
@@ -1078,9 +1169,12 @@ async function fetchPosts() {
     } = await supabase
         .from(NEWS_TABLE)
         .select("*")
-        .order("created_at", {
-            ascending: false
-        });
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
 
     if (error) {
         console.error(
@@ -1102,138 +1196,162 @@ async function fetchPosts() {
         return;
     }
 
-    if (!posts || posts.length === 0) {
-        if (homeContainer) {
+    const allPosts =
+        posts || [];
+
+    /*
+     * NAJWAŻNIEJSZA CZĘŚĆ:
+     *
+     * Firma jest wykluczana z głównej strony
+     * niezależnie od tego, czy tag brzmi:
+     *
+     * OGŁOSZENIA FIRMY
+     * OGŁOSZENIA FIRM
+     * OGŁOSZENIA FIRMOWE
+     */
+
+    const homePosts =
+        allPosts.filter(
+            post =>
+                !isCompanyTag(
+                    post.tag
+                )
+        );
+
+    const companyPosts =
+        allPosts.filter(
+            post =>
+                isCompanyTag(
+                    post.tag
+                )
+        );
+
+    /*
+     * Strona główna:
+     * City Hall zostaje.
+     * Ogłoszenia firm są całkowicie wykluczone.
+     */
+
+    if (
+        homePosts.length > 0 &&
+        homeFeatured
+    ) {
+        homeFeatured.innerHTML =
+            renderHero(
+                homePosts[0]
+            );
+    }
+
+    if (
+        homeContainer
+    ) {
+        if (homePosts.length > 1) {
+            homeContainer.innerHTML =
+                homePosts
+                    .slice(1)
+                    .map(renderCard)
+                    .join("");
+        } else if (homePosts.length === 0) {
             homeContainer.innerHTML =
                 `<p style="color:var(--text-muted);">
                     Brak wpisów.
                 </p>`;
         }
+    }
 
-        if (companyContainer) {
+    /*
+     * Tylko zakładka Ogłoszenia firm
+     */
+
+    if (companyContainer) {
+        if (companyPosts.length > 0) {
+            companyContainer.innerHTML =
+                companyPosts
+                    .map(renderCard)
+                    .join("");
+        } else {
             companyContainer.innerHTML =
                 `<p style="color:var(--text-muted);">
                     Brak ogłoszeń firm.
                 </p>`;
         }
-
-        return;
     }
 
     /*
-     * STRONA GŁÓWNA:
-     * Pokazujemy wszystko oprócz OGŁOSZENIA FIRMY.
-     * City Hall normalnie tutaj zostaje.
+     * Pozostałe kategorie
      */
 
-    const publicHomePosts =
-        posts.filter(post =>
-            normalizeTag(post.tag) !==
-            "OGLOSZENIAFIRMY"
+    const newsPosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "WIADOMOSCI"
         );
 
-    if (
-        homeFeatured &&
-        publicHomePosts.length > 0
-    ) {
-        homeFeatured.innerHTML =
-            renderHero(
-                publicHomePosts[0]
-            );
-    }
+    const articlePosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "ARTYKULY"
+        );
 
-    if (
-        homeContainer &&
-        publicHomePosts.length > 1
-    ) {
-        homeContainer.innerHTML =
-            publicHomePosts
-                .slice(1)
-                .map(renderCard)
-                .join("");
-    }
+    const tiktokPosts =
+        allPosts.filter(
+            post =>
+                normalizeTag(post.tag) ===
+                "TIKTOKI"
+        );
 
-    const containers = {
-        WIADOMOSCI: newsContainer,
-        ARTYKULY: articlesContainer,
-        TIKTOKI: tiktoksContainer,
-        CITYHALL: cityHallContainer,
-        OGLOSZENIAFIRMY: companyContainer
-    };
+    const cityHallPosts =
+        allPosts.filter(
+            post =>
+                isCityHallTag(
+                    post.tag
+                )
+        );
 
-    const counts = {
-        WIADOMOSCI: 0,
-        ARTYKULY: 0,
-        TIKTOKI: 0,
-        CITYHALL: 0,
-        OGLOSZENIAFIRMY: 0
-    };
-
-    posts.forEach(post => {
-        const tag =
-            normalizeTag(post.tag);
-
-        const container =
-            containers[tag];
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML +=
-            renderCard(post);
-
-        counts[tag]++;
-    });
-
-    if (
-        newsContainer &&
-        counts.WIADOMOSCI === 0
-    ) {
+    if (newsContainer) {
         newsContainer.innerHTML =
-            `<p style="color:var(--text-muted);">
-                Brak wiadomości.
-            </p>`;
+            newsPosts.length > 0
+                ? newsPosts
+                    .map(renderCard)
+                    .join("")
+                : `<p style="color:var(--text-muted);">
+                    Brak wiadomości.
+                  </p>`;
     }
 
-    if (
-        articlesContainer &&
-        counts.ARTYKULY === 0
-    ) {
+    if (articlesContainer) {
         articlesContainer.innerHTML =
-            `<p style="color:var(--text-muted);">
-                Brak artykułów.
-            </p>`;
+            articlePosts.length > 0
+                ? articlePosts
+                    .map(renderCard)
+                    .join("")
+                : `<p style="color:var(--text-muted);">
+                    Brak artykułów.
+                  </p>`;
     }
 
-    if (
-        tiktoksContainer &&
-        counts.TIKTOKI === 0
-    ) {
+    if (tiktoksContainer) {
         tiktoksContainer.innerHTML =
-            `<p style="color:var(--text-muted);">
-                Brak filmów.
-            </p>`;
+            tiktokPosts.length > 0
+                ? tiktokPosts
+                    .map(renderCard)
+                    .join("")
+                : `<p style="color:var(--text-muted);">
+                    Brak filmów.
+                  </p>`;
     }
 
-    if (
-        cityHallContainer &&
-        counts.CITYHALL === 0
-    ) {
+    if (cityHallContainer) {
         cityHallContainer.innerHTML =
-            `<p style="color:var(--text-muted);">
-                Brak ogłoszeń City Hall.
-            </p>`;
-    }
-
-    if (
-        companyContainer &&
-        counts.OGLOSZENIAFIRMY === 0
-    ) {
-        companyContainer.innerHTML =
-            `<p style="color:var(--text-muted);">
-                Brak ogłoszeń firm.
-            </p>`;
+            cityHallPosts.length > 0
+                ? cityHallPosts
+                    .map(renderCard)
+                    .join("")
+                : `<p style="color:var(--text-muted);">
+                    Brak ogłoszeń City Hall.
+                  </p>`;
     }
 }
 
@@ -1248,12 +1366,16 @@ async function handleCreatePost(event) {
         getSupabase();
 
     if (!supabase || !currentUser) {
-        alert("Musisz być zalogowany.");
+        alert(
+            "Musisz być zalogowany."
+        );
         return;
     }
 
     if (!canUsePanel(currentUser)) {
-        alert("Brak uprawnień do panelu.");
+        alert(
+            "Brak uprawnień do panelu."
+        );
         return;
     }
 
@@ -1297,16 +1419,11 @@ async function handleCreatePost(event) {
         return;
     }
 
-    /*
-     * CITY HALL:
-     * brak cooldownu,
-     * tylko kategoria CITY HALL.
-     */
-
+    // City Hall nie ma cooldownu
     if (
         isCityHall(currentUser) &&
         !isBossOrAdmin(currentUser) &&
-        normalizedTag !== "CITYHALL"
+        !isCityHallTag(tag)
     ) {
         alert(
             "City Hall może dodawać tylko ogłoszenia City Hall."
@@ -1314,15 +1431,11 @@ async function handleCreatePost(event) {
         return;
     }
 
-    /*
-     * FIRMA:
-     * tylko kategoria OGŁOSZENIA FIRMY.
-     */
-
+    // Firma może dodawać tylko ogłoszenia firm
     if (
         isCompany(currentUser) &&
         !isBossOrAdmin(currentUser) &&
-        normalizedTag !== "OGLOSZENIAFIRMY"
+        !isCompanyTag(tag)
     ) {
         alert(
             "Firma może dodawać tylko ogłoszenia firm."
@@ -1330,20 +1443,21 @@ async function handleCreatePost(event) {
         return;
     }
 
-    if (
-        normalizedTag === "CITYHALL" &&
-        !isCityHall(currentUser) &&
-        !isBossOrAdmin(currentUser)
-    ) {
-        alert(
-            "Nie masz uprawnień do City Hall."
-        );
-        return;
+    if (isCityHallTag(tag)) {
+        if (
+            !isCityHall(currentUser) &&
+            !isBossOrAdmin(currentUser)
+        ) {
+            alert(
+                "Nie masz uprawnień do City Hall."
+            );
+            return;
+        }
+
+        tag = "CITY HALL";
     }
 
-    if (
-        normalizedTag === "OGLOSZENIAFIRMY"
-    ) {
+    if (isCompanyTag(tag)) {
         if (
             !isCompany(currentUser) &&
             !isBossOrAdmin(currentUser)
@@ -1360,6 +1474,9 @@ async function handleCreatePost(event) {
             );
             return;
         }
+
+        // Zawsze zapisuj jedną, prawidłową nazwę taga
+        tag = "OGŁOSZENIA FIRMY";
     }
 
     const metadata =
@@ -1372,7 +1489,9 @@ async function handleCreatePost(event) {
         "Admin";
 
     const authorDiscordId =
-        getDiscordId(currentUser);
+        getDiscordId(
+            currentUser
+        );
 
     const {
         error
@@ -1404,8 +1523,7 @@ async function handleCreatePost(event) {
         );
 
         if (
-            normalizedTag ===
-                "OGLOSZENIAFIRMY" &&
+            isCompanyTag(tag) &&
             error.message
                 .toLowerCase()
                 .includes(
@@ -1413,7 +1531,7 @@ async function handleCreatePost(event) {
                 )
         ) {
             alert(
-                "Firma może dodać tylko jedno ogłoszenie na 48 godzin."
+                "Firma może dodać jedno ogłoszenie na 48 godzin."
             );
         } else {
             alert(
@@ -1426,7 +1544,9 @@ async function handleCreatePost(event) {
     }
 
     document
-        .getElementById("news-form")
+        .getElementById(
+            "news-form"
+        )
         ?.reset();
 
     updateCategoryOptions(
@@ -1439,17 +1559,18 @@ async function handleCreatePost(event) {
         "Wpis został opublikowany."
     );
 
-    if (
-        normalizedTag ===
-        "OGLOSZENIAFIRMY"
-    ) {
-        switchTab("ogloszenia");
-    } else if (
-        normalizedTag === "CITYHALL"
-    ) {
-        switchTab("cityhall");
+    if (isCompanyTag(tag)) {
+        switchTab(
+            "ogloszenia"
+        );
+    } else if (isCityHallTag(tag)) {
+        switchTab(
+            "cityhall"
+        );
     } else {
-        switchTab("home");
+        switchTab(
+            "home"
+        );
     }
 }
 
@@ -1485,7 +1606,10 @@ async function handleDelete(postId) {
     } = await supabase
         .from(NEWS_TABLE)
         .delete()
-        .eq("id", postId);
+        .eq(
+            "id",
+            postId
+        );
 
     if (error) {
         console.error(
@@ -1511,17 +1635,17 @@ async function handleDelete(postId) {
 document.addEventListener(
     "click",
     event => {
-        const deleteButtonElement =
+        const deleteButton =
             event.target.closest(
                 ".btn-delete"
             );
 
-        if (deleteButtonElement) {
+        if (deleteButton) {
             event.preventDefault();
             event.stopPropagation();
 
             handleDelete(
-                deleteButtonElement.dataset.id
+                deleteButton.dataset.id
             );
 
             return;
@@ -1566,28 +1690,36 @@ document.addEventListener(
         setupMobileMenu();
 
         document
-            .getElementById("btn-login")
+            .getElementById(
+                "btn-login"
+            )
             ?.addEventListener(
                 "click",
                 loginWithDiscord
             );
 
         document
-            .getElementById("btn-logout")
+            .getElementById(
+                "btn-logout"
+            )
             ?.addEventListener(
                 "click",
                 logout
             );
 
         document
-            .getElementById("news-form")
+            .getElementById(
+                "news-form"
+            )
             ?.addEventListener(
                 "submit",
                 handleCreatePost
             );
 
         document
-            .getElementById("news-tag")
+            .getElementById(
+                "news-tag"
+            )
             ?.addEventListener(
                 "change",
                 updateCompanyField
