@@ -3,13 +3,13 @@ window.SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
 // --- LISTY ID Z DISCORDA ---
-window.BOSS_DISCORD_IDS = ['1487414745534431233'];
+window.BOSS_DISCORD_IDS = [''];
 
 // Kto widzi Panel Admina i może dodawać wpisy
-window.ADMIN_DISCORD_IDS = ['1487414745534431233'];
+window.ADMIN_DISCORD_IDS = [''];
 
 // Kto może dodawać ogłoszenia w kategorii CITY HALL
-window.CITY_HALL_DISCORD_IDS = ['1487414745534431233'];
+window.CITY_HALL_DISCORD_IDS = [''];
 
 // Link do Discorda rekrutacyjnego
 window.RECRUIT_DISCORD_URL = 'https://discord.gg/yQDZNv9heE';
