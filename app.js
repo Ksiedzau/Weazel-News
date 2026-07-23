@@ -59,6 +59,10 @@ function getUserRole(user) {
   return { label: "Redaktor", cls: "role-default" };
 }
 
+function isBossOrAdmin(user) {
+  return isUserInList(user, window.BOSS_DISCORD_IDS || []) || isUserInList(user, window.ADMIN_DISCORD_IDS || []);
+}
+
 // --- ZAKŁADKI ---
 function switchTab(tabId) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
@@ -104,9 +108,12 @@ function applyFormPermissions(user) {
 }
 
 function applyRoleVisibility(user) {
-  const isAdmin = isUserInList(user, window.ADMIN_DISCORD_IDS || []) || isUserInList(user, window.BOSS_DISCORD_IDS || []);
+  const isAdmin = isBossOrAdmin(user);
   const navAdmin = document.getElementById("nav-admin");
-  if (navAdmin) navAdmin.style.display = isAdmin ? "" : "none";
+
+  // KLUCZOWA POPRAWKA: używamy "flex" zamiast "" bo CSS ma display:none
+  if (navAdmin) navAdmin.style.display = isAdmin ? "flex" : "none";
+
   if (!isAdmin) {
     const active = document.querySelector(".tab-content.active");
     if (active && active.id === "tab-admin") switchTab("home");
@@ -239,7 +246,11 @@ async function fetchPosts() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) { console.error("fetchPosts error:", error); return; }
+  if (error) {
+    console.error("fetchPosts error:", error);
+    if (homeGrid) homeGrid.innerHTML = `<p style="color:#ef4444;">Błąd bazy danych: ${escapeHtml(error.message)}</p>`;
+    return;
+  }
 
   renderTicker(data || []);
 
@@ -277,8 +288,7 @@ async function handleCreatePost(e) {
   if (!supabase) return;
   if (!currentUser) return alert("Musisz być zalogowany.");
 
-  const isAdmin = isUserInList(currentUser, window.ADMIN_DISCORD_IDS || []) || isUserInList(currentUser, window.BOSS_DISCORD_IDS || []);
-  if (!isAdmin) return alert("Brak uprawnień do Panelu Admina.");
+  if (!isBossOrAdmin(currentUser)) return alert("Brak uprawnień do Panelu Admina.");
 
   const title = document.getElementById("news-title")?.value.trim() || "";
   const tag = document.getElementById("news-tag")?.value || "";
