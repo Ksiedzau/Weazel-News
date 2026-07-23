@@ -1,4 +1,4 @@
-// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker
+// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker, usuwanie
 
 function normalizeTag(s) {
   return String(s || "").trim().toUpperCase()
@@ -110,10 +110,7 @@ function applyFormPermissions(user) {
 function applyRoleVisibility(user) {
   const isAdmin = isBossOrAdmin(user);
   const navAdmin = document.getElementById("nav-admin");
-
-  // KLUCZOWA POPRAWKA: używamy "flex" zamiast "" bo CSS ma display:none
   if (navAdmin) navAdmin.style.display = isAdmin ? "flex" : "none";
-
   if (!isAdmin) {
     const active = document.querySelector(".tab-content.active");
     if (active && active.id === "tab-admin") switchTab("home");
@@ -151,6 +148,9 @@ function updateUI(user) {
     if (userRoleEl) userRoleEl.textContent = "";
   }
   applyRoleVisibility(user);
+
+  // Odśwież widok, żeby przyciski "Usuń" pojawiły się / zniknęły
+  fetchPosts();
 }
 
 async function loginWithDiscord() {
@@ -174,6 +174,14 @@ async function logout() {
 
 // --- BAZA ---
 const NEWS_TABLE = "news";
+
+// Styl przycisku usuwania (inline, żeby nie ruszać index.html)
+const DELETE_BTN_STYLE = "margin-top:10px;align-self:flex-start;background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.4);padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:800;text-transform:uppercase;cursor:pointer;transition:0.2s;";
+
+function deleteButtonHtml(postId) {
+  if (!isBossOrAdmin(currentUser)) return "";
+  return `<button class="btn-delete" data-id="${postId}" style="${DELETE_BTN_STYLE}" onmouseover="this.style.background='#ef4444';this.style.color='#fff';" onmouseout="this.style.background='rgba(239,68,68,0.12)';this.style.color='#ef4444';">🗑️ Usuń artykuł</button>`;
+}
 
 function renderMedia(post, isHero) {
   const cls = isHero ? "hero-media" : "card-media";
@@ -199,6 +207,7 @@ function renderCard(post) {
         <h2 class="card-title">${escapeHtml(post.title)}</h2>
         <div class="card-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
         <p class="card-text">${escapeHtml(post.content)}</p>
+        ${deleteButtonHtml(post.id)}
       </div>
     </div>`;
 }
@@ -213,6 +222,7 @@ function renderHero(post) {
         <h2 class="hero-title">${escapeHtml(post.title)}</h2>
         <div class="hero-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
         <p class="hero-text">${escapeHtml(post.content)}</p>
+        ${deleteButtonHtml(post.id)}
       </div>
     </div>`;
 }
@@ -280,6 +290,37 @@ async function fetchPosts() {
   if (counters.TIKTOKI === 0 && cT) cT.innerHTML = `<p style="color: var(--text-muted);">Brak wideo.</p>`;
   if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
 }
+
+// --- USUWANIE ARTYKUŁU ---
+async function handleDelete(postId) {
+  if (!postId) return;
+  if (!isBossOrAdmin(currentUser)) {
+    alert("Brak uprawnień do usuwania artykułów.");
+    return;
+  }
+  if (!confirm("Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć.")) return;
+
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  const { error } = await supabase.from(NEWS_TABLE).delete().eq("id", postId);
+  if (error) {
+    console.error("Błąd usuwania:", error);
+    alert("Błąd usuwania: " + error.message);
+    return;
+  }
+  await fetchPosts();
+}
+
+// Delegowanie kliknięć przycisków "Usuń" (karty są tworzone dynamicznie)
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-delete");
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const id = btn.getAttribute("data-id");
+  handleDelete(id);
+});
 
 // --- ADMIN: dodawanie ---
 async function handleCreatePost(e) {
@@ -355,7 +396,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const { data } = await supabase.auth.getSession();
-    updateUI(data?.session?.user || null);
+    const sessionUser = data?.session?.user || null;
+    currentUser = sessionUser;
+    updateUI(sessionUser);
   } catch (err) { console.error("getSession error:", err); }
 
   supabase.auth.onAuthStateChange((_event, session) => {
