@@ -1,11 +1,8 @@
-// app.js - logowanie (Supabase + Discord), zakładki, baza newsów + Panel Admina
+// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, uprawnienia City Hall
 
 function normalizeTag(s) {
-  return String(s || "")
-    .trim()
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return String(s || "").trim().toUpperCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function escapeHtml(s) {
@@ -17,328 +14,310 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
+function extractYoutubeId(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 let supabaseInstance = null;
 let currentUser = null;
 
 function getSupabase() {
   if (supabaseInstance) return supabaseInstance;
-
   const supabaseLib = window.supabase;
-  if (!supabaseLib) {
-    console.error("Supabase CDN nie jest załadowany (window.supabase = undefined).");
-    return null;
-  }
-
+  if (!supabaseLib) { console.error("Brak window.supabase (CDN)"); return null; }
   const url = window.SUPABASE_URL;
   const key = window.SUPABASE_KEY;
-
-  if (!url || !key) {
-    console.error("Brak window.SUPABASE_URL lub window.SUPABASE_KEY w config.js");
-    return null;
-  }
-
+  if (!url || !key) { console.error("Brak SUPABASE_URL/KEY w config.js"); return null; }
   supabaseInstance = supabaseLib.createClient(url, key, {
-    auth: {
-      flowType: "pkce",
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
+    auth: { flowType: "pkce", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
-
   return supabaseInstance;
 }
 
 function getDiscordIdFromUser(user) {
   if (!user) return null;
-
-  // najpewniejsze: identities dla provider="discord"
   const identities = user.identities || [];
-  const discordIdentity = identities.find(i => i.provider === "discord");
-  if (discordIdentity?.id) return String(discordIdentity.id);
-
-  // fallback (czasem może być inaczej)
-  if (user.id) return String(user.id);
-
-  return null;
+  const d = identities.find(i => i.provider === "discord");
+  if (d && d.id) return String(d.id);
+  return user.id ? String(user.id) : null;
 }
 
-function isUserInDiscordList(user, list) {
+function isUserInList(user, list) {
   const ids = Array.isArray(list) ? list.map(String) : [];
   const did = getDiscordIdFromUser(user);
-  return !!did && ids.includes(String(did));
+  return !!did && ids.includes(did);
 }
 
-// --- TAB SWITCHING (działa z Twoim menu na podstawie data-tab) ---
+// --- ZAKŁADKI ---
 function switchTab(tabId) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
-
   const target = document.getElementById(`tab-${tabId}`) || document.getElementById(tabId);
   if (target) target.classList.add("active");
-
   document.querySelectorAll(".nav-btn").forEach(btn => {
-    const t = btn.getAttribute("data-tab");
-    if (t === tabId) btn.classList.add("active");
-    else btn.classList.remove("active");
-  });
-
-  // w mobile jak masz sidebar-btn
-  document.querySelectorAll(".sidebar-btn").forEach(btn => {
-    const t = btn.getAttribute("data-tab");
-    if (t === tabId) btn.classList.add("active");
-    else btn.classList.remove("active");
+    btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
   });
 }
 
 function setupTabSwitching() {
-  // desktop nav
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const tabId = btn.getAttribute("data-tab");
-      if (tabId) switchTab(tabId);
+      const t = btn.getAttribute("data-tab");
+      if (t) switchTab(t);
     });
   });
-
-  // mobile sidebar (jeśli masz)
-  document.querySelectorAll(".sidebar-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tabId = btn.getAttribute("data-tab");
-      if (tabId) switchTab(tabId);
-    });
-  });
-
-  // jeśli masz onclick="switchTab('...')" to i tak działa, ale to nic nie szkodzi
 }
 
-// --- UI LOGOWANIA ---
+// --- UPRAWNIENIA / UI ---
+const ALL_TAGS = [
+  { value: "STRONA GŁÓWNA", label: "Strona Główna" },
+  { value: "WIADOMOŚCI", label: "Wiadomości" },
+  { value: "ARTYKUŁY", label: "Artykuły" },
+  { value: "TIKTOKI", label: "Tiktoki" },
+  { value: "CITY HALL", label: "City Hall (tylko rząd)", needCityHall: true }
+];
+
+function applyFormPermissions(user) {
+  const sel = document.getElementById("news-tag");
+  if (!sel) return;
+  const isCity = isUserInList(user, window.CITY_HALL_DISCORD_IDS || []);
+  const current = sel.value;
+  sel.innerHTML = "";
+  ALL_TAGS.forEach(t => {
+    if (t.needCityHall && !isCity) return;
+    const o = document.createElement("option");
+    o.value = t.value;
+    o.textContent = t.label;
+    sel.appendChild(o);
+  });
+  if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+}
+
 function applyRoleVisibility(user) {
-  const adminIds = window.ADMIN_DISCORD_IDS || [];
-  const isAdmin = isUserInDiscordList(user, adminIds);
-
-  const navAdmin =
-    document.getElementById("nav-admin") ||
-    document.querySelector('[data-tab="admin"]');
-
-  const tabAdmin =
-    document.getElementById("tab-admin") ||
-    document.getElementById("admin") ||
-    document.querySelector('#tab-admin, [data-tab="admin"]');
-
+  const isAdmin = isUserInList(user, window.ADMIN_DISCORD_IDS || []);
+  const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = isAdmin ? "" : "none";
-  if (tabAdmin) {
-    if (!isAdmin) {
-      tabAdmin.classList.remove("active");
-      // powrót na stronę główną
-      const active = document.querySelector(".tab-content.active");
-      if (active && (active.id === "tab-admin" || active.getAttribute("data-tab") === "admin")) {
-        switchTab("home");
-      }
-    }
+  if (!isAdmin) {
+    const active = document.querySelector(".tab-content.active");
+    if (active && active.id === "tab-admin") switchTab("home");
   }
+  applyFormPermissions(user);
 }
 
 function updateUI(user) {
   const loginBtn = document.getElementById("btn-login");
   const userInfo = document.getElementById("user-info");
-
-  if (!loginBtn || !userInfo) {
-    // Jeśli masz inne ID w index.html, daj znać jakie - dopasuję 1:1
-    return;
-  }
+  if (!loginBtn || !userInfo) return;
 
   if (user) {
     currentUser = user;
     loginBtn.style.display = "none";
     userInfo.style.display = "flex";
-
     const meta = user.user_metadata || {};
-    const nickname =
-      meta.full_name ||
-      meta.name ||
-      meta.preferred_username ||
-      user.email ||
-      "Użytkownik";
-
+    const nickname = meta.full_name || meta.name || meta.preferred_username || user.email || "Użytkownik";
     const avatarUrl = meta.avatar_url || meta.picture || "";
-
     const userNameEl = document.getElementById("user-name");
     const userAvatarEl = document.getElementById("user-avatar");
-
     if (userNameEl) userNameEl.textContent = nickname;
     if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
-
-    applyRoleVisibility(user);
   } else {
     currentUser = null;
     loginBtn.style.display = "flex";
     userInfo.style.display = "none";
-    applyRoleVisibility(null);
-    switchTab("home");
   }
+  applyRoleVisibility(user);
 }
 
 async function loginWithDiscord() {
   const supabase = getSupabase();
   if (!supabase) return alert("Supabase nie jest gotowy.");
-
   const redirectUrl = window.location.origin + window.location.pathname;
-
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "discord",
     options: { redirectTo: redirectUrl }
   });
-
-  if (error) {
-    console.error(error);
-    alert("Błąd logowania: " + error.message);
-  }
+  if (error) { console.error(error); alert("Błąd logowania: " + error.message); }
 }
 
 async function logout() {
   const supabase = getSupabase();
   if (!supabase) return;
-
   const { error } = await supabase.auth.signOut();
   if (error) console.error(error);
-
   window.location.href = window.location.origin + window.location.pathname;
 }
 
-// --- BAZA DANYCH ---
-const NEWS_TABLE = "news"; // jeśli masz inną nazwę tabeli, zmień tutaj
+// --- BAZA ---
+const NEWS_TABLE = "news";
 
-function guessContainerByTag(tagNorm) {
-  // Dopasowujemy pod typowe tagi z Twojej strony
-  // home: domyślnie
-  const containers = {
-    home: document.getElementById("home-container"),
-    wiadomosci: document.getElementById("wiadomosci-container"),
-    artykuly: document.getElementById("artykuly-container"),
-    tiktoki: document.getElementById("tiktoki-container"),
-    cityhall: document.getElementById("cityhall-container")
-  };
-
-  if (!containers.home && !containers.wiadomosci && !containers.artykuly && !containers.tiktoki && !containers.cityhall) {
-    return null;
+function renderMedia(post, isHero) {
+  const cls = isHero ? "hero-media" : "card-media";
+  const video = post.video_url || "";
+  const yt = extractYoutubeId(video);
+  if (yt) {
+    return `<iframe class="${cls}" src="https://www.youtube.com/embed/${yt}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
-
-  if (tagNorm === "STRONAGLOWNA") return containers.home;
-  if (tagNorm === "WIADOMOSCI") return containers.wiadomosci;
-  if (tagNorm === "ARTYKUŁY" || tagNorm === "ARTYKUY" || tagNorm === "ARTYKULY") return containers.artykuly;
-  if (tagNorm === "TIKTOKI") return containers.tiktoki;
-
-  // city hall / rządowe
-  if (tagNorm === "CITYHALL" || tagNorm === "CITYHALL(RZADOWE)" || tagNorm === "RZADOWE") return containers.cityhall;
-
-  return containers.home;
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(video)) {
+    return `<video class="${cls}" src="${escapeHtml(video)}" controls></video>`;
+  }
+  const img = post.image_url ? escapeHtml(post.image_url) : "https://i.imgur.com/vHdfC1B.png";
+  return `<img class="${cls}" src="${img}" alt="">`;
 }
 
-function renderPostCard(post) {
-  const title = escapeHtml(post.title || "");
-  const tag = escapeHtml(post.tag || "");
-  const author = escapeHtml(post.author || "Admin");
-  const content = escapeHtml(post.content || "");
-
-  const dateStr = post.created_at
-    ? new Date(post.created_at).toLocaleDateString("pl-PL")
-    : "";
-
-  const img = post.image_url ? escapeHtml(post.image_url) : "https://i.imgur.com/vHdfC1B.png";
-
+function renderCard(post) {
+  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
   return `
     <div class="card">
-      <img class="card-media" src="${img}" alt="News image">
+      ${renderMedia(post, false)}
       <div class="card-body">
-        <span class="card-tag">${tag}</span>
-        <h2 class="card-title">${title}</h2>
-        <div class="card-meta">Autor: ${author} | ${dateStr}</div>
-        <p class="card-text">${content}</p>
+        <span class="card-tag">${escapeHtml(post.tag || "")}</span>
+        <h2 class="card-title">${escapeHtml(post.title)}</h2>
+        <div class="card-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
+        <p class="card-text">${escapeHtml(post.content)}</p>
       </div>
-    </div>
-  `;
+    </div>`;
+}
+
+function renderHero(post) {
+  const dateStr = post.created_at ? new Date(post.created_at).toLocaleDateString("pl-PL") : "";
+  return `
+    <div class="hero-card">
+      ${renderMedia(post, true)}
+      <div class="hero-body">
+        <span class="hero-tag">${escapeHtml(post.tag || "WYRÓŻNIONE")}</span>
+        <h2 class="hero-title">${escapeHtml(post.title)}</h2>
+        <div class="hero-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
+        <p class="hero-text">${escapeHtml(post.content)}</p>
+      </div>
+    </div>`;
+}
+
+function renderTicker(posts) {
+  const track = document.getElementById("ticker-track");
+  if (!track) return;
+  if (!posts || posts.length === 0) {
+    track.textContent = "Witamy w Weazel News — najważniejsze informacje z Los Santos!";
+    return;
+  }
+  const items = posts.slice(0, 8).map(p => `<span>${escapeHtml(p.title)}</span>`).join("");
+  track.innerHTML = items + items; // podwójnie dla płynnej pętli
 }
 
 async function fetchPosts() {
   const supabase = getSupabase();
   if (!supabase) return;
 
-  const cHome = document.getElementById("home-container");
+  const homeFeatured = document.getElementById("home-featured");
+  const homeGrid = document.getElementById("home-container");
   const cW = document.getElementById("wiadomosci-container");
   const cA = document.getElementById("artykuly-container");
   const cT = document.getElementById("tiktoki-container");
   const cC = document.getElementById("cityhall-container");
 
-  [cHome, cW, cA, cT, cC].forEach(el => { if (el) el.innerHTML = ""; });
+  [homeFeatured, homeGrid, cW, cA, cT, cC].forEach(el => { if (el) el.innerHTML = ""; });
 
   const { data, error } = await supabase
     .from(NEWS_TABLE)
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("fetchPosts error:", error);
-    return;
-  }
+  if (error) { console.error("fetchPosts error:", error); return; }
+
+  // ticker ze wszystkich
+  renderTicker(data || []);
 
   if (!data || data.length === 0) {
-    if (cHome) cHome.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
+    if (homeGrid) homeGrid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
     return;
   }
 
-  for (const post of data) {
-    const tagNorm = normalizeTag(post.tag);
-    const container = guessContainerByTag(tagNorm) || cHome;
-    if (container) container.innerHTML += renderPostCard(post);
+  // STRONA GŁÓWNA = wszystkie (featured + grid)
+  if (homeFeatured) homeFeatured.innerHTML = renderHero(data[0]);
+  if (homeGrid) {
+    if (data.length > 1) {
+      homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
+    }
   }
+
+  // Kategorie filtrowane
+  const byTag = { "WIADOMOSCI": cW, "ARTYKULY": cA, "TIKTOKI": cT, "CITYHALL": cC };
+  const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0 };
+
+  for (const post of data) {
+    const key = normalizeTag(post.tag);
+    if (byTag[key]) {
+      byTag[key].innerHTML += renderCard(post);
+      counters[key]++;
+    }
+  }
+
+  if (counters.WIADOMOSCI === 0 && cW) cW.innerHTML = `<p style="color: var(--text-muted);">Brak wiadomości.</p>`;
+  if (counters.ARTYKULY === 0 && cA) cA.innerHTML = `<p style="color: var(--text-muted);">Brak artykułów.</p>`;
+  if (counters.TIKTOKI === 0 && cT) cT.innerHTML = `<p style="color: var(--text-muted);">Brak wideo.</p>`;
+  if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
 }
 
 // --- ADMIN: dodawanie ---
 async function handleCreatePost(e) {
   e.preventDefault();
-
   const supabase = getSupabase();
   if (!supabase) return;
-
   if (!currentUser) return alert("Musisz być zalogowany.");
 
-  const adminIds = window.ADMIN_DISCORD_IDS || [];
-  if (!isUserInDiscordList(currentUser, adminIds)) {
-    return alert("Brak uprawnień do Panelu Admina.");
-  }
+  const isAdmin = isUserInList(currentUser, window.ADMIN_DISCORD_IDS || []);
+  if (!isAdmin) return alert("Brak uprawnień do Panelu Admina.");
 
-  const title = document.getElementById("news-title")?.value || "";
+  const title = document.getElementById("news-title")?.value.trim() || "";
   const tag = document.getElementById("news-tag")?.value || "";
-  const imageUrl = document.getElementById("news-image")?.value || "";
-  const content = document.getElementById("news-content")?.value || "";
+  const imageUrl = document.getElementById("news-image")?.value.trim() || "";
+  const videoUrl = document.getElementById("news-video")?.value.trim() || "";
+  const content = document.getElementById("news-content")?.value.trim() || "";
 
-  if (!title || !tag || !content) return alert("Uzupełnij wymagane pola.");
+  if (!title || !tag || !content) return alert("Uzupełnij tytuł, kategorię i treść.");
+
+  // Zabezpieczenie City Hall
+  if (normalizeTag(tag) === "CITYHALL") {
+    if (!isUserInList(currentUser, window.CITY_HALL_DISCORD_IDS || [])) {
+      return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
+    }
+  }
 
   const meta = currentUser.user_metadata || {};
   const authorName = meta.full_name || meta.name || "Admin";
 
-  const { error } = await supabase.from(NEWS_TABLE).insert([
-    {
-      title,
-      tag,
-      image_url: imageUrl,
-      content,
-      author: authorName,
-      created_at: new Date().toISOString()
-    }
-  ]);
+  const { error } = await supabase.from(NEWS_TABLE).insert([{
+    title, tag,
+    image_url: imageUrl,
+    video_url: videoUrl,
+    content,
+    author: authorName,
+    created_at: new Date().toISOString()
+  }]);
 
-  if (error) {
-    console.error(error);
-    alert("Błąd publikacji: " + error.message);
-    return;
-  }
+  if (error) { console.error(error); alert("Błąd publikacji: " + error.message); return; }
 
   document.getElementById("news-form")?.reset();
+  applyFormPermissions(currentUser); // odbuduj select po resecie
   await fetchPosts();
+
+  const tagToTab = {
+    "STRONA GŁÓWNA": "home",
+    "WIADOMOŚCI": "wiadomosci",
+    "ARTYKUŁY": "artykuly",
+    "TIKTOKI": "tiktoki",
+    "CITY HALL": "cityhall"
+  };
+  switchTab(tagToTab[tag] || "home");
+  alert("Wpis opublikowany!");
 }
 
 // --- START ---
 document.addEventListener("DOMContentLoaded", async () => {
+  // Link rekrutacyjny z config
+  const recruitLink = document.getElementById("recruit-discord-link");
+  if (recruitLink && window.RECRUIT_DISCORD_URL) recruitLink.href = window.RECRUIT_DISCORD_URL;
+
   const supabase = getSupabase();
   if (!supabase) return;
 
@@ -346,28 +325,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const loginBtn = document.getElementById("btn-login");
   const logoutBtn = document.getElementById("btn-logout");
-
   if (loginBtn) loginBtn.addEventListener("click", loginWithDiscord);
   if (logoutBtn) logoutBtn.addEventListener("click", logout);
 
   const newsForm = document.getElementById("news-form");
   if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
 
-  // on-load session
+  // domyślnie zbuduj select (bez city hall dopóki nie wiemy kto jest)
+  applyFormPermissions(null);
+
   try {
     const { data } = await supabase.auth.getSession();
-    const sessionUser = data?.session?.user || null;
-    updateUI(sessionUser);
-  } catch (err) {
-    console.error("getSession error:", err);
-  }
+    updateUI(data?.session?.user || null);
+  } catch (err) { console.error("getSession error:", err); }
 
-  // live auth changes
   supabase.auth.onAuthStateChange((_event, session) => {
-    const user = session?.user || null;
-    updateUI(user);
+    updateUI(session?.user || null);
   });
 
-  // load data
   await fetchPosts();
 });
