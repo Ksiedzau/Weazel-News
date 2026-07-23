@@ -1,4 +1,4 @@
-// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker, usuwanie, klikalne karty, menu mobilne
+// app.js - Weazel News
 
 function normalizeTag(s) {
   return String(s || "").trim().toUpperCase()
@@ -55,11 +55,17 @@ function getUserRole(user) {
   if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
   if (isUserInList(user, window.ADMIN_DISCORD_IDS || [])) return { label: "Admin", cls: "role-admin" };
   if (isUserInList(user, window.CITY_HALL_DISCORD_IDS || [])) return { label: "City Hall", cls: "role-cityhall" };
+  if (isUserInList(user, window.COMPANY_DISCORD_IDS || [])) return { label: "Firma", cls: "role-company" };
   return { label: "Obywatel", cls: "role-default" };
 }
 
 function isBossOrAdmin(user) {
   return isUserInList(user, window.BOSS_DISCORD_IDS || []) || isUserInList(user, window.ADMIN_DISCORD_IDS || []);
+}
+function isCityHall(user) { return isUserInList(user, window.CITY_HALL_DISCORD_IDS || []); }
+function isCompany(user) { return isUserInList(user, window.COMPANY_DISCORD_IDS || []); }
+function canAccessPanel(user) {
+  return isBossOrAdmin(user) || isCityHall(user) || isCompany(user);
 }
 
 // --- ZAKŁADKI ---
@@ -79,68 +85,70 @@ function setupTabSwitching() {
   document.querySelectorAll(".nav-btn, .sidebar-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = btn.getAttribute("data-tab");
-      if (t) {
-        switchTab(t);
-        closeMobileMenu();
-      }
+      if (t) { switchTab(t); closeMobileMenu(); }
     });
   });
 }
 
 // --- MENU MOBILNE ---
 function openMobileMenu() {
-  const sb = document.getElementById("mobile-sidebar");
-  const ov = document.getElementById("sidebar-overlay");
-  if (sb) sb.classList.add("active");
-  if (ov) ov.classList.add("active");
+  document.getElementById("mobile-sidebar")?.classList.add("active");
+  document.getElementById("sidebar-overlay")?.classList.add("active");
 }
 function closeMobileMenu() {
-  const sb = document.getElementById("mobile-sidebar");
-  const ov = document.getElementById("sidebar-overlay");
-  if (sb) sb.classList.remove("active");
-  if (ov) ov.classList.remove("active");
+  document.getElementById("mobile-sidebar")?.classList.remove("active");
+  document.getElementById("sidebar-overlay")?.classList.remove("active");
 }
 function setupMobileMenu() {
-  const btn = document.getElementById("mobile-menu-btn");
-  const close = document.getElementById("sidebar-close");
-  const ov = document.getElementById("sidebar-overlay");
-  if (btn) btn.addEventListener("click", openMobileMenu);
-  if (close) close.addEventListener("click", closeMobileMenu);
-  if (ov) ov.addEventListener("click", closeMobileMenu);
+  document.getElementById("mobile-menu-btn")?.addEventListener("click", openMobileMenu);
+  document.getElementById("sidebar-close")?.addEventListener("click", closeMobileMenu);
+  document.getElementById("sidebar-overlay")?.addEventListener("click", closeMobileMenu);
 }
 
 // --- UPRAWNIENIA / UI ---
 const ALL_TAGS = [
-  { value: "STRONA GŁÓWNA", label: "Strona Główna" },
-  { value: "WIADOMOŚCI", label: "Wiadomości" },
-  { value: "ARTYKUŁY", label: "Artykuły" },
-  { value: "TIKTOKI", label: "Tiktoki" },
-  { value: "CITY HALL", label: "City Hall (tylko rząd)", needCityHall: true }
+  { value: "STRONA GŁÓWNA", label: "Strona Główna", needBoss: true },
+  { value: "WIADOMOŚCI", label: "Wiadomości", needBoss: true },
+  { value: "ARTYKUŁY", label: "Artykuły", needBoss: true },
+  { value: "TIKTOKI", label: "Tiktoki", needBoss: true },
+  { value: "CITY HALL", label: "City Hall (tylko rząd)", needCityHall: true },
+  { value: "OGŁOSZENIA FIRMY", label: "Ogłoszenia firmy", needCompany: true }
 ];
 
 function applyFormPermissions(user) {
   const sel = document.getElementById("news-tag");
   if (!sel) return;
-  const isCity = isUserInList(user, window.CITY_HALL_DISCORD_IDS || []);
+  const boss = isBossOrAdmin(user);
+  const city = isCityHall(user);
+  const comp = isCompany(user);
   const current = sel.value;
   sel.innerHTML = "";
   ALL_TAGS.forEach(t => {
-    if (t.needCityHall && !isCity) return;
+    const allowed = boss || (t.needCityHall && city) || (t.needCompany && comp);
+    if (!allowed) return;
     const o = document.createElement("option");
     o.value = t.value;
     o.textContent = t.label;
     sel.appendChild(o);
   });
   if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+  toggleCompanyNameField();
+}
+
+function toggleCompanyNameField() {
+  const sel = document.getElementById("news-tag");
+  const row = document.getElementById("company-name-row");
+  if (!sel || !row) return;
+  row.style.display = normalizeTag(sel.value) === "OGLOSZENIAFIRMY" ? "" : "none";
 }
 
 function applyRoleVisibility(user) {
-  const isAdmin = isBossOrAdmin(user);
+  const hasPanel = canAccessPanel(user);
   const navAdmin = document.getElementById("nav-admin");
   const sidebarAdmin = document.getElementById("sidebar-admin");
-  if (navAdmin) navAdmin.style.display = isAdmin ? "flex" : "none";
-  if (sidebarAdmin) sidebarAdmin.style.display = isAdmin ? "flex" : "none";
-  if (!isAdmin) {
+  if (navAdmin) navAdmin.style.display = hasPanel ? "flex" : "none";
+  if (sidebarAdmin) sidebarAdmin.style.display = hasPanel ? "flex" : "none";
+  if (!hasPanel) {
     const active = document.querySelector(".tab-content.active");
     if (active && active.id === "tab-admin") switchTab("home");
   }
@@ -215,6 +223,12 @@ function getPostClickUrl(post) {
   return "";
 }
 
+function tagClass(tagNorm) {
+  if (tagNorm === "OGLOSZENIAFIRMY") return "tag-company";
+  if (tagNorm === "CITYHALL") return "tag-cityhall";
+  return "";
+}
+
 function renderMedia(post, isHero) {
   const cls = isHero ? "hero-media" : "card-media";
   const video = post.video_url || "";
@@ -234,12 +248,15 @@ function renderCard(post) {
   const clickUrl = getPostClickUrl(post);
   const clickableClass = clickUrl ? " clickable" : "";
   const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
+  const tn = normalizeTag(post.tag);
+  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
   return `
     <div class="card${clickableClass}"${dataUrl}>
       ${renderMedia(post, false)}
       <div class="card-body">
-        <span class="card-tag">${escapeHtml(post.tag || "")}</span>
+        <span class="card-tag ${tagClass(tn)}">${escapeHtml(post.tag || "")}</span>
         <h2 class="card-title">${escapeHtml(post.title)}</h2>
+        ${companyLine}
         <div class="card-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
         <p class="card-text">${escapeHtml(post.content)}</p>
         ${deleteButtonHtml(post.id)}
@@ -252,12 +269,15 @@ function renderHero(post) {
   const clickUrl = getPostClickUrl(post);
   const clickableClass = clickUrl ? " clickable" : "";
   const dataUrl = clickUrl ? ` data-url="${escapeHtml(clickUrl)}"` : "";
+  const tn = normalizeTag(post.tag);
+  const companyLine = post.company_name ? `<div class="card-company">🏢 ${escapeHtml(post.company_name)}</div>` : "";
   return `
     <div class="hero-card${clickableClass}"${dataUrl}>
       ${renderMedia(post, true)}
       <div class="hero-body">
         <span class="hero-tag">${escapeHtml(post.tag || "WYRÓŻNIONE")}</span>
         <h2 class="hero-title">${escapeHtml(post.title)}</h2>
+        ${companyLine}
         <div class="hero-meta">Autor: ${escapeHtml(post.author || "Admin")} | ${escapeHtml(dateStr)}</div>
         <p class="hero-text">${escapeHtml(post.content)}</p>
         ${deleteButtonHtml(post.id)}
@@ -286,8 +306,9 @@ async function fetchPosts() {
   const cA = document.getElementById("artykuly-container");
   const cT = document.getElementById("tiktoki-container");
   const cC = document.getElementById("cityhall-container");
+  const cO = document.getElementById("ogloszenia-container");
 
-  [homeFeatured, homeGrid, cW, cA, cT, cC].forEach(el => { if (el) el.innerHTML = ""; });
+  [homeFeatured, homeGrid, cW, cA, cT, cC, cO].forEach(el => { if (el) el.innerHTML = ""; });
 
   const { data, error } = await supabase
     .from(NEWS_TABLE)
@@ -312,8 +333,14 @@ async function fetchPosts() {
     homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
   }
 
-  const byTag = { "WIADOMOSCI": cW, "ARTYKULY": cA, "TIKTOKI": cT, "CITYHALL": cC };
-  const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0 };
+  const byTag = {
+    "WIADOMOSCI": cW,
+    "ARTYKULY": cA,
+    "TIKTOKI": cT,
+    "CITYHALL": cC,
+    "OGLOSZENIAFIRMY": cO
+  };
+  const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0, OGLOSZENIAFIRMY: 0 };
 
   for (const post of data) {
     const key = normalizeTag(post.tag);
@@ -327,38 +354,24 @@ async function fetchPosts() {
   if (counters.ARTYKULY === 0 && cA) cA.innerHTML = `<p style="color: var(--text-muted);">Brak artykułów.</p>`;
   if (counters.TIKTOKI === 0 && cT) cT.innerHTML = `<p style="color: var(--text-muted);">Brak wideo.</p>`;
   if (counters.CITYHALL === 0 && cC) cC.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń rządowych.</p>`;
+  if (counters.OGLOSZENIAFIRMY === 0 && cO) cO.innerHTML = `<p style="color: var(--text-muted);">Brak ogłoszeń firm.</p>`;
 }
 
 // --- USUWANIE ---
 async function handleDelete(postId) {
   if (!postId) return;
-  if (!isBossOrAdmin(currentUser)) {
-    alert("Brak uprawnień do usuwania artykułów.");
-    return;
-  }
+  if (!isBossOrAdmin(currentUser)) { alert("Brak uprawnień do usuwania artykułów."); return; }
   if (!confirm("Czy na pewno chcesz usunąć ten artykuł? Tej operacji nie można cofnąć.")) return;
-
   const supabase = getSupabase();
   if (!supabase) return;
-
   const { error } = await supabase.from(NEWS_TABLE).delete().eq("id", postId);
-  if (error) {
-    console.error("Błąd usuwania:", error);
-    alert("Błąd usuwania: " + error.message);
-    return;
-  }
+  if (error) { console.error("Błąd usuwania:", error); alert("Błąd usuwania: " + error.message); return; }
   await fetchPosts();
 }
 
-// --- DELEGOWANIE KLIKNIĘĆ ---
 document.addEventListener("click", (e) => {
   const delBtn = e.target.closest(".btn-delete");
-  if (delBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-    handleDelete(delBtn.getAttribute("data-id"));
-    return;
-  }
+  if (delBtn) { e.preventDefault(); e.stopPropagation(); handleDelete(delBtn.getAttribute("data-id")); return; }
   const clickable = e.target.closest(".card.clickable, .hero-card.clickable");
   if (clickable) {
     const url = clickable.getAttribute("data-url");
@@ -372,21 +385,27 @@ async function handleCreatePost(e) {
   const supabase = getSupabase();
   if (!supabase) return;
   if (!currentUser) return alert("Musisz być zalogowany.");
-
-  if (!isBossOrAdmin(currentUser)) return alert("Brak uprawnień do Panelu Admina.");
+  if (!canAccessPanel(currentUser)) return alert("Brak uprawnień do Panelu Admina.");
 
   const title = document.getElementById("news-title")?.value.trim() || "";
   const tag = document.getElementById("news-tag")?.value || "";
+  const companyName = document.getElementById("news-company")?.value.trim() || "";
   const imageUrl = document.getElementById("news-image")?.value.trim() || "";
   const videoUrl = document.getElementById("news-video")?.value.trim() || "";
   const content = document.getElementById("news-content")?.value.trim() || "";
 
   if (!title || !tag || !content) return alert("Uzupełnij tytuł, kategorię i treść.");
 
-  if (normalizeTag(tag) === "CITYHALL") {
-    if (!isUserInList(currentUser, window.CITY_HALL_DISCORD_IDS || [])) {
-      return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
+  const tn = normalizeTag(tag);
+
+  if (tn === "CITYHALL" && !isCityHall(currentUser) && !isBossOrAdmin(currentUser)) {
+    return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
+  }
+  if (tn === "OGLOSZENIAFIRMY") {
+    if (!isCompany(currentUser) && !isBossOrAdmin(currentUser)) {
+      return alert("Nie masz uprawnień do publikacji ogłoszeń firm.");
     }
+    if (!companyName) return alert("Podaj nazwę firmy dla ogłoszenia.");
   }
 
   const meta = currentUser.user_metadata || {};
@@ -394,6 +413,7 @@ async function handleCreatePost(e) {
 
   const { error } = await supabase.from(NEWS_TABLE).insert([{
     title, tag,
+    company_name: companyName || null,
     image_url: imageUrl,
     video_url: videoUrl,
     content,
@@ -412,7 +432,8 @@ async function handleCreatePost(e) {
     "WIADOMOŚCI": "wiadomosci",
     "ARTYKUŁY": "artykuly",
     "TIKTOKI": "tiktoki",
-    "CITY HALL": "cityhall"
+    "CITY HALL": "cityhall",
+    "OGŁOSZENIA FIRMY": "ogloszenia"
   };
   switchTab(tagToTab[tag] || "home");
   alert("Wpis opublikowany!");
@@ -429,13 +450,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupTabSwitching();
   setupMobileMenu();
 
-  const loginBtn = document.getElementById("btn-login");
-  const logoutBtn = document.getElementById("btn-logout");
-  if (loginBtn) loginBtn.addEventListener("click", loginWithDiscord);
-  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  document.getElementById("btn-login")?.addEventListener("click", loginWithDiscord);
+  document.getElementById("btn-logout")?.addEventListener("click", logout);
 
   const newsForm = document.getElementById("news-form");
   if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
+
+  document.getElementById("news-tag")?.addEventListener("change", toggleCompanyNameField);
 
   applyFormPermissions(null);
 
