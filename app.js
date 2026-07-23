@@ -22,18 +22,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Podpięcie nasłuchiwania pod przycisk logowania
-    const loginButton = document.getElementById("btn-login") || document.querySelector("button[onclick*='login']");
-    if (loginButton) {
-        loginButton.removeAttribute("onclick");
-        loginButton.addEventListener("click", loginWithDiscord);
-    }
-
     // Sprawdzenie sesji przy załadowaniu strony
     await checkUserSession();
 });
 
-// Główna funkcja logowania przez Discorda
+// Główna funkcja logowania przez Discorda (wywoływana bezpośrednio z HTML)
 async function loginWithDiscord() {
     try {
         const supabaseInstance = window.supabaseClient || window.supabase;
@@ -41,14 +34,13 @@ async function loginWithDiscord() {
             throw new Error("Obiekt Supabase auth jest niedostępny.");
         }
 
-        // Dokładny adres powrotny na GitHub Pages (bazujący na aktualnym URL bez parametrów)
+        // Dokładny adres powrotny na GitHub Pages
         const redirectUrl = window.location.origin + window.location.pathname;
 
         const { data, error } = await supabaseInstance.auth.signInWithOAuth({
             provider: 'discord',
             options: {
-                redirectTo: redirectUrl,
-                skipBrowserRedirect: false
+                redirectTo: redirectUrl
             }
         });
 
@@ -56,7 +48,7 @@ async function loginWithDiscord() {
             console.error("Błąd podczas logowania przez Discorda:", error.message);
             alert("Nie udało się zalogować: " + error.message);
         } else if (data && data.url) {
-            // Jawne wymuszenie przekierowania na panel logowania Discorda
+            // Bezpośrednie przekierowanie do panelu logowania Discorda
             window.location.href = data.url;
         }
     } catch (err) {
