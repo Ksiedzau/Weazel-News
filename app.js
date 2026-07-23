@@ -1,4 +1,4 @@
-// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, uprawnienia City Hall
+// app.js - Weazel News: logowanie, zakładki, baza, panel admina, wideo, rangi, ticker
 
 function normalizeTag(s) {
   return String(s || "").trim().toUpperCase()
@@ -50,6 +50,15 @@ function isUserInList(user, list) {
   return !!did && ids.includes(did);
 }
 
+// --- RANGI ---
+function getUserRole(user) {
+  if (!user) return { label: "", cls: "role-default" };
+  if (isUserInList(user, window.BOSS_DISCORD_IDS || [])) return { label: "Szef", cls: "role-boss" };
+  if (isUserInList(user, window.ADMIN_DISCORD_IDS || [])) return { label: "Admin", cls: "role-admin" };
+  if (isUserInList(user, window.CITY_HALL_DISCORD_IDS || [])) return { label: "City Hall", cls: "role-cityhall" };
+  return { label: "Redaktor", cls: "role-default" };
+}
+
 // --- ZAKŁADKI ---
 function switchTab(tabId) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
@@ -95,7 +104,7 @@ function applyFormPermissions(user) {
 }
 
 function applyRoleVisibility(user) {
-  const isAdmin = isUserInList(user, window.ADMIN_DISCORD_IDS || []);
+  const isAdmin = isUserInList(user, window.ADMIN_DISCORD_IDS || []) || isUserInList(user, window.BOSS_DISCORD_IDS || []);
   const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = isAdmin ? "" : "none";
   if (!isAdmin) {
@@ -119,12 +128,20 @@ function updateUI(user) {
     const avatarUrl = meta.avatar_url || meta.picture || "";
     const userNameEl = document.getElementById("user-name");
     const userAvatarEl = document.getElementById("user-avatar");
+    const userRoleEl = document.getElementById("user-role");
     if (userNameEl) userNameEl.textContent = nickname;
     if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
+    if (userRoleEl) {
+      const role = getUserRole(user);
+      userRoleEl.textContent = role.label;
+      userRoleEl.className = "user-role " + role.cls;
+    }
   } else {
     currentUser = null;
     loginBtn.style.display = "flex";
     userInfo.style.display = "none";
+    const userRoleEl = document.getElementById("user-role");
+    if (userRoleEl) userRoleEl.textContent = "";
   }
   applyRoleVisibility(user);
 }
@@ -196,12 +213,12 @@ function renderHero(post) {
 function renderTicker(posts) {
   const track = document.getElementById("ticker-track");
   if (!track) return;
-  if (!posts || posts.length === 0) {
-    track.textContent = "Witamy w Weazel News — najważniejsze informacje z Los Santos!";
-    return;
+  const slogan = "Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas. Tylko u nas niezależne dziennikarstwo bez cenzury!";
+  let items = `<span>${escapeHtml(slogan)}</span>`;
+  if (posts && posts.length) {
+    items += posts.slice(0, 10).map(p => `<span>${escapeHtml(p.title)}</span>`).join("");
   }
-  const items = posts.slice(0, 8).map(p => `<span>${escapeHtml(p.title)}</span>`).join("");
-  track.innerHTML = items + items; // podwójnie dla płynnej pętli
+  track.innerHTML = items + items;
 }
 
 async function fetchPosts() {
@@ -224,23 +241,18 @@ async function fetchPosts() {
 
   if (error) { console.error("fetchPosts error:", error); return; }
 
-  // ticker ze wszystkich
   renderTicker(data || []);
 
   if (!data || data.length === 0) {
-    if (homeGrid) homeGrid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów.</p>`;
+    if (homeGrid) homeGrid.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów. Zaglądaj później!</p>`;
     return;
   }
 
-  // STRONA GŁÓWNA = wszystkie (featured + grid)
   if (homeFeatured) homeFeatured.innerHTML = renderHero(data[0]);
-  if (homeGrid) {
-    if (data.length > 1) {
-      homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
-    }
+  if (homeGrid && data.length > 1) {
+    homeGrid.innerHTML = data.slice(1).map(renderCard).join("");
   }
 
-  // Kategorie filtrowane
   const byTag = { "WIADOMOSCI": cW, "ARTYKULY": cA, "TIKTOKI": cT, "CITYHALL": cC };
   const counters = { WIADOMOSCI: 0, ARTYKULY: 0, TIKTOKI: 0, CITYHALL: 0 };
 
@@ -265,7 +277,7 @@ async function handleCreatePost(e) {
   if (!supabase) return;
   if (!currentUser) return alert("Musisz być zalogowany.");
 
-  const isAdmin = isUserInList(currentUser, window.ADMIN_DISCORD_IDS || []);
+  const isAdmin = isUserInList(currentUser, window.ADMIN_DISCORD_IDS || []) || isUserInList(currentUser, window.BOSS_DISCORD_IDS || []);
   if (!isAdmin) return alert("Brak uprawnień do Panelu Admina.");
 
   const title = document.getElementById("news-title")?.value.trim() || "";
@@ -276,7 +288,6 @@ async function handleCreatePost(e) {
 
   if (!title || !tag || !content) return alert("Uzupełnij tytuł, kategorię i treść.");
 
-  // Zabezpieczenie City Hall
   if (normalizeTag(tag) === "CITYHALL") {
     if (!isUserInList(currentUser, window.CITY_HALL_DISCORD_IDS || [])) {
       return alert("Nie masz uprawnień do publikacji w kategorii City Hall.");
@@ -298,7 +309,7 @@ async function handleCreatePost(e) {
   if (error) { console.error(error); alert("Błąd publikacji: " + error.message); return; }
 
   document.getElementById("news-form")?.reset();
-  applyFormPermissions(currentUser); // odbuduj select po resecie
+  applyFormPermissions(currentUser);
   await fetchPosts();
 
   const tagToTab = {
@@ -314,7 +325,6 @@ async function handleCreatePost(e) {
 
 // --- START ---
 document.addEventListener("DOMContentLoaded", async () => {
-  // Link rekrutacyjny z config
   const recruitLink = document.getElementById("recruit-discord-link");
   if (recruitLink && window.RECRUIT_DISCORD_URL) recruitLink.href = window.RECRUIT_DISCORD_URL;
 
@@ -331,7 +341,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const newsForm = document.getElementById("news-form");
   if (newsForm) newsForm.addEventListener("submit", handleCreatePost);
 
-  // domyślnie zbuduj select (bez city hall dopóki nie wiemy kto jest)
   applyFormPermissions(null);
 
   try {
