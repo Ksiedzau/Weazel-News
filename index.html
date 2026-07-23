@@ -50,14 +50,46 @@
             gap: 10px;
         }
 
-        .header-left { display: flex; align-items: center; gap: 15px; min-width: 0; }
+        .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+        /* HAMBURGER (widoczny tylko na mobile) */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            width: 40px; height: 40px; background: var(--bg-card);
+            border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; gap: 4px; flex-shrink: 0;
+        }
+        .mobile-menu-btn span { display: block; width: 20px; height: 2px; background-color: #fff; border-radius: 2px; }
+
+        /* SIDEBAR MOBILNY */
+        .mobile-sidebar {
+            position: fixed; top: 0; left: -100%; width: 280px; height: 100%;
+            background: var(--bg-header); border-right: 2px solid var(--border-color);
+            z-index: 1000; display: flex; flex-direction: column; padding: 20px;
+            transition: left 0.3s ease; box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+        }
+        .mobile-sidebar.active { left: 0; }
+        .sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-close { background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; line-height: 1; }
+        .sidebar-links { display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-btn {
+            background: rgba(255,255,255,0.03); border: none; color: var(--text-muted);
+            padding: 12px 16px; text-align: left; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; text-transform: uppercase;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-btn.active { background: var(--border-color); color: #fff; }
+        .sidebar-btn.cityhall-sidebar { color: var(--accent-blue); }
+        .sidebar-btn.admin-sidebar { color: var(--accent-gold); display: none; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; }
+        .sidebar-overlay.active { display: block; }
 
         .brand { display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 0; }
         .brand-badge { background: var(--accent-red); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 900; font-size: 0.8rem; flex-shrink: 0; }
         .brand-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-title span { color: var(--accent-red); }
 
-        .nav-links { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
+        /* Menu desktop: domyślnie ukryte (mobile-first) */
+        .nav-links { display: none; align-items: center; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
         .nav-btn {
             color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-weight: 700;
             font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; background: rgba(255,255,255,0.03); transition: 0.2s;
@@ -90,6 +122,19 @@
         .role-default { color: var(--text-muted); }
         .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
 
+        /* DESKTOP: pokaż nav-links, ukryj hamburger */
+        @media (min-width: 1000px) {
+            .nav-links { display: flex; }
+            .mobile-menu-btn { display: none !important; }
+        }
+        /* MOBILE: pokaż hamburger */
+        @media (max-width: 999px) {
+            header { padding: 10px 14px; }
+            .mobile-menu-btn { display: flex; }
+            .nav-links { display: none !important; }
+            .user-name { max-width: 90px; }
+        }
+
         main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -98,7 +143,6 @@
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
         .page-header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
 
-        /* CZERWONY PASEK Z PRZEWIJANYM TEKSTEM (bez "NA ŻYWO") */
         .live-ticker {
             background: linear-gradient(90deg, #7f1010, var(--accent-red), #7f1010);
             color: #fff;
@@ -119,7 +163,6 @@
         .ticker-track-inner span::before { content: "●"; color: #fca5a5; margin-right: 10px; }
         @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
-        /* HERO */
         .hero-card {
             display: grid;
             grid-template-columns: 1fr;
@@ -131,6 +174,7 @@
             transition: 0.2s;
         }
         .hero-card:hover { border-color: var(--accent-red); }
+        .hero-card.clickable { cursor: pointer; }
         @media (min-width: 800px) { .hero-card { grid-template-columns: 1.3fr 1fr; } }
         .hero-media { width: 100%; height: 260px; object-fit: cover; background: #000; border: 0; display: block; }
         @media (min-width: 800px) { .hero-media { height: 100%; min-height: 340px; } }
@@ -140,7 +184,6 @@
         .hero-meta { font-size: 0.85rem; color: var(--text-muted); }
         .hero-text { color: #d1d5db; line-height: 1.55; font-size: 0.95rem; }
 
-        /* OPISY / INFO NA STRONIE GŁÓWNEJ */
         .home-info { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
         @media (min-width: 750px) { .home-info { grid-template-columns: repeat(3, 1fr); } }
         .info-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 22px; transition: 0.2s; }
@@ -153,12 +196,12 @@
         .home-about h2 { color: #fff; font-weight: 900; text-transform: uppercase; font-size: 1.2rem; margin-bottom: 10px; }
         .home-about p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
 
-        /* GRID KART */
         .cards-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
         @media (min-width: 750px) { .cards-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; } }
 
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; width: 100%; transition: 0.2s; }
         .card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
+        .card.clickable { cursor: pointer; }
         .card-media { width: 100%; height: 180px; background: #121520; object-fit: cover; border: 0; display: block; }
         .card-body { padding: 15px; display: flex; flex-direction: column; flex: 1; }
         .card-tag { background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin-bottom: 8px; }
@@ -166,7 +209,6 @@
         .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
         .card-text { font-size: 0.9rem; color: #d1d5db; line-height: 1.45; word-break: break-word; }
 
-        /* Panel Admina */
         .admin-panel { display: flex; flex-direction: column; gap: 16px; width: 100%; }
         .admin-card { background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; width: 100%; }
         .admin-card-title { font-size: 1.1rem; font-weight: 800; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); }
@@ -179,7 +221,6 @@
         .btn-submit:hover { background: #b91c1c; }
         .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
-        /* Rekrutacja */
         .recruit-box { background: var(--bg-card); padding: 32px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; }
         .recruit-box h2 { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 10px; text-transform: uppercase; }
         .recruit-box p { color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
@@ -189,6 +230,9 @@
 
     <header>
         <div class="header-left">
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
             <div class="brand" onclick="switchTab('home')">
                 <span class="brand-badge">LIVE</span>
                 <h1 class="brand-title">Weazel <span>News</span></h1>
@@ -224,8 +268,25 @@
         </div>
     </header>
 
+    <!-- SIDEBAR MOBILNY -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <aside class="mobile-sidebar" id="mobile-sidebar">
+        <div class="sidebar-header">
+            <span style="font-weight:900; color:var(--accent-red); text-transform:uppercase;">Weazel Menu</span>
+            <button class="sidebar-close" id="sidebar-close" aria-label="Zamknij">&times;</button>
+        </div>
+        <div class="sidebar-links">
+            <button class="sidebar-btn active" data-tab="home">🏡 Strona Główna</button>
+            <button class="sidebar-btn" data-tab="wiadomosci">📰 Wiadomości</button>
+            <button class="sidebar-btn" data-tab="artykuly">📄 Artykuły</button>
+            <button class="sidebar-btn" data-tab="tiktoki">📱 Tiktoki</button>
+            <button class="sidebar-btn cityhall-sidebar" data-tab="cityhall">🏛️ City Hall</button>
+            <button class="sidebar-btn" data-tab="rekrutacja">💼 Rekrutacja</button>
+            <button class="sidebar-btn admin-sidebar" id="sidebar-admin" data-tab="admin">⚙️ Panel Admina</button>
+        </div>
+    </aside>
+
     <main>
-        <!-- STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-content active">
             <div class="live-ticker">
                 <div class="ticker-track">
@@ -266,7 +327,6 @@
             <div class="cards-grid" id="home-container"></div>
         </section>
 
-        <!-- WIADOMOŚCI -->
         <section id="tab-wiadomosci" class="tab-content">
             <div class="page-header">
                 <h1>Wiadomości</h1>
@@ -277,7 +337,6 @@
             </div>
         </section>
 
-        <!-- ARTYKUŁY -->
         <section id="tab-artykuly" class="tab-content">
             <div class="page-header">
                 <h1>Artykuły</h1>
@@ -288,7 +347,6 @@
             </div>
         </section>
 
-        <!-- TIKTOKI -->
         <section id="tab-tiktoki" class="tab-content">
             <div class="page-header">
                 <h1>Tiktoki</h1>
@@ -299,7 +357,6 @@
             </div>
         </section>
 
-        <!-- CITY HALL -->
         <section id="tab-cityhall" class="tab-content">
             <div class="page-header">
                 <h1 style="color: var(--accent-blue);">City Hall</h1>
@@ -310,7 +367,6 @@
             </div>
         </section>
 
-        <!-- REKRUTACJA -->
         <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header">
                 <h1>Rekrutacja</h1>
@@ -328,7 +384,6 @@
             </div>
         </section>
 
-        <!-- PANEL ADMINA -->
         <section id="tab-admin" class="tab-content">
             <div class="page-header">
                 <h1 style="color: var(--accent-gold);">Panel Admina</h1>
