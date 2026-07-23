@@ -6,12 +6,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 let supabaseInstance = null;
 let currentUser = null;
 
-// Lista Discord ID osób, które mogą wejść do Panelu Naczelnika (Admina)
-// WPISZ TUTAJ SWÓJ DISCORD ID oraz innych naczelników
-const ADMIN_DISCORD_IDS = [
-    "359740523267522560", // Przykładowe Discord ID, zamień na swoje!
-];
-
 // Bezpieczna inicjalizacja klienta Supabase
 function getSupabase() {
     if (supabaseInstance) return supabaseInstance;
@@ -40,42 +34,48 @@ function getSupabase() {
 // Główny punkt startowy aplikacji
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
-    setupMobileMenu();
     setupTabSwitching();
 });
 
 function initApp() {
     const supabase = getSupabase();
     if (!supabase) {
-        setTimeout(initApp, 500); // Ponowna próba
+        setTimeout(initApp, 500); // Ponowna próba za chwilę
         return;
     }
 
-    // Obsługa przycisków logowania/wylogowania
+    // Obsługa kliknięć przycisków logowania/wylogowania
     const loginBtn = document.getElementById("btn-login");
     const logoutBtn = document.getElementById("btn-logout");
 
-    if (loginBtn) loginBtn.addEventListener("click", loginWithDiscord);
-    if (logoutBtn) logoutBtn.addEventListener("click", logout);
+    if (loginBtn) {
+        loginBtn.addEventListener("click", loginWithDiscord);
+    } else {
+        console.error("Nie znaleziono przycisku #btn-login w HTML!");
+    }
 
-    // Obsługa dodawania postów z formularza admina
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", logout);
+    }
+
+    // Obsługa formularza dodawania postów
     const newsForm = document.getElementById("news-form");
     if (newsForm) {
         newsForm.addEventListener("submit", handleCreatePost);
     }
 
-    // Załaduj posty z bazy danych
+    // Pobierz posty z bazy
     fetchPosts();
 
-    // Nasłuchiwanie zmian stanu autoryzacji (Zalecane przez Supabase)
+    // Nasłuchiwanie stanu zalogowania
     supabase.auth.onAuthStateChange((event, session) => {
-        console.log("Zmiana stanu autoryzacji:", event, session);
+        console.log("Status logowania:", event, session);
         
         if (session && session.user) {
             currentUser = session.user;
             updateUI(session.user);
             
-            // Czyszczenie parametrów z paska adresu (estetyka)
+            // Czyszczenie URL z brzydkich tokenów po powrocie z Discorda
             if (window.location.search.includes("code=")) {
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
@@ -90,10 +90,16 @@ function initApp() {
 // Funkcja logowania przez Discorda
 async function loginWithDiscord() {
     const supabase = getSupabase();
-    if (!supabase) return;
+    if (!supabase) {
+        alert("Błąd: Biblioteka Supabase nie jest gotowa.");
+        return;
+    }
 
     try {
+        // dynamiczne określenie adresu URL na Github Pages
         const redirectUrl = window.location.origin + window.location.pathname;
+        console.log("Inicjalizacja logowania. Przekierowanie do: ", redirectUrl);
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'discord',
             options: {
@@ -102,20 +108,18 @@ async function loginWithDiscord() {
         });
         if (error) throw error;
     } catch (err) {
-        console.error("Błąd podczas logowania przez Discorda:", err.message);
-        alert("Nie udało się zalogować: " + err.message);
+        console.error("Szczegóły błędu Discord:", err);
+        alert("Błąd podczas logowania przez Discord: " + err.message);
     }
 }
 
-// Aktualizacja interfejsu użytkownika
+// Aktualizacja UI (zalogowany / niezalogowany)
 function updateUI(user) {
     const loginBtn = document.getElementById("btn-login");
     const userInfoBox = document.getElementById("user-info");
     const userNameEl = document.getElementById("user-name");
     const userAvatarEl = document.getElementById("user-avatar");
-    
     const navAdmin = document.getElementById("nav-admin");
-    const sidebarAdmin = document.getElementById("sidebar-admin");
 
     if (user) {
         const metadata = user.user_metadata || {};
@@ -127,26 +131,17 @@ function updateUI(user) {
         if (userNameEl) userNameEl.textContent = nickname;
         if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
 
-        // Sprawdź uprawnienia Admina na podstawie konta powiązanego z Discord
-        const providerId = user.identities?.[0]?.id || user.id; 
-        if (ADMIN_DISCORD_IDS.includes(providerId) || ADMIN_DISCORD_IDS.includes(user.id)) {
-            if (navAdmin) navAdmin.style.display = "block";
-            if (sidebarAdmin) sidebarAdmin.style.display = "block";
-        } else {
-            // Tymczasowo: Jeśli chcesz, aby każdy zalogowany widział panel admina do testów, odkomentuj poniższe linie:
-            if (navAdmin) navAdmin.style.display = "block";
-            if (sidebarAdmin) sidebarAdmin.style.display = "block";
-        }
+        // Pokaż panel admina każdemu zalogowanemu (możesz później ograniczyć dla wybranych ID)
+        if (navAdmin) navAdmin.style.display = "flex";
     } else {
         if (loginBtn) loginBtn.style.display = "flex";
         if (userInfoBox) userInfoBox.style.display = "none";
         if (navAdmin) navAdmin.style.display = "none";
-        if (sidebarAdmin) sidebarAdmin.style.display = "none";
-        switchTab('news'); // Powrót na stronę główną po wylogowaniu
+        switchTab('home'); // powrót na główną po wylogowaniu
     }
 }
 
-// Funkcja wylogowania
+// Wylogowanie
 async function logout() {
     const supabase = getSupabase();
     if (!supabase) return;
@@ -160,33 +155,29 @@ async function logout() {
     }
 }
 
-// OBSŁUGA ZAKŁADEK (TAB SWITCHING)
+// OBSŁUGA ZAKŁADEK (TABS)
 function setupTabSwitching() {
-    const buttons = document.querySelectorAll(".nav-btn, .sidebar-btn, .brand");
+    const buttons = document.querySelectorAll(".nav-btn");
     
     buttons.forEach(button => {
         button.addEventListener("click", () => {
-            const tabName = button.getAttribute("data-tab") || 'news';
-            switchTab(tabName);
-            
-            // Zamknij sidebar mobilny przy zmianie zakładki
-            document.getElementById("mobile-sidebar").classList.remove("active");
-            document.getElementById("sidebar-overlay").classList.remove("active");
+            const tabName = button.getAttribute("data-tab");
+            if (tabName) switchTab(tabName);
         });
     });
 }
 
 function switchTab(tabId) {
-    // Ukryj wszystkie zakładki
+    // Ukrywanie wszystkich sekcji
     document.querySelectorAll(".tab-content").forEach(tab => {
         tab.classList.remove("active");
     });
     
-    // Pokaż wybraną zakładkę
+    // Pokazywanie wybranej
     const targetTab = document.getElementById(`tab-${tabId}`);
     if (targetTab) targetTab.classList.add("active");
 
-    // Zaktualizuj klasę 'active' w menu górnym
+    // Zmiana klasy "active" na przyciskach w menu
     document.querySelectorAll(".nav-btn").forEach(btn => {
         if (btn.getAttribute("data-tab") === tabId) {
             btn.classList.add("active");
@@ -194,50 +185,14 @@ function switchTab(tabId) {
             btn.classList.remove("active");
         }
     });
-
-    // Zaktualizuj klasę 'active' w sidebarze
-    document.querySelectorAll(".sidebar-btn").forEach(btn => {
-        if (btn.getAttribute("data-tab") === tabId) {
-            btn.classList.add("active");
-        } else {
-            btn.classList.remove("active");
-        }
-    });
 }
 
-// MENU MOBILNE (OTWIERANIE/ZAMYKANIE)
-function setupMobileMenu() {
-    const menuBtn = document.getElementById("mobile-menu-btn");
-    const closeBtn = document.getElementById("sidebar-close");
-    const sidebar = document.getElementById("mobile-sidebar");
-    const overlay = document.getElementById("sidebar-overlay");
-
-    if (menuBtn && sidebar && overlay) {
-        menuBtn.addEventListener("click", () => {
-            sidebar.classList.add("active");
-            overlay.classList.add("active");
-        });
-    }
-
-    if (closeBtn && sidebar && overlay) {
-        closeBtn.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        });
-        overlay.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        });
-    }
-}
-
-// BAZA DANYCH: POBIERANIE POSTÓW (WIADOMOŚCI)
+// BAZA DANYCH: POBIERANIE WPISÓW
 async function fetchPosts() {
     const supabase = getSupabase();
     if (!supabase) return;
 
     try {
-        // Pobieramy wpisy z tabeli 'news' posortowane od najnowszego
         const { data: posts, error } = await supabase
             .from('news')
             .select('*')
@@ -245,53 +200,59 @@ async function fetchPosts() {
 
         if (error) throw error;
 
-        const newsContainer = document.getElementById("news-container");
-        const cityhallContainer = document.getElementById("cityhall-container");
+        // Kontenery dla poszczególnych podstron
+        const containers = {
+            'STRONA GŁÓWNA': document.getElementById("home-container"),
+            'WIADOMOŚCI': document.getElementById("wiadomosci-container"),
+            'ARTYKUŁY': document.getElementById("artykuly-container"),
+            'TIKTOKI': document.getElementById("tiktoki-container"),
+            'CITY HALL': document.getElementById("cityhall-container")
+        };
 
-        if (newsContainer) newsContainer.innerHTML = "";
-        if (cityhallContainer) cityhallContainer.innerHTML = "";
+        // Czyszczenie kontenerów
+        Object.values(containers).forEach(container => {
+            if (container) container.innerHTML = "";
+        });
 
-        let newsCount = 0;
-        let govCount = 0;
+        // Liczniki wpisów w poszczególnych zakładkach
+        const counts = { 'STRONA GŁÓWNA': 0, 'WIADOMOŚCI': 0, 'ARTYKUŁY': 0, 'TIKTOKI': 0, 'CITY HALL': 0 };
 
         if (posts && posts.length > 0) {
             posts.forEach(post => {
-                const postHtml = `
-                    <div class="card">
-                        <img class="card-media" src="${post.image_url || 'https://i.imgur.com/vHdfC1B.png'}" alt="News Image">
-                        <div class="card-body">
-                            <span class="card-tag">${post.tag || 'WIADOMOŚCI'}</span>
-                            <h2 class="card-title">${post.title}</h2>
-                            <div class="card-meta">Autor: ${post.author} | ${new Date(post.created_at).toLocaleDateString('pl-PL')}</div>
-                            <p class="card-text">${post.content}</p>
-                        </div>
-                    </div>
-                `;
+                const targetTag = post.tag ? post.tag.toUpperCase() : 'STRONA GŁÓWNA';
+                const container = containers[targetTag];
 
-                if (post.tag === "RZĄDOWE") {
-                    if (cityhallContainer) cityhallContainer.innerHTML += postHtml;
-                    govCount++;
-                } else {
-                    if (newsContainer) newsContainer.innerHTML += postHtml;
-                    newsCount++;
+                if (container) {
+                    container.innerHTML += `
+                        <div class="card">
+                            <img class="card-media" src="${post.image_url || 'https://i.imgur.com/vHdfC1B.png'}" alt="News Image">
+                            <div class="card-body">
+                                <span class="card-tag">${targetTag}</span>
+                                <h2 class="card-title">${post.title}</h2>
+                                <div class="card-meta">Autor: ${post.author} | ${new Date(post.created_at).toLocaleDateString('pl-PL')}</div>
+                                <p class="card-text">${post.content}</p>
+                            </div>
+                        </div>
+                    `;
+                    counts[targetTag]++;
                 }
             });
         }
 
-        // Komunikaty zastępcze jeśli brak postów
-        if (newsCount === 0 && newsContainer) {
-            newsContainer.innerHTML = '<p style="color: var(--text-muted);">Brak aktualnych wiadomości w bazie danych.</p>';
-        }
-        if (govCount === 0 && cityhallContainer) {
-            cityhallContainer.innerHTML = '<p style="color: var(--text-muted);">Brak oficjalnych komunikatów rządowych.</p>';
-        }
+        // Pokaż informację o braku wpisów, jeśli dana zakładka jest pusta
+        Object.keys(containers).forEach(key => {
+            const container = containers[key];
+            if (container && counts[key] === 0) {
+                container.innerHTML = `<p style="color: var(--text-muted);">Brak wpisów w kategorii: ${key.toLowerCase()}</p>`;
+            }
+        });
 
     } catch (err) {
-        console.error("Błąd pobierania postów:", err.message);
+        console.error("Błąd pobierania postów z bazy:", err.message);
     }
 }
 
-// BAZA DANYCH: DODAWANIE POSTA PRZEZ FORMULARZ ADMINA
+// BAZA DANYCH: DODAWANIE WPISU
 async function handleCreatePost(e) {
     e.preventDefault();
     const supabase = getSupabase();
@@ -326,19 +287,23 @@ async function handleCreatePost(e) {
 
         if (error) throw error;
 
-        alert("Artykuł został opublikowany!");
-        document.getElementById("news-form").reset(); // Reset pól formularza
+        alert("Pomyślnie opublikowano wpis!");
+        document.getElementById("news-form").reset();
         
-        // Odśwież posty i przejdź do odpowiedniej zakładki
-        await fetchPosts();
-        if (tag === "RZĄDOWE") {
-            switchTab('cityhall');
-        } else {
-            switchTab('news');
-        }
+        await fetchPosts(); // Odśwież listę
+        
+        // Przejdź do zakładki, do której dodaliśmy wpis
+        const tabMapping = {
+            'STRONA GŁÓWNA': 'home',
+            'WIADOMOŚCI': 'wiadomosci',
+            'ARTYKUŁY': 'artykuly',
+            'TIKTOKI': 'tiktoki',
+            'CITY HALL': 'cityhall'
+        };
+        switchTab(tabMapping[tag] || 'home');
 
     } catch (err) {
-        console.error("Błąd publikowania artykułu:", err.message);
-        alert("Błąd podczas publikacji: " + err.message);
+        console.error("Błąd publikowania wpisu:", err.message);
+        alert("Błąd publikowania wpisu: " + err.message);
     }
 }
