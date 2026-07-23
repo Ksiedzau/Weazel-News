@@ -1,8 +1,6 @@
 // =====================================================
 // WEAZEL NEWS - APP.JS
-// Kategorie: Wiadomości, Artykuły, Tiktoki,
-// City Hall oraz Ogłoszenia firm.
-// Bez specjalnej roli Firma.
+// Bez ogłoszeń firm i bez roli Firma.
 // =====================================================
 
 (() => {
@@ -26,19 +24,19 @@
             .replace(/\s+/g, "");
     }
 
-    function isCompanyTag(value) {
-        return [
-            "OGLOSZENIAFIRM",
-            "OGLOSZENIAFIRMY",
-            "OGLOSZENIAFIRMOWE"
-        ].includes(normalizeTag(value));
-    }
-
     function isCityHallTag(value) {
         return [
             "CITYHALL",
             "RZADOWE",
             "OGLOSZENIACITYHALL"
+        ].includes(normalizeTag(value));
+    }
+
+    function isCompanyTag(value) {
+        return [
+            "OGLOSZENIAFIRM",
+            "OGLOSZENIAFIRMY",
+            "OGLOSZENIAFIRMOWE"
         ].includes(normalizeTag(value));
     }
 
@@ -51,8 +49,6 @@
             .replaceAll("'", "&#039;");
     }
 
-    window.normalizeTag = normalizeTag;
-
     function getSupabase() {
         if (supabaseClient) {
             return supabaseClient;
@@ -60,12 +56,15 @@
 
         if (!window.supabase) {
             console.error(
-                "Biblioteka Supabase nie została załadowana."
+                "Nie znaleziono biblioteki Supabase."
             );
             return null;
         }
 
-        if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
+        if (
+            !window.SUPABASE_URL ||
+            !window.SUPABASE_KEY
+        ) {
             console.error(
                 "Brak SUPABASE_URL lub SUPABASE_KEY."
             );
@@ -147,7 +146,10 @@
     }
 
     function isBossOrAdmin(user) {
-        return isBoss(user) || isAdmin(user);
+        return (
+            isBoss(user) ||
+            isAdmin(user)
+        );
     }
 
     function canUsePanel(user) {
@@ -159,11 +161,17 @@
 
     function getRole(user) {
         if (isBoss(user)) {
-            return ["Szef", "role-boss"];
+            return [
+                "Szef",
+                "role-boss"
+            ];
         }
 
         if (isAdmin(user)) {
-            return ["Admin", "role-admin"];
+            return [
+                "Admin",
+                "role-admin"
+            ];
         }
 
         if (isCityHall(user)) {
@@ -194,7 +202,9 @@
             );
 
         if (target) {
-            target.classList.add("active");
+            target.classList.add(
+                "active"
+            );
         }
 
         document
@@ -324,10 +334,6 @@
                 [
                     "CITY HALL",
                     "City Hall"
-                ],
-                [
-                    "OGŁOSZENIA FIRM",
-                    "Ogłoszenia firm"
                 ]
             );
         } else if (isCityHall(user)) {
@@ -432,7 +438,9 @@
                     : "none";
         }
 
-        updateCategoryOptions(user);
+        updateCategoryOptions(
+            user
+        );
 
         if (!user) {
             if (roleElement) {
@@ -517,7 +525,7 @@
 
         if (error) {
             console.error(
-                "Błąd Discord OAuth:",
+                "Błąd logowania:",
                 error
             );
 
@@ -592,7 +600,9 @@
             return `
                 <video
                     class="${className}"
-                    src="${escapeHtml(video)}"
+                    src="${escapeHtml(
+                        video
+                    )}"
                     controls>
                 </video>
             `;
@@ -610,11 +620,17 @@
     }
 
     function getPostUrl(post) {
-        if (post.video_url?.trim()) {
+        if (
+            post.video_url &&
+            post.video_url.trim()
+        ) {
             return post.video_url.trim();
         }
 
-        if (post.image_url?.trim()) {
+        if (
+            post.image_url &&
+            post.image_url.trim()
+        ) {
             return post.image_url.trim();
         }
 
@@ -652,11 +668,9 @@
                 : "";
 
         const tagClass =
-            isCompanyTag(post.tag)
-                ? "tag-company"
-                : isCityHallTag(post.tag)
-                    ? "tag-cityhall"
-                    : "";
+            isCityHallTag(post.tag)
+                ? "tag-cityhall"
+                : "";
 
         return `
             <div
@@ -696,12 +710,15 @@
                             "Admin"
                         )}
                         |
-                        ${escapeHtml(date)}
+                        ${escapeHtml(
+                            date
+                        )}
                     </div>
 
                     <p class="card-text">
                         ${escapeHtml(
-                            post.content || ""
+                            post.content ||
+                            ""
                         )}
                     </p>
 
@@ -741,7 +758,10 @@
                         : ""
                 }>
 
-                ${renderMedia(post, true)}
+                ${renderMedia(
+                    post,
+                    true
+                )}
 
                 <div class="hero-body">
                     <span class="hero-tag">
@@ -752,7 +772,8 @@
 
                     <h2 class="hero-title">
                         ${escapeHtml(
-                            post.title || ""
+                            post.title ||
+                            ""
                         )}
                     </h2>
 
@@ -763,12 +784,15 @@
                             "Admin"
                         )}
                         |
-                        ${escapeHtml(date)}
+                        ${escapeHtml(
+                            date
+                        )}
                     </div>
 
                     <p class="hero-text">
                         ${escapeHtml(
-                            post.content || ""
+                            post.content ||
+                            ""
                         )}
                     </p>
 
@@ -818,11 +842,6 @@
                 "cityhall-container"
             );
 
-        const companyContainer =
-            document.getElementById(
-                "ogloszenia-firm-container"
-            );
-
         const {
             data,
             error
@@ -842,60 +861,48 @@
                 error
             );
 
+            if (homeContainer) {
+                homeContainer.innerHTML =
+                    `<p>Błąd bazy danych.</p>`;
+            }
+
             return;
         }
 
-        const allPosts =
-            data || [];
+        /*
+         * Stare ogłoszenia firm są pomijane,
+         * ponieważ usunęliśmy tę kategorię.
+         */
 
-        // City Hall zostaje na głównej.
-        // Ogłoszenia firm są tylko w swojej zakładce.
-        const homePosts =
-            allPosts.filter(
+        const posts =
+            (data || []).filter(
                 post =>
                     !isCompanyTag(
                         post.tag
                     )
             );
 
-        const companyPosts =
-            allPosts.filter(
-                post =>
-                    isCompanyTag(
-                        post.tag
-                    )
-            );
-
         if (homeFeatured) {
             homeFeatured.innerHTML =
-                homePosts.length
+                posts.length
                     ? renderHero(
-                        homePosts[0]
+                        posts[0]
                     )
                     : "";
         }
 
         if (homeContainer) {
             homeContainer.innerHTML =
-                homePosts.length > 1
-                    ? homePosts
+                posts.length > 1
+                    ? posts
                         .slice(1)
                         .map(renderCard)
                         .join("")
                     : "<p>Brak wpisów.</p>";
         }
 
-        if (companyContainer) {
-            companyContainer.innerHTML =
-                companyPosts.length
-                    ? companyPosts
-                        .map(renderCard)
-                        .join("")
-                    : "<p>Brak ogłoszeń firm.</p>";
-        }
-
         const newsPosts =
-            allPosts.filter(
+            posts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -903,7 +910,7 @@
             );
 
         const articlePosts =
-            allPosts.filter(
+            posts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -911,7 +918,7 @@
             );
 
         const tiktokPosts =
-            allPosts.filter(
+            posts.filter(
                 post =>
                     normalizeTag(
                         post.tag
@@ -919,7 +926,7 @@
             );
 
         const cityHallPosts =
-            allPosts.filter(
+            posts.filter(
                 post =>
                     isCityHallTag(
                         post.tag
@@ -969,7 +976,7 @@
 
         if (ticker) {
             ticker.innerHTML =
-                homePosts
+                posts
                     .slice(0, 8)
                     .map(
                         post =>
@@ -1037,10 +1044,6 @@
             tag = "CITY HALL";
         }
 
-        if (isCompanyTag(tag)) {
-            tag = "OGŁOSZENIA FIRM";
-        }
-
         const metadata =
             currentUser.user_metadata || {};
 
@@ -1094,11 +1097,9 @@
         await fetchPosts();
 
         switchTab(
-            tag === "OGŁOSZENIA FIRM"
-                ? "ogloszenia-firm"
-                : tag === "CITY HALL"
-                    ? "cityhall"
-                    : "home"
+            tag === "CITY HALL"
+                ? "cityhall"
+                : "home"
         );
 
         alert(
@@ -1130,7 +1131,10 @@
         } = await supabase
             .from(NEWS_TABLE)
             .delete()
-            .eq("id", postId);
+            .eq(
+                "id",
+                postId
+            );
 
         if (error) {
             alert(
