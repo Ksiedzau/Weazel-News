@@ -1,14 +1,13 @@
 // =====================================================
-// WEAZEL NEWS
-// Logowanie, role, baza danych, firmy, City Hall,
-// dodawanie, usuwanie, filmy, klikalne artykuły
+// WEAZEL NEWS - KOMPLETNY APP.JS
+// Role, logowanie, baza, City Hall, firmy, cooldown 48h,
+// filmy, usuwanie, klikalne artykuły i menu mobilne
 // =====================================================
 
 const NEWS_TABLE = "news";
 
 let supabaseInstance = null;
 let currentUser = null;
-
 
 // =====================================================
 // POMOCNICZE
@@ -33,9 +32,7 @@ function escapeHtml(value) {
 }
 
 function getSupabase() {
-    if (supabaseInstance) {
-        return supabaseInstance;
-    }
+    if (supabaseInstance) return supabaseInstance;
 
     if (!window.supabase) {
         console.error("Biblioteka Supabase nie została załadowana.");
@@ -43,7 +40,7 @@ function getSupabase() {
     }
 
     if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
-        console.error("Brak SUPABASE_URL lub SUPABASE_KEY.");
+        console.error("Brak SUPABASE_URL lub SUPABASE_KEY w config.js.");
         return null;
     }
 
@@ -63,37 +60,34 @@ function getSupabase() {
     return supabaseInstance;
 }
 
-
 // =====================================================
-// DISCORD ID I ROLE
+// DISCORD I ROLE
 // =====================================================
 
 function getDiscordId(user) {
     if (!user) return null;
 
-    const discordIdentity = (user.identities || []).find(
-        identity => identity.provider === "discord"
+    const identity = (user.identities || []).find(
+        item => item.provider === "discord"
     );
 
-    if (discordIdentity?.identity_data?.id) {
-        return String(discordIdentity.identity_data.id);
+    if (identity?.identity_data?.id) {
+        return String(identity.identity_data.id);
     }
 
-    if (discordIdentity?.identity_data?.sub) {
-        return String(discordIdentity.identity_data.sub);
+    if (identity?.identity_data?.sub) {
+        return String(identity.identity_data.sub);
     }
 
-    if (discordIdentity?.id) {
-        return String(discordIdentity.id);
+    if (identity?.id) {
+        return String(identity.id);
     }
 
     return user.id ? String(user.id) : null;
 }
 
 function isInList(user, list) {
-    if (!user || !Array.isArray(list)) {
-        return false;
-    }
+    if (!user || !Array.isArray(list)) return false;
 
     const discordId = getDiscordId(user);
 
@@ -171,17 +165,18 @@ function getRole(user) {
     };
 }
 
-
 // =====================================================
-// DYNAMICZNA ZAKŁADKA „OGŁOSZENIA FIRM”
-// Nie musisz zmieniać index.html.
+// DYNAMICZNA ZAKŁADKA OGŁOSZENIA FIRM
 // =====================================================
 
-function addCompanyTabToPage() {
+function addCompanyTab() {
     const desktopNav = document.querySelector(".nav-links");
     const mobileNav = document.querySelector(".sidebar-links");
 
-    if (desktopNav && !document.querySelector('[data-tab="ogloszenia"]')) {
+    if (
+        desktopNav &&
+        !desktopNav.querySelector('[data-tab="ogloszenia"]')
+    ) {
         const button = document.createElement("button");
 
         button.className = "nav-btn company-nav";
@@ -189,12 +184,12 @@ function addCompanyTabToPage() {
         button.textContent = "🏢 Ogłoszenia firm";
 
         desktopNav.appendChild(button);
-        button.addEventListener("click", () => {
-            switchTab("ogloszenia");
-        });
     }
 
-    if (mobileNav && !document.querySelector(".company-sidebar")) {
+    if (
+        mobileNav &&
+        !mobileNav.querySelector('[data-tab="ogloszenia"]')
+    ) {
         const button = document.createElement("button");
 
         button.className = "sidebar-btn company-sidebar";
@@ -202,10 +197,6 @@ function addCompanyTabToPage() {
         button.textContent = "🏢 Ogłoszenia firm";
 
         mobileNav.appendChild(button);
-        button.addEventListener("click", () => {
-            switchTab("ogloszenia");
-            closeMobileMenu();
-        });
     }
 
     if (!document.getElementById("tab-ogloszenia")) {
@@ -227,58 +218,43 @@ function addCompanyTabToPage() {
             </div>
         `;
 
-        const main = document.querySelector("main");
-
-        if (main) {
-            main.appendChild(section);
-        }
+        document.querySelector("main")?.appendChild(section);
     }
 
-    addCompanyStyles();
-}
+    if (!document.getElementById("company-styles")) {
+        const style = document.createElement("style");
 
-function addCompanyStyles() {
-    if (document.getElementById("company-styles")) {
-        return;
+        style.id = "company-styles";
+        style.textContent = `
+            .company-nav,
+            .company-sidebar {
+                color: #10b981 !important;
+            }
+
+            .company-nav:hover,
+            .company-nav.active,
+            .company-sidebar.active {
+                background: #10b981 !important;
+                color: #000 !important;
+            }
+
+            .tag-company {
+                background: #10b981 !important;
+                color: #000 !important;
+            }
+
+            .card-company {
+                color: #10b981;
+                font-weight: 800;
+                font-size: .8rem;
+                margin-bottom: 7px;
+                text-transform: uppercase;
+            }
+        `;
+
+        document.head.appendChild(style);
     }
-
-    const style = document.createElement("style");
-    style.id = "company-styles";
-
-    style.textContent = `
-        .company-nav,
-        .company-sidebar {
-            color: #10b981 !important;
-        }
-
-        .company-nav:hover,
-        .company-nav.active {
-            background: #10b981 !important;
-            color: #000 !important;
-        }
-
-        .company-sidebar.active {
-            background: #10b981 !important;
-            color: #000 !important;
-        }
-
-        .tag-company {
-            background: #10b981 !important;
-            color: #000 !important;
-        }
-
-        .card-company {
-            color: #10b981;
-            font-weight: 800;
-            font-size: .8rem;
-            margin-bottom: 7px;
-            text-transform: uppercase;
-        }
-    `;
-
-    document.head.appendChild(style);
 }
-
 
 // =====================================================
 // ZAKŁADKI
@@ -303,6 +279,8 @@ function switchTab(tabId) {
             button.dataset.tab === tabId
         );
     });
+
+    closeMobileMenu();
 }
 
 function setupTabs() {
@@ -312,57 +290,47 @@ function setupTabs() {
 
             if (tab) {
                 switchTab(tab);
-                closeMobileMenu();
             }
         });
     });
 }
-
 
 // =====================================================
 // MENU MOBILNE
 // =====================================================
 
 function openMobileMenu() {
-    document
-        .getElementById("mobile-sidebar")
+    document.getElementById("mobile-sidebar")
         ?.classList.add("active");
 
-    document
-        .getElementById("sidebar-overlay")
+    document.getElementById("sidebar-overlay")
         ?.classList.add("active");
 }
 
 function closeMobileMenu() {
-    document
-        .getElementById("mobile-sidebar")
+    document.getElementById("mobile-sidebar")
         ?.classList.remove("active");
 
-    document
-        .getElementById("sidebar-overlay")
+    document.getElementById("sidebar-overlay")
         ?.classList.remove("active");
 }
 
 function setupMobileMenu() {
-    document
-        .getElementById("mobile-menu-btn")
+    document.getElementById("mobile-menu-btn")
         ?.addEventListener("click", openMobileMenu);
 
-    document
-        .getElementById("sidebar-close")
+    document.getElementById("sidebar-close")
         ?.addEventListener("click", closeMobileMenu);
 
-    document
-        .getElementById("sidebar-overlay")
+    document.getElementById("sidebar-overlay")
         ?.addEventListener("click", closeMobileMenu);
 }
 
-
 // =====================================================
-// DODAWANIE POLA „NAZWA FIRMY” DO FORMULARZA
+// FORMULARZ
 // =====================================================
 
-function addCompanyFieldToForm() {
+function addCompanyField() {
     const form = document.getElementById("news-form");
 
     if (!form || document.getElementById("company-name-row")) {
@@ -377,6 +345,7 @@ function addCompanyFieldToForm() {
 
     row.innerHTML = `
         <label for="news-company">Nazwa firmy</label>
+
         <input
             type="text"
             id="news-company"
@@ -384,7 +353,7 @@ function addCompanyFieldToForm() {
             placeholder="np. Los Santos Customs">
 
         <div class="form-hint">
-            To pole jest wymagane przy ogłoszeniach firm.
+            Nazwa firmy jest wymagana przy ogłoszeniach firm.
         </div>
     `;
 
@@ -402,36 +371,27 @@ function updateCompanyField() {
     const row = document.getElementById("company-name-row");
     const input = document.getElementById("news-company");
 
-    if (!select || !row) {
-        return;
-    }
+    if (!select || !row) return;
 
-    const companyCategory =
+    const isCompanyCategory =
         normalizeTag(select.value) === "OGLOSZENIAFIRMY";
 
-    row.style.display = companyCategory ? "block" : "none";
+    row.style.display = isCompanyCategory ? "block" : "none";
 
     if (input) {
-        input.required = companyCategory;
+        input.required = isCompanyCategory;
     }
 }
-
-
-// =====================================================
-// OPCJE KATEGORII W PANELU
-// =====================================================
 
 function updateCategoryOptions(user) {
     const select = document.getElementById("news-tag");
 
-    if (!select) {
-        return;
-    }
+    if (!select) return;
 
-    const previousValue = select.value;
     const bossOrAdmin = isBossOrAdmin(user);
     const cityHall = isCityHall(user);
     const company = isCompany(user);
+    const oldValue = select.value;
 
     const categories = [];
 
@@ -468,36 +428,33 @@ function updateCategoryOptions(user) {
     });
 
     if (
-        previousValue &&
-        [...select.options].some(option => option.value === previousValue)
+        oldValue &&
+        [...select.options].some(option => option.value === oldValue)
     ) {
-        select.value = previousValue;
+        select.value = oldValue;
     }
 
     updateCompanyField();
 }
 
-
 // =====================================================
-// UI LOGOWANIA
+// UI LOGOWANIA I UPRAWNIENIA
 // =====================================================
 
 function updateRoleVisibility(user) {
-    const panelButton = document.getElementById("nav-admin");
-    const mobilePanelButton = document.getElementById("sidebar-admin");
+    const desktopPanel = document.getElementById("nav-admin");
+    const mobilePanel = document.getElementById("sidebar-admin");
 
     const panelVisible = canUsePanel(user);
 
-    if (panelButton) {
-        panelButton.style.display = panelVisible
-            ? "flex"
-            : "none";
+    if (desktopPanel) {
+        desktopPanel.style.display =
+            panelVisible ? "flex" : "none";
     }
 
-    if (mobilePanelButton) {
-        mobilePanelButton.style.display = panelVisible
-            ? "flex"
-            : "none";
+    if (mobilePanel) {
+        mobilePanel.style.display =
+            panelVisible ? "flex" : "none";
     }
 
     const role = getRole(user);
@@ -525,9 +482,7 @@ function updateUserUI(user) {
     const userInfo = document.getElementById("user-info");
 
     if (!loginButton || !userInfo) {
-        console.error(
-            "Brakuje #btn-login albo #user-info w index.html."
-        );
+        console.error("Brak #btn-login albo #user-info.");
         return;
     }
 
@@ -574,9 +529,8 @@ function updateUserUI(user) {
     updateRoleVisibility(user);
 }
 
-
 // =====================================================
-// LOGOWANIE / WYLOGOWANIE
+// LOGOWANIE
 // =====================================================
 
 async function loginWithDiscord() {
@@ -607,9 +561,7 @@ async function loginWithDiscord() {
 async function logout() {
     const supabase = getSupabase();
 
-    if (!supabase) {
-        return;
-    }
+    if (!supabase) return;
 
     const { error } = await supabase.auth.signOut();
 
@@ -620,7 +572,6 @@ async function logout() {
     window.location.href =
         window.location.origin + window.location.pathname;
 }
-
 
 // =====================================================
 // MEDIA
@@ -702,7 +653,6 @@ function getTagClass(post) {
 
     return "";
 }
-
 
 // =====================================================
 // KARTY
@@ -833,17 +783,14 @@ function renderHero(post) {
     `;
 }
 
-
 // =====================================================
-// POBIERANIE DANYCH Z BAZY
+// POBIERANIE Z BAZY
 // =====================================================
 
 async function fetchPosts() {
     const supabase = getSupabase();
 
-    if (!supabase) {
-        return;
-    }
+    if (!supabase) return;
 
     const homeFeatured =
         document.getElementById("home-featured");
@@ -893,8 +840,7 @@ async function fetchPosts() {
         if (homeContainer) {
             homeContainer.innerHTML = `
                 <p style="color:#ef4444;">
-                    Błąd bazy danych:
-                    ${escapeHtml(error.message)}
+                    Błąd bazy danych: ${escapeHtml(error.message)}
                 </p>
             `;
         }
@@ -916,13 +862,20 @@ async function fetchPosts() {
         return;
     }
 
+    /*
+     * STRONA GŁÓWNA:
+     * Wszystkie wpisy są tutaj widoczne,
+     * również City Hall i ogłoszenia firm.
+     */
     if (homeFeatured) {
         homeFeatured.innerHTML = renderHero(posts[0]);
     }
 
-    if (homeContainer && posts.length > 1) {
-        homeContainer.innerHTML =
-            posts.slice(1).map(renderCard).join("");
+    if (homeContainer) {
+        homeContainer.innerHTML = posts
+            .slice(1)
+            .map(renderCard)
+            .join("");
     }
 
     const containers = {
@@ -945,9 +898,7 @@ async function fetchPosts() {
         const tag = normalizeTag(post.tag);
         const container = containers[tag];
 
-        if (!container) {
-            return;
-        }
+        if (!container) return;
 
         container.innerHTML += renderCard(post);
         counts[tag]++;
@@ -978,7 +929,6 @@ async function fetchPosts() {
             `<p style="color:var(--text-muted);">Brak ogłoszeń firm.</p>`;
     }
 }
-
 
 // =====================================================
 // DODAWANIE WPISU
@@ -1024,6 +974,8 @@ async function handleCreatePost(event) {
         return;
     }
 
+    // City Hall nie ma cooldownu.
+    // Może dodawać wyłącznie do swojej kategorii.
     if (
         isCityHall(currentUser) &&
         !isBossOrAdmin(currentUser) &&
@@ -1033,6 +985,7 @@ async function handleCreatePost(event) {
         return;
     }
 
+    // Firma może dodawać tylko ogłoszenia firmowe.
     if (
         isCompany(currentUser) &&
         !isBossOrAdmin(currentUser) &&
@@ -1042,27 +995,29 @@ async function handleCreatePost(event) {
         return;
     }
 
-    if (normalizedTag === "OGLOSZENIAFIRMY" && !companyName) {
-        alert("Musisz wpisać nazwę firmy.");
-        return;
+    if (normalizedTag === "CITYHALL") {
+        if (
+            !isCityHall(currentUser) &&
+            !isBossOrAdmin(currentUser)
+        ) {
+            alert("Nie masz uprawnień do City Hall.");
+            return;
+        }
     }
 
-    if (
-        normalizedTag === "OGLOSZENIAFIRMY" &&
-        !isCompany(currentUser) &&
-        !isBossOrAdmin(currentUser)
-    ) {
-        alert("Nie masz uprawnień do ogłoszeń firm.");
-        return;
-    }
+    if (normalizedTag === "OGLOSZENIAFIRMY") {
+        if (
+            !isCompany(currentUser) &&
+            !isBossOrAdmin(currentUser)
+        ) {
+            alert("Nie masz uprawnień do ogłoszeń firm.");
+            return;
+        }
 
-    if (
-        normalizedTag === "CITYHALL" &&
-        !isCityHall(currentUser) &&
-        !isBossOrAdmin(currentUser)
-    ) {
-        alert("Nie masz uprawnień do City Hall.");
-        return;
+        if (!companyName) {
+            alert("Musisz wpisać nazwę firmy.");
+            return;
+        }
     }
 
     const metadata = currentUser.user_metadata || {};
@@ -1072,6 +1027,8 @@ async function handleCreatePost(event) {
         metadata.name ||
         metadata.preferred_username ||
         "Admin";
+
+    const authorDiscordId = getDiscordId(currentUser);
 
     const { error } = await supabase
         .from(NEWS_TABLE)
@@ -1084,13 +1041,26 @@ async function handleCreatePost(event) {
                 video_url: videoUrl || null,
                 content,
                 author,
+                author_discord_id: authorDiscordId,
                 created_at: new Date().toISOString()
             }
         ]);
 
     if (error) {
         console.error("Błąd dodawania:", error);
-        alert("Błąd publikacji: " + error.message);
+
+        if (
+            normalizedTag === "OGLOSZENIAFIRMY" &&
+            error.message.toLowerCase().includes("row-level security")
+        ) {
+            alert(
+                "Firma może dodać jedno ogłoszenie na 48 godzin. " +
+                "Spróbuj ponownie później."
+            );
+        } else {
+            alert("Błąd publikacji: " + error.message);
+        }
+
         return;
     }
 
@@ -1110,7 +1080,6 @@ async function handleCreatePost(event) {
     }
 }
 
-
 // =====================================================
 // USUWANIE WPISU
 // =====================================================
@@ -1127,20 +1096,21 @@ async function handleDelete(postId) {
 
     const supabase = getSupabase();
 
+    if (!supabase) return;
+
     const { error } = await supabase
         .from(NEWS_TABLE)
         .delete()
         .eq("id", postId);
 
     if (error) {
-        console.error(error);
+        console.error("Błąd usuwania:", error);
         alert("Błąd usuwania: " + error.message);
         return;
     }
 
     await fetchPosts();
 }
-
 
 // =====================================================
 // KLIKNIĘCIA
@@ -1170,7 +1140,6 @@ document.addEventListener("click", event => {
     }
 });
 
-
 // =====================================================
 // START
 // =====================================================
@@ -1178,12 +1147,10 @@ document.addEventListener("click", event => {
 document.addEventListener("DOMContentLoaded", async () => {
     const supabase = getSupabase();
 
-    if (!supabase) {
-        return;
-    }
+    if (!supabase) return;
 
-    addCompanyTabToPage();
-    addCompanyFieldToForm();
+    addCompanyTab();
+    addCompanyField();
 
     setupTabs();
     setupMobileMenu();
@@ -1219,9 +1186,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const { data } =
             await supabase.auth.getSession();
 
-        updateUserUI(
-            data?.session?.user || null
-        );
+        updateUserUI(data?.session?.user || null);
     } catch (error) {
         console.error("Błąd sesji:", error);
     }
