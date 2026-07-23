@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weazel News | Los Santos</title>
+
     <base href="/Weazel-News/">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +20,6 @@
             --red: #dc2626;
             --gold: #f59e0b;
             --blue: #3b82f6;
-            --green: #10b981;
             --text: #f3f4f6;
             --muted: #9ca3af;
             --border: #262c40;
@@ -29,7 +29,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Inter, sans-serif;
+            font-family: "Inter", sans-serif;
         }
 
         html,
@@ -107,8 +107,8 @@
             background: rgba(255,255,255,.04);
             color: var(--muted);
             cursor: pointer;
-            font-weight: 800;
             font-size: .78rem;
+            font-weight: 800;
             text-transform: uppercase;
         }
 
@@ -117,17 +117,12 @@
         .sidebar-btn:hover,
         .sidebar-btn.active {
             background: var(--border);
-            color: #fff;
+            color: white;
         }
 
         .cityhall-nav,
         .cityhall-sidebar {
             color: var(--blue);
-        }
-
-        .company-nav,
-        .company-sidebar {
-            color: var(--green);
         }
 
         .admin-link,
@@ -146,7 +141,7 @@
             border-radius: 8px;
             padding: 10px 15px;
             background: #5865f2;
-            color: #fff;
+            color: white;
             cursor: pointer;
             font-weight: 800;
             text-decoration: none;
@@ -205,10 +200,6 @@
 
         .role-cityhall {
             color: var(--blue);
-        }
-
-        .role-company {
-            color: var(--green);
         }
 
         .role-default {
@@ -348,10 +339,14 @@
             padding: 4px 9px;
             border-radius: 5px;
             background: var(--red);
-            color: #fff;
+            color: white;
             font-size: .68rem;
             font-weight: 900;
             text-transform: uppercase;
+        }
+
+        .tag-cityhall {
+            background: var(--blue);
         }
 
         .hero-title {
@@ -411,23 +406,6 @@
             margin: 7px 0;
             font-size: 1.1rem;
             font-weight: 900;
-        }
-
-        .card-company {
-            margin-bottom: 6px;
-            color: var(--green);
-            font-size: .8rem;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .tag-company {
-            background: var(--green);
-            color: #000;
-        }
-
-        .tag-cityhall {
-            background: var(--blue);
         }
 
         .home-info {
@@ -498,12 +476,6 @@
             resize: vertical;
         }
 
-        .form-hint {
-            margin-top: 4px;
-            color: var(--muted);
-            font-size: .75rem;
-        }
-
         .btn-submit {
             padding: 11px 18px;
             border: 0;
@@ -512,6 +484,18 @@
             color: white;
             cursor: pointer;
             font-weight: 900;
+        }
+
+        .delete-button {
+            align-self: flex-start;
+            margin-top: 10px;
+            padding: 6px 10px;
+            border: 1px solid #ef4444;
+            border-radius: 6px;
+            background: rgba(239,68,68,.12);
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: 800;
         }
 
         .mobile-menu-btn {
@@ -647,6 +631,7 @@
                 class="brand"
                 onclick="switchTab('home')">
                 <span class="brand-badge">LIVE</span>
+
                 <h1 class="brand-title">
                     Weazel <span>News</span>
                 </h1>
@@ -674,10 +659,6 @@
                 🏛️ City Hall
             </button>
 
-            <button class="nav-btn company-nav" data-tab="ogloszenia">
-                🏢 Ogłoszenia firm
-            </button>
-
             <button class="nav-btn" data-tab="rekrutacja">
                 💼 Rekrutacja
             </button>
@@ -691,11 +672,16 @@
         </nav>
 
         <div class="auth-box">
-            <button id="btn-login" class="btn-discord">
+            <button
+                id="btn-login"
+                class="btn-discord">
                 Zaloguj przez Discord
             </button>
 
-            <div id="user-info" class="user-info">
+            <div
+                id="user-info"
+                class="user-info">
+
                 <img
                     id="user-avatar"
                     class="user-avatar"
@@ -703,7 +689,9 @@
                     alt="Avatar">
 
                 <div class="user-meta">
-                    <span id="user-name" class="user-name">
+                    <span
+                        id="user-name"
+                        class="user-name">
                         Użytkownik
                     </span>
 
@@ -713,7 +701,9 @@
                     </span>
                 </div>
 
-                <button id="btn-logout" class="btn-logout">
+                <button
+                    id="btn-logout"
+                    class="btn-logout">
                     Wyloguj
                 </button>
             </div>
@@ -728,6 +718,7 @@
     <aside
         id="mobile-sidebar"
         class="mobile-sidebar">
+
         <div class="sidebar-header">
             <span>WEAZEL MENU</span>
 
@@ -759,10 +750,6 @@
                 🏛️ City Hall
             </button>
 
-            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia">
-                🏢 Ogłoszenia firm
-            </button>
-
             <button class="sidebar-btn" data-tab="rekrutacja">
                 💼 Rekrutacja
             </button>
@@ -777,9 +764,14 @@
     </aside>
 
     <main>
-        <section id="tab-home" class="tab-content active">
+        <section
+            id="tab-home"
+            class="tab-content active">
+
             <div class="ticker">
-                <div id="ticker-text" class="ticker-inner">
+                <div
+                    id="ticker-text"
+                    class="ticker-inner">
                     <span>
                         Witamy w Weazel News — najświeższe informacje z Los Santos.
                     </span>
@@ -793,6 +785,7 @@
 
             <div class="about-box">
                 <h2>O Weazel News</h2>
+
                 <p>
                     Niezależna redakcja Los Santos. Informujemy o wydarzeniach,
                     komunikatach City Hall, artykułach i materiałach wideo.
@@ -804,7 +797,9 @@
             <div class="home-info">
                 <div class="info-card">
                     <div style="font-size:2rem;">📡</div>
+
                     <h3>Informacje z miasta</h3>
+
                     <p>
                         Najważniejsze wydarzenia i komunikaty w jednym miejscu.
                     </p>
@@ -812,75 +807,100 @@
 
                 <div class="info-card">
                     <div style="font-size:2rem;">🏛️</div>
+
                     <h3>City Hall</h3>
+
                     <p>
-                        Oficjalne ogłoszenia miasta są widoczne również na stronie głównej.
+                        Oficjalne komunikaty miasta są widoczne również na stronie głównej.
                     </p>
                 </div>
 
                 <div class="info-card">
                     <div style="font-size:2rem;">🎥</div>
+
                     <h3>Materiały wideo</h3>
+
                     <p>
                         Oglądaj relacje i materiały z życia Los Santos.
                     </p>
                 </div>
             </div>
 
-            <div id="home-container" class="cards-grid"></div>
+            <div
+                id="home-container"
+                class="cards-grid">
+            </div>
         </section>
 
-        <section id="tab-wiadomosci" class="tab-content">
+        <section
+            id="tab-wiadomosci"
+            class="tab-content">
+
             <div class="page-header">
                 <h1>Wiadomości</h1>
                 <p>Bieżące informacje z miasta</p>
             </div>
 
-            <div id="wiadomosci-container" class="cards-grid"></div>
+            <div
+                id="wiadomosci-container"
+                class="cards-grid">
+            </div>
         </section>
 
-        <section id="tab-artykuly" class="tab-content">
+        <section
+            id="tab-artykuly"
+            class="tab-content">
+
             <div class="page-header">
                 <h1>Artykuły</h1>
                 <p>Analizy, reportaże i felietony</p>
             </div>
 
-            <div id="artykuly-container" class="cards-grid"></div>
+            <div
+                id="artykuly-container"
+                class="cards-grid">
+            </div>
         </section>
 
-        <section id="tab-tiktoki" class="tab-content">
+        <section
+            id="tab-tiktoki"
+            class="tab-content">
+
             <div class="page-header">
                 <h1>Tiktoki</h1>
                 <p>Krótkie materiały wideo</p>
             </div>
 
-            <div id="tiktoki-container" class="cards-grid"></div>
-        </section>
-
-        <section id="tab-cityhall" class="tab-content">
-            <div class="page-header">
-                <h1 style="color:var(--blue);">City Hall</h1>
-                <p>Oficjalne komunikaty miasta</p>
+            <div
+                id="tiktoki-container"
+                class="cards-grid">
             </div>
-
-            <div id="cityhall-container" class="cards-grid"></div>
         </section>
 
-        <section id="tab-ogloszenia" class="tab-content">
+        <section
+            id="tab-cityhall"
+            class="tab-content">
+
             <div class="page-header">
-                <h1 style="color:var(--green);">
-                    Ogłoszenia firm
+                <h1 style="color:var(--blue);">
+                    City Hall
                 </h1>
 
                 <p>
-                    Ogłoszenia lokalnych przedsiębiorstw
+                    Oficjalne komunikaty miasta
                 </p>
             </div>
 
-            <div id="ogloszenia-container" class="cards-grid"></div>
+            <div
+                id="cityhall-container"
+                class="cards-grid">
+            </div>
         </section>
 
-        <section id="tab-rekrutacja" class="tab-content">
+        <section
+            id="tab-rekrutacja"
+            class="tab-content">
+
             <div class="page-header">
                 <h1>Rekrutacja</h1>
                 <p>Dołącz do zespołu Weazel News</p>
@@ -904,7 +924,10 @@
             </div>
         </section>
 
-        <section id="tab-admin" class="tab-content">
+        <section
+            id="tab-admin"
+            class="tab-content">
+
             <div class="page-header">
                 <h1 style="color:var(--gold);">
                     Panel Admina
@@ -920,7 +943,9 @@
 
                 <form id="news-form">
                     <div class="form-row">
-                        <label for="news-title">Tytuł</label>
+                        <label for="news-title">
+                            Tytuł
+                        </label>
 
                         <input
                             id="news-title"
@@ -930,33 +955,15 @@
                     </div>
 
                     <div class="form-row">
-                        <label for="news-tag">Kategoria</label>
+                        <label for="news-tag">
+                            Kategoria
+                        </label>
 
                         <select
                             id="news-tag"
                             class="form-field"
                             required>
                         </select>
-                    </div>
-
-                    <div
-                        id="company-name-row"
-                        class="form-row"
-                        style="display:none;">
-
-                        <label for="news-company">
-                            Nazwa firmy
-                        </label>
-
-                        <input
-                            id="news-company"
-                            class="form-field"
-                            type="text"
-                            placeholder="np. Los Santos Customs">
-
-                        <div class="form-hint">
-                            Wymagane przy ogłoszeniach firm.
-                        </div>
                     </div>
 
                     <div class="form-row">
@@ -1005,7 +1012,8 @@
         </section>
     </main>
 
-<script src="config.js?v=30"></script>
-<script src="app.js?v=30"></script>
+    <!-- Te dwa skrypty mają wystąpić tylko raz -->
+    <script src="config.js?v=100"></script>
+    <script src="app.js?v=100"></script>
 </body>
 </html>
