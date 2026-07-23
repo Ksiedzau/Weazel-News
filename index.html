@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Weazel News | Los Santos</title>
 
     <base href="/Weazel-News/">
@@ -20,6 +21,7 @@
             --red: #dc2626;
             --gold: #f59e0b;
             --blue: #3b82f6;
+            --green: #10b981;
             --text: #f3f4f6;
             --muted: #9ca3af;
             --border: #262c40;
@@ -125,6 +127,11 @@
             color: var(--blue);
         }
 
+        .company-nav,
+        .company-sidebar {
+            color: var(--green);
+        }
+
         .admin-link,
         .admin-sidebar {
             display: none;
@@ -141,7 +148,7 @@
             border-radius: 8px;
             padding: 10px 15px;
             background: #5865f2;
-            color: white;
+            color: #fff;
             cursor: pointer;
             font-weight: 800;
             text-decoration: none;
@@ -274,13 +281,8 @@
         }
 
         @keyframes tickerMove {
-            from {
-                transform: translateX(0);
-            }
-
-            to {
-                transform: translateX(-100%);
-            }
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
         }
 
         .about-box {
@@ -339,7 +341,7 @@
             padding: 4px 9px;
             border-radius: 5px;
             background: var(--red);
-            color: white;
+            color: #fff;
             font-size: .68rem;
             font-weight: 900;
             text-transform: uppercase;
@@ -347,6 +349,11 @@
 
         .tag-cityhall {
             background: var(--blue);
+        }
+
+        .tag-company {
+            background: var(--green);
+            color: #000;
         }
 
         .hero-title {
@@ -434,8 +441,7 @@
             line-height: 1.5;
         }
 
-        .admin-card,
-        .recruit-box {
+        .admin-card {
             padding: 22px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -496,6 +502,36 @@
             color: #ef4444;
             cursor: pointer;
             font-weight: 800;
+        }
+
+        /* Rekrutacja — wycentrowana */
+        .recruit-box {
+            max-width: 780px;
+            margin: 35px auto 0;
+            padding: 45px 30px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--card), var(--header));
+            text-align: center;
+        }
+
+        .recruit-box h2 {
+            margin-bottom: 14px;
+            font-size: 1.55rem;
+            text-transform: uppercase;
+        }
+
+        .recruit-box p {
+            max-width: 620px;
+            margin: 0 auto 24px;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .recruit-box .btn-discord {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .mobile-menu-btn {
@@ -611,6 +647,11 @@
             .home-info {
                 grid-template-columns: 1fr;
             }
+
+            .recruit-box {
+                margin-top: 20px;
+                padding: 30px 18px;
+            }
         }
     </style>
 </head>
@@ -657,6 +698,10 @@
 
             <button class="nav-btn cityhall-nav" data-tab="cityhall">
                 🏛️ City Hall
+            </button>
+
+            <button class="nav-btn company-nav" data-tab="ogloszenia-firm">
+                🏢 Ogłoszenia firm
             </button>
 
             <button class="nav-btn" data-tab="rekrutacja">
@@ -750,6 +795,10 @@
                 🏛️ City Hall
             </button>
 
+            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia-firm">
+                🏢 Ogłoszenia firm
+            </button>
+
             <button class="sidebar-btn" data-tab="rekrutacja">
                 💼 Rekrutacja
             </button>
@@ -797,9 +846,7 @@
             <div class="home-info">
                 <div class="info-card">
                     <div style="font-size:2rem;">📡</div>
-
                     <h3>Informacje z miasta</h3>
-
                     <p>
                         Najważniejsze wydarzenia i komunikaty w jednym miejscu.
                     </p>
@@ -807,9 +854,7 @@
 
                 <div class="info-card">
                     <div style="font-size:2rem;">🏛️</div>
-
                     <h3>City Hall</h3>
-
                     <p>
                         Oficjalne komunikaty miasta są widoczne również na stronie głównej.
                     </p>
@@ -817,9 +862,7 @@
 
                 <div class="info-card">
                     <div style="font-size:2rem;">🎥</div>
-
                     <h3>Materiały wideo</h3>
-
                     <p>
                         Oglądaj relacje i materiały z życia Los Santos.
                     </p>
@@ -898,6 +941,26 @@
         </section>
 
         <section
+            id="tab-ogloszenia-firm"
+            class="tab-content">
+
+            <div class="page-header">
+                <h1 style="color:var(--green);">
+                    Ogłoszenia firm
+                </h1>
+
+                <p>
+                    Ogłoszenia lokalnych przedsiębiorstw
+                </p>
+            </div>
+
+            <div
+                id="ogloszenia-firm-container"
+                class="cards-grid">
+            </div>
+        </section>
+
+        <section
             id="tab-rekrutacja"
             class="tab-content">
 
@@ -910,7 +973,8 @@
                 <h2>Chcesz zostać dziennikarzem?</h2>
 
                 <p>
-                    Dołącz do naszego Discorda i złóż podanie do redakcji.
+                    Dołącz do naszego Discorda i złóż podanie do redakcji Weazel News.
+                    Szukamy osób z pasją do informacji, reportaży i życia Los Santos.
                 </p>
 
                 <a
@@ -1012,8 +1076,8 @@
         </section>
     </main>
 
-    <!-- Te dwa skrypty mają wystąpić tylko raz -->
-    <script src="config.js?v=100"></script>
-    <script src="app.js?v=100"></script>
+    <!-- Każdy skrypt tylko raz -->
+    <script src="config.js?v=200"></script>
+    <script src="app.js?v=200"></script>
 </body>
 </html>
