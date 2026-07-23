@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Weazel News | Los Santos</title>
 
     <base href="/Weazel-News/">
@@ -51,10 +50,10 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            min-height: 60px;
             display: flex;
             align-items: center;
             gap: 15px;
+            min-height: 60px;
             padding: 10px 24px;
             background: var(--header);
             border-bottom: 3px solid var(--red);
@@ -108,7 +107,7 @@
             padding: 9px 12px;
             border: 0;
             border-radius: 7px;
-            background: rgba(255,255,255,.04);
+            background: rgba(255, 255, 255, .04);
             color: var(--muted);
             cursor: pointer;
             font-size: .78rem;
@@ -284,13 +283,8 @@
         }
 
         @keyframes tickerMove {
-            from {
-                transform: translateX(0);
-            }
-
-            to {
-                transform: translateX(-100%);
-            }
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
         }
 
         .about-box {
@@ -445,8 +439,7 @@
             line-height: 1.5;
         }
 
-        .admin-card,
-        .recruit-box {
+        .admin-card {
             padding: 22px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -513,6 +506,9 @@
             max-width: 780px;
             margin: 35px auto 0;
             padding: 45px 30px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--card), var(--header));
             text-align: center;
         }
 
@@ -671,7 +667,6 @@
                 class="brand"
                 onclick="switchTab('home')">
                 <span class="brand-badge">LIVE</span>
-
                 <h1 class="brand-title">
                     Weazel <span>News</span>
                 </h1>
@@ -697,10 +692,6 @@
 
             <button class="nav-btn cityhall-nav" data-tab="cityhall">
                 🏛️ City Hall
-            </button>
-
-            <button class="nav-btn company-nav" data-tab="ogloszenia-firm">
-                🏢 Ogłoszenia firm
             </button>
 
             <button class="nav-btn" data-tab="rekrutacja">
@@ -794,10 +785,6 @@
                 🏛️ City Hall
             </button>
 
-            <button class="sidebar-btn company-sidebar" data-tab="ogloszenia-firm">
-                🏢 Ogłoszenia firm
-            </button>
-
             <button class="sidebar-btn" data-tab="rekrutacja">
                 💼 Rekrutacja
             </button>
@@ -812,10 +799,7 @@
     </aside>
 
     <main>
-        <section
-            id="tab-home"
-            class="tab-content active">
-
+        <section id="tab-home" class="tab-content active">
             <div class="ticker">
                 <div
                     id="ticker-text"
@@ -833,7 +817,6 @@
 
             <div class="about-box">
                 <h2>O Weazel News</h2>
-
                 <p>
                     Niezależna redakcja Los Santos. Informujemy o wydarzeniach,
                     komunikatach City Hall, artykułach i materiałach wideo.
@@ -874,10 +857,7 @@
             </div>
         </section>
 
-        <section
-            id="tab-wiadomosci"
-            class="tab-content">
-
+        <section id="tab-wiadomosci" class="tab-content">
             <div class="page-header">
                 <h1>Wiadomości</h1>
                 <p>Bieżące informacje z miasta</p>
@@ -889,10 +869,7 @@
             </div>
         </section>
 
-        <section
-            id="tab-artykuly"
-            class="tab-content">
-
+        <section id="tab-artykuly" class="tab-content">
             <div class="page-header">
                 <h1>Artykuły</h1>
                 <p>Analizy, reportaże i felietony</p>
@@ -904,10 +881,7 @@
             </div>
         </section>
 
-        <section
-            id="tab-tiktoki"
-            class="tab-content">
-
+        <section id="tab-tiktoki" class="tab-content">
             <div class="page-header">
                 <h1>Tiktoki</h1>
                 <p>Krótkie materiały wideo</p>
@@ -919,18 +893,12 @@
             </div>
         </section>
 
-        <section
-            id="tab-cityhall"
-            class="tab-content">
-
+        <section id="tab-cityhall" class="tab-content">
             <div class="page-header">
                 <h1 style="color:var(--blue);">
                     City Hall
                 </h1>
-
-                <p>
-                    Oficjalne komunikaty miasta
-                </p>
+                <p>Oficjalne komunikaty miasta</p>
             </div>
 
             <div
@@ -939,30 +907,7 @@
             </div>
         </section>
 
-        <section
-            id="tab-ogloszenia-firm"
-            class="tab-content">
-
-            <div class="page-header">
-                <h1 style="color:#10b981;">
-                    Ogłoszenia firm
-                </h1>
-
-                <p>
-                    Ogłoszenia lokalnych przedsiębiorstw
-                </p>
-            </div>
-
-            <div
-                id="ogloszenia-firm-container"
-                class="cards-grid">
-            </div>
-        </section>
-
-        <section
-            id="tab-rekrutacja"
-            class="tab-content">
-
+        <section id="tab-rekrutacja" class="tab-content">
             <div class="page-header">
                 <h1>Rekrutacja</h1>
                 <p>Dołącz do zespołu Weazel News</p>
@@ -987,18 +932,12 @@
             </div>
         </section>
 
-        <section
-            id="tab-admin"
-            class="tab-content">
-
+        <section id="tab-admin" class="tab-content">
             <div class="page-header">
                 <h1 style="color:var(--gold);">
                     Panel Admina
                 </h1>
-
-                <p>
-                    Dodawanie wpisów do bazy danych
-                </p>
+                <p>Dodawanie wpisów do bazy danych</p>
             </div>
 
             <div class="admin-card">
@@ -1006,9 +945,7 @@
 
                 <form id="news-form">
                     <div class="form-row">
-                        <label for="news-title">
-                            Tytuł
-                        </label>
+                        <label for="news-title">Tytuł</label>
 
                         <input
                             id="news-title"
@@ -1018,9 +955,7 @@
                     </div>
 
                     <div class="form-row">
-                        <label for="news-tag">
-                            Kategoria
-                        </label>
+                        <label for="news-tag">Kategoria</label>
 
                         <select
                             id="news-tag"
@@ -1076,7 +1011,7 @@
     </main>
 
     <!-- Każdy skrypt tylko raz -->
-    <script src="config.js?v=300"></script>
-    <script src="app.js?v=300"></script>
+    <script src="config.js?v=400"></script>
+    <script src="app.js?v=400"></script>
 </body>
 </html>
