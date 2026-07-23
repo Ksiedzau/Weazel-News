@@ -3,7 +3,7 @@ window.SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
 window.SUPABASE_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
 // --- LISTY ID Z DISCORDA ---
-window.BOSS_DISCORD_IDS = [''];
+window.BOSS_DISCORD_IDS = ['1487414745534431233'];
 
 // Kto widzi Panel Admina i może dodawać wpisy
 window.ADMIN_DISCORD_IDS = [''];
