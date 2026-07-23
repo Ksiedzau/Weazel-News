@@ -1,37 +1,36 @@
 // app.js - Obsługa logowania i aplikacji Weazel News
 
-// Inicjalizacja klienta Supabase z wymuszonym przepływem PKCE (zapobiega błędom 404 z tokenami na GitHub Pages)
-// Upewnij się, że podajesz swoje poprawne dane projektu Supabase, jeśli inicjalizujesz go tutaj:
-const SUPABASE_URL = 'TUTAJ_WPISZ_SWOJ_URL';
-const SUPABASE_ANON_KEY = 'TUTAJ_WPISZ_SWOJ_ANON_KEY';
+const SUPABASE_URL = 'https://mwymbvvlxcnmqtvdewgh.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN';
 
-// Jeśli inicjalizujesz Supabase w innym pliku, upewnij się, że obiekt klienta korzysta z { auth: { flowType: 'pkce' } }
+// Inicjalizacja klienta Supabase z przepływem PKCE (wymaganym dla GitHub Pages)
 if (window.supabase && !window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
             flowType: 'pkce',
             persistSession: true,
             autoRefreshToken: true,
+            detectSessionInUrl: true // Kluczowe: automatycznie wykrywa token/kod w URL po powrocie z OAuth
         }
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Sprawdzenie czy Supabase jest dostępne
+document.addEventListener("DOMContentLoaded", async () => {
     const supabaseInstance = window.supabaseClient || window.supabase;
     if (!supabaseInstance) {
-        console.error("Klient Supabase nie został zainicjalizowany! Sprawdź kolejność skryptów w HTML.");
+        console.error("Klient Supabase nie został zainicjalizowany!");
+        return;
     }
 
     // Podpięcie nasłuchiwania pod przycisk logowania
-    const loginButton = document.getElementById("login-btn") || document.querySelector("button[onclick*='login']");
+    const loginButton = document.getElementById("btn-login") || document.querySelector("button[onclick*='login']");
     if (loginButton) {
         loginButton.removeAttribute("onclick");
         loginButton.addEventListener("click", loginWithDiscord);
     }
 
-    // Sprawdzenie aktualnej sesji użytkownika przy starcie
-    checkUserSession();
+    // Sprawdzamy sesję przy starcie (automatycznie obsłuży też powrót z Discorda dzięki detectSessionInUrl)
+    await checkUserSession();
 });
 
 // Główna funkcja logowania przez Discorda
@@ -42,7 +41,7 @@ async function loginWithDiscord() {
             throw new Error("Obiekt Supabase auth jest niedostępny.");
         }
 
-        // Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages (np. /Weazel-News/)
+        // Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages
         const redirectUrl = window.location.origin + window.location.pathname;
 
         const { data, error } = await supabaseInstance.auth.signInWithOAuth({
@@ -61,7 +60,7 @@ async function loginWithDiscord() {
     }
 }
 
-// Funkcja sprawdzająca czy użytkownik jest zalogowany
+// Funkcja sprawdzająca sesję i aktualizująca widok interfejsu
 async function checkUserSession() {
     const supabaseInstance = window.supabaseClient || window.supabase;
     if (!supabaseInstance) return;
@@ -70,11 +69,32 @@ async function checkUserSession() {
         const { data: { session }, error } = await supabaseInstance.auth.getSession();
         if (error) throw error;
 
-        if (session) {
+        const loginBtn = document.getElementById("btn-login");
+        const userInfoBox = document.getElementById("user-info");
+        const userNameEl = document.getElementById("user-name");
+        const userAvatarEl = document.getElementById("user-avatar");
+
+        if (session && session.user) {
             console.log("Zalogowany użytkownik:", session.user);
-            // Tutaj ukryj przycisk logowania / pokaż panel
+
+            // Wyciągamy dane z profilu Discorda (zależnie od struktury user_metadata)
+            const metadata = session.user.user_metadata || {};
+            const nickname = metadata.full_name || metadata.name || metadata.preferred_username || session.user.email || "Użytkownik";
+            const avatarUrl = metadata.avatar_url || metadata.picture || "";
+
+            // Podmieniamy widok elementów na stronie
+            if (loginBtn) loginBtn.style.display = "none";
+            if (userInfoBox) userInfoBox.style.display = "flex";
+            if (userNameEl) userNameEl.textContent = nickname;
+            if (userAvatarEl && avatarUrl) userAvatarEl.src = avatarUrl;
+
+            // Opcjonalnie: odblokowanie paneli administracyjnych, jeśli użytkownik ma uprawnienia
+            // (Możesz tu dodać własną logikę sprawdzania roli)
+
         } else {
             console.log("Brak aktywnej sesji - użytkownik niezalogowany.");
+            if (loginBtn) loginBtn.style.display = "flex";
+            if (userInfoBox) userInfoBox.style.display = "none";
         }
     } catch (err) {
         console.error("Błąd pobierania sesji:", err.message);
@@ -90,6 +110,6 @@ async function logout() {
     if (error) {
         console.error("Błąd wylogowania:", error.message);
     } else {
-        window.location.reload();
+        window.location.href = window.location.origin + window.location.pathname;
     }
 }
