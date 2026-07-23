@@ -1,5 +1,5 @@
 // =====================================================
-// WEAZEL NEWS - KONFIGURACJA
+// KONFIGURACJA WEAZEL NEWS
 // =====================================================
 
 window.SUPABASE_URL =
@@ -8,8 +8,6 @@ window.SUPABASE_URL =
 window.SUPABASE_KEY =
     "sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN";
 
-// Stały adres strony GitHub Pages.
-// Dzięki temu OAuth zawsze wraca w dobre miejsce.
 window.SITE_URL =
     "https://ksiedzau.github.io/Weazel-News/";
 
@@ -31,6 +29,6 @@ window.CITY_HALL_DISCORD_IDS = [
     "1007988667077369857"
 ];
 
-// DISCORD DO REKRUTACJI
+// DISCORD REKRUTACYJNY
 window.RECRUIT_DISCORD_URL =
     "https://discord.gg/yQDZNv9heE";
