@@ -1,7 +1,7 @@
 // =====================================================
 // WEAZEL NEWS - APP.JS
-// Kategorie: wiadomości, artykuły, tiktoki,
-// City Hall i Ogłoszenia firm.
+// Kategorie: Wiadomości, Artykuły, Tiktoki,
+// City Hall oraz Ogłoszenia firm.
 // Bez specjalnej roli Firma.
 // =====================================================
 
@@ -59,12 +59,16 @@
         }
 
         if (!window.supabase) {
-            console.error("Brak biblioteki Supabase.");
+            console.error(
+                "Biblioteka Supabase nie została załadowana."
+            );
             return null;
         }
 
         if (!window.SUPABASE_URL || !window.SUPABASE_KEY) {
-            console.error("Brak konfiguracji Supabase.");
+            console.error(
+                "Brak SUPABASE_URL lub SUPABASE_KEY."
+            );
             return null;
         }
 
@@ -92,7 +96,8 @@
 
         const identity =
             (user.identities || []).find(
-                item => item.provider === "discord"
+                item =>
+                    item.provider === "discord"
             );
 
         const data =
@@ -114,7 +119,9 @@
         return Boolean(
             discordId &&
             Array.isArray(ids) &&
-            ids.map(String).includes(discordId)
+            ids.map(String).includes(
+                discordId
+            )
         );
     }
 
@@ -160,17 +167,25 @@
         }
 
         if (isCityHall(user)) {
-            return ["City Hall", "role-cityhall"];
+            return [
+                "City Hall",
+                "role-cityhall"
+            ];
         }
 
-        return ["Obywatel", "role-default"];
+        return [
+            "Obywatel",
+            "role-default"
+        ];
     }
 
     function switchTab(tabId) {
         document
             .querySelectorAll(".tab-content")
             .forEach(section => {
-                section.classList.remove("active");
+                section.classList.remove(
+                    "active"
+                );
             });
 
         const target =
@@ -189,7 +204,8 @@
             .forEach(button => {
                 button.classList.toggle(
                     "active",
-                    button.dataset.tab === tabId
+                    button.dataset.tab ===
+                        tabId
                 );
             });
 
@@ -198,13 +214,31 @@
 
     window.switchTab = switchTab;
 
+    function openMobileMenu() {
+        document
+            .getElementById(
+                "mobile-sidebar"
+            )
+            ?.classList.add("active");
+
+        document
+            .getElementById(
+                "sidebar-overlay"
+            )
+            ?.classList.add("active");
+    }
+
     function closeMobileMenu() {
         document
-            .getElementById("mobile-sidebar")
+            .getElementById(
+                "mobile-sidebar"
+            )
             ?.classList.remove("active");
 
         document
-            .getElementById("sidebar-overlay")
+            .getElementById(
+                "sidebar-overlay"
+            )
             ?.classList.remove("active");
     }
 
@@ -227,33 +261,27 @@
             });
 
         document
-            .getElementById("mobile-menu-btn")
+            .getElementById(
+                "mobile-menu-btn"
+            )
             ?.addEventListener(
                 "click",
-                () => {
-                    document
-                        .getElementById(
-                            "mobile-sidebar"
-                        )
-                        ?.classList.add("active");
-
-                    document
-                        .getElementById(
-                            "sidebar-overlay"
-                        )
-                        ?.classList.add("active");
-                }
+                openMobileMenu
             );
 
         document
-            .getElementById("sidebar-close")
+            .getElementById(
+                "sidebar-close"
+            )
             ?.addEventListener(
                 "click",
                 closeMobileMenu
             );
 
         document
-            .getElementById("sidebar-overlay")
+            .getElementById(
+                "sidebar-overlay"
+            )
             ?.addEventListener(
                 "click",
                 closeMobileMenu
@@ -277,11 +305,26 @@
 
         if (isBossOrAdmin(user)) {
             options.push(
-                ["STRONA GŁÓWNA", "Strona Główna"],
-                ["WIADOMOŚCI", "Wiadomości"],
-                ["ARTYKUŁY", "Artykuły"],
-                ["TIKTOKI", "Tiktoki"],
-                ["CITY HALL", "City Hall"],
+                [
+                    "STRONA GŁÓWNA",
+                    "Strona Główna"
+                ],
+                [
+                    "WIADOMOŚCI",
+                    "Wiadomości"
+                ],
+                [
+                    "ARTYKUŁY",
+                    "Artykuły"
+                ],
+                [
+                    "TIKTOKI",
+                    "Tiktoki"
+                ],
+                [
+                    "CITY HALL",
+                    "City Hall"
+                ],
                 [
                     "OGŁOSZENIA FIRM",
                     "Ogłoszenia firm"
@@ -289,7 +332,10 @@
             );
         } else if (isCityHall(user)) {
             options.push(
-                ["CITY HALL", "City Hall"]
+                [
+                    "CITY HALL",
+                    "City Hall"
+                ]
             );
         }
 
@@ -302,8 +348,11 @@
                         "option"
                     );
 
-                option.value = value;
-                option.textContent = label;
+                option.value =
+                    value;
+
+                option.textContent =
+                    label;
 
                 select.appendChild(
                     option
@@ -314,10 +363,12 @@
         if (
             [...select.options].some(
                 option =>
-                    option.value === oldValue
+                    option.value ===
+                    oldValue
             )
         ) {
-            select.value = oldValue;
+            select.value =
+                oldValue;
         }
     }
 
@@ -355,29 +406,38 @@
 
         if (loginButton) {
             loginButton.style.display =
-                user ? "none" : "flex";
+                user
+                    ? "none"
+                    : "inline-flex";
         }
 
         if (userInfo) {
             userInfo.style.display =
-                user ? "flex" : "none";
+                user
+                    ? "flex"
+                    : "none";
         }
 
         if (adminButton) {
             adminButton.style.display =
-                panelVisible ? "flex" : "none";
+                panelVisible
+                    ? "flex"
+                    : "none";
         }
 
         if (mobileAdminButton) {
             mobileAdminButton.style.display =
-                panelVisible ? "flex" : "none";
+                panelVisible
+                    ? "flex"
+                    : "none";
         }
 
         updateCategoryOptions(user);
 
         if (!user) {
             if (roleElement) {
-                roleElement.textContent = "";
+                roleElement.textContent =
+                    "";
             }
 
             return;
@@ -442,8 +502,8 @@
         }
 
         const redirectTo =
-            window.location.origin +
-            window.location.pathname;
+            window.SITE_URL ||
+            "https://ksiedzau.github.io/Weazel-News/";
 
         const { error } =
             await supabase.auth.signInWithOAuth(
@@ -456,6 +516,11 @@
             );
 
         if (error) {
+            console.error(
+                "Błąd Discord OAuth:",
+                error
+            );
+
             alert(
                 "Błąd logowania: " +
                 error.message
@@ -471,11 +536,19 @@
             return;
         }
 
-        await supabase.auth.signOut();
+        const { error } =
+            await supabase.auth.signOut();
+
+        if (error) {
+            console.error(
+                "Błąd wylogowania:",
+                error
+            );
+        }
 
         window.location.href =
-            window.location.origin +
-            window.location.pathname;
+            window.SITE_URL ||
+            "https://ksiedzau.github.io/Weazel-News/";
     }
 
     function getYoutubeId(url) {
@@ -491,7 +564,9 @@
 
     function renderMedia(post, hero = false) {
         const className =
-            hero ? "hero-media" : "card-media";
+            hero
+                ? "hero-media"
+                : "card-media";
 
         const video =
             post.video_url || "";
@@ -555,7 +630,9 @@
             <button
                 type="button"
                 class="delete-button"
-                data-id="${escapeHtml(postId)}">
+                data-id="${escapeHtml(
+                    postId
+                )}">
                 🗑️ Usuń
             </button>
         `;
@@ -583,10 +660,16 @@
 
         return `
             <div
-                class="card ${url ? "clickable" : ""}"
+                class="card ${
+                    url
+                        ? "clickable"
+                        : ""
+                }"
                 ${
                     url
-                        ? `data-url="${escapeHtml(url)}"`
+                        ? `data-url="${escapeHtml(
+                            url
+                        )}"`
                         : ""
                 }>
 
@@ -622,7 +705,9 @@
                         )}
                     </p>
 
-                    ${deleteButton(post.id)}
+                    ${deleteButton(
+                        post.id
+                    )}
                 </div>
             </div>
         `;
@@ -643,10 +728,16 @@
 
         return `
             <div
-                class="hero-card ${url ? "clickable" : ""}"
+                class="hero-card ${
+                    url
+                        ? "clickable"
+                        : ""
+                }"
                 ${
                     url
-                        ? `data-url="${escapeHtml(url)}"`
+                        ? `data-url="${escapeHtml(
+                            url
+                        )}"`
                         : ""
                 }>
 
@@ -681,7 +772,9 @@
                         )}
                     </p>
 
-                    ${deleteButton(post.id)}
+                    ${deleteButton(
+                        post.id
+                    )}
                 </div>
             </div>
         `;
@@ -755,11 +848,8 @@
         const allPosts =
             data || [];
 
-        /*
-         * Ogłoszenia firm są wyłączone z głównej.
-         * City Hall zostaje na głównej.
-         */
-
+        // City Hall zostaje na głównej.
+        // Ogłoszenia firm są tylko w swojej zakładce.
         const homePosts =
             allPosts.filter(
                 post =>
@@ -1104,7 +1194,6 @@
             }
 
             setupMenu();
-            setupMobileMenu();
             setupClicks();
 
             document
