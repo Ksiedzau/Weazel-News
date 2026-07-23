@@ -80,8 +80,14 @@
         .btn-discord svg { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; }
 
         .user-info { display: none; align-items: center; gap: 10px; background: var(--bg-card); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
-        .user-name { font-weight: 700; font-size: 0.85rem; color: #fff; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
+        .user-meta { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+        .user-name { font-weight: 700; font-size: 0.85rem; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-role { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .role-boss { color: var(--accent-gold); }
+        .role-admin { color: #f87171; }
+        .role-cityhall { color: var(--accent-blue); }
+        .role-default { color: var(--text-muted); }
         .btn-logout { background: none; border: none; color: #ef4444; font-size: 0.85rem; font-weight: 700; cursor: pointer; margin-left: 5px; }
 
         main { flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; }
@@ -92,49 +98,28 @@
         .page-header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: #fff; }
         .page-header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
 
-        /* LIVE TICKER */
+        /* CZERWONY PASEK Z PRZEWIJANYM TEKSTEM (bez "NA ŻYWO") */
         .live-ticker {
-            background: linear-gradient(90deg, #7f1010, var(--accent-red));
+            background: linear-gradient(90deg, #7f1010, var(--accent-red), #7f1010);
             color: #fff;
             border-radius: 8px;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             box-shadow: 0 4px 14px rgba(220,38,38,0.25);
         }
-        .live-ticker .label {
-            background: #000;
-            color: #fff;
-            padding: 10px 14px;
-            font-weight: 900;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .live-ticker .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.3; } }
-        .ticker-track {
-            overflow: hidden;
-            white-space: nowrap;
-            flex: 1;
-            padding: 10px 0;
-        }
+        .ticker-track { overflow: hidden; white-space: nowrap; padding: 12px 0; }
         .ticker-track-inner {
             display: inline-block;
             padding-left: 100%;
-            animation: tickerScroll 35s linear infinite;
+            animation: tickerScroll 40s linear infinite;
             font-weight: 700;
             font-size: 0.9rem;
         }
-        .ticker-track-inner span { margin-right: 40px; }
+        .ticker-track-inner span { margin-right: 45px; }
         .ticker-track-inner span::before { content: "●"; color: #fca5a5; margin-right: 10px; }
         @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
-        /* HERO (wyróżniony artykuł) */
+        /* HERO */
         .hero-card {
             display: grid;
             grid-template-columns: 1fr;
@@ -154,6 +139,19 @@
         .hero-title { font-size: 1.8rem; font-weight: 900; color: #fff; line-height: 1.2; }
         .hero-meta { font-size: 0.85rem; color: var(--text-muted); }
         .hero-text { color: #d1d5db; line-height: 1.55; font-size: 0.95rem; }
+
+        /* OPISY / INFO NA STRONIE GŁÓWNEJ */
+        .home-info { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
+        @media (min-width: 750px) { .home-info { grid-template-columns: repeat(3, 1fr); } }
+        .info-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 22px; transition: 0.2s; }
+        .info-card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
+        .info-icon { font-size: 2rem; margin-bottom: 10px; }
+        .info-card h3 { color: #fff; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; font-size: 1rem; }
+        .info-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; }
+
+        .home-about { background: linear-gradient(135deg, var(--bg-card), var(--bg-header)); border: 1px solid var(--border-color); border-left: 5px solid var(--accent-red); border-radius: 10px; padding: 24px; margin-bottom: 28px; }
+        .home-about h2 { color: #fff; font-weight: 900; text-transform: uppercase; font-size: 1.2rem; margin-bottom: 10px; }
+        .home-about p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
 
         /* GRID KART */
         .cards-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
@@ -217,7 +215,10 @@
 
             <div id="user-info" class="user-info">
                 <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                <span id="user-name" class="user-name">Użytkownik</span>
+                <div class="user-meta">
+                    <span id="user-name" class="user-name">Użytkownik</span>
+                    <span id="user-role" class="user-role role-default"></span>
+                </div>
                 <button id="btn-logout" class="btn-logout">Wyloguj</button>
             </div>
         </div>
@@ -227,8 +228,9 @@
         <!-- STRONA GŁÓWNA -->
         <section id="tab-home" class="tab-content active">
             <div class="live-ticker">
-                <div class="label"><span class="dot"></span> NA ŻYWO</div>
-                <div class="ticker-track"><div class="ticker-track-inner" id="ticker-track">Ładowanie najnowszych wiadomości z Los Santos...</div></div>
+                <div class="ticker-track">
+                    <div class="ticker-track-inner" id="ticker-track">Witamy w Weazel News — Twoje źródło prawdy z Los Santos! Najświeższe wiadomości, reportaże i relacje prosto z ulic San Andreas. Bądź na bieżąco z wydarzeniami, które kształtują nasze miasto! Tylko u nas niezależne dziennikarstwo bez cenzury!</div>
+                </div>
             </div>
 
             <div class="page-header">
@@ -236,7 +238,31 @@
                 <p>Najważniejsze wydarzenia z Los Santos</p>
             </div>
 
+            <div class="home-about">
+                <h2>O Weazel News</h2>
+                <p>Jesteśmy największą niezależną redakcją w stanie San Andreas. Od lat relacjonujemy wszystko to, co władza chciałaby zamiatać pod dywan — od korupcji w City Hall, przez pościgi na autostradach, po największe afery kryminalne Los Santos. Nasz zespół reporterów pracuje 24/7, abyś zawsze wiedział, co naprawdę dzieje się w mieście.</p>
+            </div>
+
             <div id="home-featured"></div>
+
+            <div class="home-info">
+                <div class="info-card">
+                    <div class="info-icon">📡</div>
+                    <h3>Relacje na żywo</h3>
+                    <p>Nasi reporterzy są zawsze tam, gdzie dzieje się akcja. Od pościgów po konferencje prasowe — przekazujemy informacje prosto z ulic Los Santos, bez opóźnień.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🔍</div>
+                    <h3>Niezależne śledztwa</h3>
+                    <p>Nie boimy się zadawać trudnych pytań. Publikujemy głębokie analizy i reportaże, które odsłaniają prawdę o władzy, biznesie i półświatku San Andreas.</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🎥</div>
+                    <h3>Materiały wideo</h3>
+                    <p>Oglądaj relacje, wywiady i krótkie formy wideo z życia miasta. Nasza sekcja Tiktoki to pulse miasta w pigułce — szybko, głośno i bez filtrów.</p>
+                </div>
+            </div>
+
             <div class="cards-grid" id="home-container"></div>
         </section>
 
