@@ -1,15 +1,31 @@
 // app.js - Obsługa logowania i aplikacji Weazel News
 
+// Inicjalizacja klienta Supabase z wymuszonym przepływem PKCE (zapobiega błędom 404 z tokenami na GitHub Pages)
+// Upewnij się, że podajesz swoje poprawne dane projektu Supabase, jeśli inicjalizujesz go tutaj:
+const SUPABASE_URL = 'TUTAJ_WPISZ_SWOJ_URL';
+const SUPABASE_ANON_KEY = 'TUTAJ_WPISZ_SWOJ_ANON_KEY';
+
+// Jeśli inicjalizujesz Supabase w innym pliku, upewnij się, że obiekt klienta korzysta z { auth: { flowType: 'pkce' } }
+if (window.supabase && !window.supabaseClient) {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+            flowType: 'pkce',
+            persistSession: true,
+            autoRefreshToken: true,
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Sprawdzenie czy Supabase jest dostępne
-    if (!window.supabase) {
+    const supabaseInstance = window.supabaseClient || window.supabase;
+    if (!supabaseInstance) {
         console.error("Klient Supabase nie został zainicjalizowany! Sprawdź kolejność skryptów w HTML.");
     }
 
-    // Podpięcie nasłuchiwania pod przycisk logowania (jeśli istnieje w HTML, np. o id 'login-btn' lub klasie)
+    // Podpięcie nasłuchiwania pod przycisk logowania
     const loginButton = document.getElementById("login-btn") || document.querySelector("button[onclick*='login']");
     if (loginButton) {
-        // Usuwamy stare inline onclick z HTML jeśli koliduje, i przypisujemy czysty nasłuchiwacz
         loginButton.removeAttribute("onclick");
         loginButton.addEventListener("click", loginWithDiscord);
     }
@@ -21,17 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
 // Główna funkcja logowania przez Discorda
 async function loginWithDiscord() {
     try {
-        if (!window.supabase || !window.supabase.auth) {
+        const supabaseInstance = window.supabaseClient || window.supabase;
+        if (!supabaseInstance || !supabaseInstance.auth) {
             throw new Error("Obiekt Supabase auth jest niedostępny.");
         }
 
-        // NAPRAWA BŁĘDU 404: Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages (np. /Weazel-News/)
+        // Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages (np. /Weazel-News/)
         const redirectUrl = window.location.origin + window.location.pathname;
 
-        const { data, error } = await window.supabase.auth.signInWithOAuth({
+        const { data, error } = await supabaseInstance.auth.signInWithOAuth({
             provider: 'discord',
             options: {
-                redirectTo: redirectUrl // Wraca na poprawną ścieżkę
+                redirectTo: redirectUrl 
             }
         });
 
@@ -46,15 +63,16 @@ async function loginWithDiscord() {
 
 // Funkcja sprawdzająca czy użytkownik jest zalogowany
 async function checkUserSession() {
-    if (!window.supabase) return;
+    const supabaseInstance = window.supabaseClient || window.supabase;
+    if (!supabaseInstance) return;
 
     try {
-        const { data: { session }, error } = await window.supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseInstance.auth.getSession();
         if (error) throw error;
 
         if (session) {
             console.log("Zalogowany użytkownik:", session.user);
-            // Tutaj możesz dodać kod ukrywający przycisk logowania i pokazujący panel użytkownika
+            // Tutaj ukryj przycisk logowania / pokaż panel
         } else {
             console.log("Brak aktywnej sesji - użytkownik niezalogowany.");
         }
@@ -63,11 +81,12 @@ async function checkUserSession() {
     }
 }
 
-// Opcjonalna funkcja wylogowania
+// Funkcja wylogowania
 async function logout() {
-    if (!window.supabase) return;
+    const supabaseInstance = window.supabaseClient || window.supabase;
+    if (!supabaseInstance) return;
     
-    const { error } = await window.supabase.auth.signOut();
+    const { error } = await supabaseInstance.auth.signOut();
     if (error) {
         console.error("Błąd wylogowania:", error.message);
     } else {
