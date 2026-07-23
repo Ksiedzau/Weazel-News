@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
 
         :root {
             --bg: #0b0d14;
@@ -21,7 +21,6 @@
             --red: #dc2626;
             --gold: #f59e0b;
             --blue: #3b82f6;
-            --green: #10b981;
             --text: #f3f4f6;
             --muted: #9ca3af;
             --border: #262c40;
@@ -36,28 +35,29 @@
 
         html,
         body {
-            min-height: 100vh;
+            min-height: 100%;
             background: var(--bg);
             color: var(--text);
             overflow-x: hidden;
         }
 
         body {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
         header {
-            min-height: 60px;
-            padding: 10px 24px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: var(--header);
-            border-bottom: 3px solid var(--red);
             position: sticky;
             top: 0;
             z-index: 100;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 24px;
+            background: var(--header);
+            border-bottom: 3px solid var(--red);
         }
 
         .header-left {
@@ -75,14 +75,16 @@
         }
 
         .brand-badge {
-            background: var(--red);
             padding: 5px 8px;
             border-radius: 4px;
-            font-weight: 900;
+            background: var(--red);
+            color: white;
             font-size: .75rem;
+            font-weight: 900;
         }
 
         .brand-title {
+            color: white;
             font-size: 1.1rem;
             font-weight: 900;
             text-transform: uppercase;
@@ -94,18 +96,18 @@
 
         .nav-links {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
             flex: 1;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .nav-btn,
         .sidebar-btn {
+            padding: 9px 12px;
             border: 0;
             border-radius: 7px;
-            padding: 9px 12px;
             background: rgba(255,255,255,.04);
             color: var(--muted);
             cursor: pointer;
@@ -127,11 +129,6 @@
             color: var(--blue);
         }
 
-        .company-nav,
-        .company-sidebar {
-            color: var(--green);
-        }
-
         .admin-link,
         .admin-sidebar {
             display: none;
@@ -144,11 +141,14 @@
         }
 
         .btn-discord {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
             border: 0;
             border-radius: 8px;
-            padding: 10px 15px;
             background: #5865f2;
-            color: #fff;
+            color: white;
             cursor: pointer;
             font-weight: 800;
             text-decoration: none;
@@ -171,24 +171,25 @@
         .user-avatar {
             width: 32px;
             height: 32px;
+            border: 2px solid var(--red);
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--red);
         }
 
         .user-meta {
             display: flex;
             flex-direction: column;
-            line-height: 1.2;
+            line-height: 1.15;
         }
 
         .user-name {
             max-width: 130px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: white;
             font-size: .82rem;
             font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .user-role {
@@ -224,9 +225,9 @@
         main {
             width: 100%;
             max-width: 1400px;
+            flex: 1;
             margin: 0 auto;
             padding: 24px;
-            flex: 1;
         }
 
         .tab-content {
@@ -244,9 +245,10 @@
         }
 
         .page-header h1 {
+            color: white;
             font-size: 1.7rem;
-            text-transform: uppercase;
             font-weight: 900;
+            text-transform: uppercase;
         }
 
         .page-header p {
@@ -255,19 +257,20 @@
         }
 
         .ticker {
+            width: 100%;
             margin-bottom: 22px;
-            padding: 12px 0;
             overflow: hidden;
-            white-space: nowrap;
+            padding: 12px 0;
             border-radius: 8px;
             background: linear-gradient(90deg, #7f1010, var(--red), #7f1010);
-            font-weight: 800;
+            white-space: nowrap;
         }
 
         .ticker-inner {
             display: inline-block;
             padding-left: 100%;
             animation: tickerMove 38s linear infinite;
+            font-weight: 800;
         }
 
         .ticker-inner span {
@@ -281,8 +284,13 @@
         }
 
         @keyframes tickerMove {
-            from { transform: translateX(0); }
-            to { transform: translateX(-100%); }
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-100%);
+            }
         }
 
         .about-box {
@@ -320,10 +328,10 @@
 
         .hero-media {
             width: 100%;
-            height: 100%;
             min-height: 300px;
-            object-fit: cover;
+            height: 100%;
             background: #000;
+            object-fit: cover;
         }
 
         .hero-body {
@@ -336,12 +344,11 @@
 
         .hero-tag,
         .card-tag {
-            display: inline-block;
             align-self: flex-start;
             padding: 4px 9px;
             border-radius: 5px;
             background: var(--red);
-            color: #fff;
+            color: white;
             font-size: .68rem;
             font-weight: 900;
             text-transform: uppercase;
@@ -351,12 +358,8 @@
             background: var(--blue);
         }
 
-        .tag-company {
-            background: var(--green);
-            color: #000;
-        }
-
         .hero-title {
+            color: white;
             font-size: 1.8rem;
             font-weight: 900;
         }
@@ -398,19 +401,20 @@
         .card-media {
             width: 100%;
             height: 180px;
-            object-fit: cover;
             background: #000;
+            object-fit: cover;
         }
 
         .card-body {
             display: flex;
-            flex-direction: column;
             flex: 1;
+            flex-direction: column;
             padding: 15px;
         }
 
         .card-title {
             margin: 7px 0;
+            color: white;
             font-size: 1.1rem;
             font-weight: 900;
         }
@@ -441,7 +445,8 @@
             line-height: 1.5;
         }
 
-        .admin-card {
+        .admin-card,
+        .recruit-box {
             padding: 22px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -504,14 +509,10 @@
             font-weight: 800;
         }
 
-        /* Rekrutacja — wycentrowana */
         .recruit-box {
             max-width: 780px;
             margin: 35px auto 0;
             padding: 45px 30px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--card), var(--header));
             text-align: center;
         }
 
@@ -530,8 +531,6 @@
 
         .recruit-box .btn-discord {
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .mobile-menu-btn {
@@ -539,8 +538,8 @@
             width: 40px;
             height: 40px;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             gap: 4px;
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -562,8 +561,8 @@
             width: 280px;
             height: 100vh;
             padding: 20px;
-            background: var(--header);
             border-right: 2px solid var(--border);
+            background: var(--header);
             transition: left .25s ease;
         }
 
@@ -945,7 +944,7 @@
             class="tab-content">
 
             <div class="page-header">
-                <h1 style="color:var(--green);">
+                <h1 style="color:#10b981;">
                     Ogłoszenia firm
                 </h1>
 
@@ -1077,7 +1076,7 @@
     </main>
 
     <!-- Każdy skrypt tylko raz -->
-    <script src="config.js?v=200"></script>
-    <script src="app.js?v=200"></script>
+    <script src="config.js?v=300"></script>
+    <script src="app.js?v=300"></script>
 </body>
 </html>
