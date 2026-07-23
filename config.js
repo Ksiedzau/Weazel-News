@@ -4,9 +4,8 @@ window.SUPABASE_URL =
 window.SUPABASE_KEY =
     "sb_publishable_ih2IDk7NUpRav8RC-pVHdg_HRdb2vyN";
 
-// SZEF
+// SZEF — usunięte ID 1487414745534431233
 window.BOSS_DISCORD_IDS = [
-    "1487414745534431233",
     "1183805781724893245"
 ];
 
@@ -22,10 +21,10 @@ window.CITY_HALL_DISCORD_IDS = [
     "1007988667077369857"
 ];
 
-// FIRMY
-// Na razie puste. Później wpiszesz tu ID osób firmowych.
-window.COMPANY_DISCORD_IDS = [];
+// FIRMA — Twoje ID
+window.COMPANY_DISCORD_IDS = [
+    "1487414745534431233"
+];
 
-// Rekrutacja
 window.RECRUIT_DISCORD_URL =
     "https://discord.gg/yQDZNv9heE";
