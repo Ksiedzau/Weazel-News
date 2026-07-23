@@ -18,17 +18,20 @@ document.addEventListener("DOMContentLoaded", () => {
     checkUserSession();
 });
 
-// Główna funkcja logowania przez Discorda (Linia 38 w Twoim kodzie)
+// Główna funkcja logowania przez Discorda
 async function loginWithDiscord() {
     try {
         if (!window.supabase || !window.supabase.auth) {
             throw new Error("Obiekt Supabase auth jest niedostępny.");
         }
 
+        // NAPRAWA BŁĘDU 404: Pobieramy pełny adres łącznie z podkatalogiem na GitHub Pages (np. /Weazel-News/)
+        const redirectUrl = window.location.origin + window.location.pathname;
+
         const { data, error } = await window.supabase.auth.signInWithOAuth({
             provider: 'discord',
             options: {
-                redirectTo: window.location.origin // wraca na obecną stronę po zalogowaniu
+                redirectTo: redirectUrl // Wraca na poprawną ścieżkę
             }
         });
 
